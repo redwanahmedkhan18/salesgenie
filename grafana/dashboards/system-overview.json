@@ -1,0 +1,141 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "SalesGenie - System Overview",
+    "tags": ["salesgenie", "overview", "system"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Health",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "up{job=\"api-gateway\"}",
+            "format": "time_series",
+            "instant": true
+          }
+        ],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"value": null, "color": "green"},
+            {"value": 1, "color": "red"}
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "title": "CPU Usage",
+        "type": "gauge",
+        "gridPos": {"x": 4, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total[5m]) * 100",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Memory Usage",
+        "type": "gauge",
+        "gridPos": {"x": 8, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "(container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Request Rate",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m]))",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Error Rate",
+        "type": "stat",
+        "gridPos": {"x": 16, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Response Time (95th percentile)",
+        "type": "stat",
+        "gridPos": {"x": 20, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Active Users",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 4, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(increase(http_requests_total{path=\"/api/v1/auth/login\"}[5m]))",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Database Connections",
+        "type": "stat",
+        "gridPos": {"x": 4, "y": 4, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "AI Tokens Used",
+        "type": "stat",
+        "gridPos": {"x": 8, "y": 4, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(ai_tokens_used_total[5m]))",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Queue Length",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 4, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(redis_list_length{key=~\"queue.*\"})",
+            "format": "time_series"
+          }
+        ]
+      }
+    ]
+  }
+}

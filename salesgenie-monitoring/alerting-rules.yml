@@ -1,0 +1,78 @@
+groups:
+- name: salesgenie.rules
+  rules:
+  # Alert for high error rate
+  - alert: HighErrorRate
+    expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+    for: 5m
+    labels:
+      severity: critical
+      team: sre
+    annotations:
+      summary: "High error rate detected on {{ $labels.service }}"
+      description: "{{ $value }}% error rate on {{ $labels.service }}"
+
+  # Alert for CPU usage
+  - alert: HighCPUUsage
+    expr: rate(container_cpu_usage_seconds_total[5m]) > 0.9
+    for: 2m
+    labels:
+      severity: warning
+      team: sre
+    annotations:
+      summary: "High CPU usage on {{ $labels.instance }}"
+      description: "{{ $value }}% CPU usage on {{ $labels.instance }}"
+
+  # Alert for memory usage
+  - alert: HighMemoryUsage
+    expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.9
+    for: 2m
+    labels:
+      severity: warning
+      team: sre
+    annotations:
+      summary: "High memory usage on {{ $labels.instance }}"
+      description: "{{ $value }}% memory usage on {{ $labels.instance }}"
+
+  # Alert for database connections
+  - alert: DatabaseConnectionExhaustion
+    expr: pg_stat_activity_count > 100
+    for: 1m
+    labels:
+      severity: critical
+      team: database
+    annotations:
+      summary: "Database connection exhaustion"
+      description: "{{ $value }} active database connections"
+
+  # Alert for slow queries
+  - alert: SlowDatabaseQueries
+    expr: rate(pg_stat_statements_total{type="SELECT"}[5m]) > 100
+    for: 5m
+    labels:
+      severity: warning
+      team: database
+    annotations:
+      summary: "Slow database queries"
+      description: "{{ $value }} queries per second above threshold"
+
+  # Alert for AI token limit
+  - alert: HighTokenUsage
+    expr: rate(ai_tokens_used_total[1h]) > 1000000
+    for: 10m
+    labels:
+      severity: warning
+      team: ai
+    annotations:
+      summary: "High AI token usage"
+      description: "{{ $value }} tokens per hour"
+
+  # Alert for service down
+  - alert: ServiceDown
+    expr: up == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Service {{ $labels.service }} is down"
+      description: "Service {{ $labels.service }} on {{ $labels.instance }} is not responding"

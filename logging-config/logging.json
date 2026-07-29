@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "json": {
+      "format": "{\"timestamp\": \"%(asctime)s\", \"level\": \"%(levelname)s\", \"service\": \"%(service_name)s\", \"request_id\": \"%(request_id)s\", \"user_id\": \"%(user_id)s\", \"trace_id\": \"%(trace_id)s\", \"message\": \"%(message)s\", \"module\": \"%(module)s\", \"function\": \"%(funcName)s\", \"line\": %(lineno)d, \"duration_ms\": %(duration_ms)s, \"context\": %(context)s}",
+      "datefmt": "%Y-%m-%dT%H:%M:%S.%fZ"
+    },
+    "detailed": {
+      "format": "[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    },
+    "standard": {
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "INFO",
+      "formatter": "json",
+      "stream": "ext://sys.stdout"
+    },
+    "file": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "level": "DEBUG",
+      "formatter": "json",
+      "filename": "/var/log/salesgenie/app.log",
+      "maxBytes": 10485760,
+      "backupCount": 5
+    },
+    "syslog": {
+      "class": "logging.handlers.SysLogHandler",
+      "level": "INFO",
+      "formatter": "json",
+      "address": "/dev/log",
+      "facility": "local0"
+    },
+    "error_file": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "level": "ERROR",
+      "formatter": "json",
+      "filename": "/var/log/salesgenie/error.log",
+      "maxBytes": 10485760,
+      "backupCount": 5
+    }
+  },
+  "loggers": {
+    "salesgenie": {
+      "level": "DEBUG",
+      "handlers": ["console", "file"],
+      "propagate": false
+    },
+    "enterprise_ai_platform": {
+      "level": "DEBUG",
+      "handlers": ["console", "file"],
+      "propagate": false
+    },
+    "uvicorn": {
+      "level": "INFO",
+      "handlers": ["console"],
+      "propagate": false
+    },
+    "uvicorn.error": {
+      "level": "INFO",
+      "handlers": ["console"],
+      "propagate": false
+    },
+    "sqlalchemy": {
+      "level": "WARNING",
+      "handlers": ["console"],
+      "propagate": false
+    },
+    "httpx": {
+      "level": "WARNING",
+      "handlers": ["console"],
+      "propagate": false
+    }
+  },
+  "root": {
+    "level": "INFO",
+    "handlers": ["console"]
+  }
+}

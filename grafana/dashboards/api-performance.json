@@ -1,0 +1,129 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "SalesGenie - API Performance",
+    "tags": ["salesgenie", "api", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate by Service",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m])) by (service)",
+            "legendFormat": "{{service}}",
+            "format": "time_series"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests per second"},
+          {"format": "short", "show": false}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Error Rate by Service",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+            "legendFormat": "{{service}}",
+            "format": "time_series"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "decimals": 2, "label": "Error Rate %"},
+          {"format": "short", "show": false}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Response Time Distribution",
+        "type": "heatmap",
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(http_request_duration_seconds_bucket[5m])",
+            "format": "heatmap",
+            "legendFormat": "{{le}}"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Request Duration by Endpoint",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{path!=\"\"}[5m])) by (path)",
+            "legendFormat": "{{path}}",
+            "format": "time_series"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Duration (seconds)"},
+          {"format": "short", "show": false}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Status Code Distribution",
+        "type": "piechart",
+        "gridPos": {"x": 0, "y": 16, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(http_requests_total) by (status)",
+            "legendFormat": "{{status}}",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Top Endpoints by Latency",
+        "type": "barchart",
+        "gridPos": {"x": 6, "y": 16, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "topk(5, histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) by (path))",
+            "legendFormat": "{{path}}",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Throughput by HTTP Method",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 22, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m])) by (method)",
+            "legendFormat": "{{method}}",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Status Codes",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 22, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m])) by (status)",
+            "legendFormat": "{{status}}",
+            "format": "time_series"
+          }
+        ]
+      }
+    ]
+  }
+}
