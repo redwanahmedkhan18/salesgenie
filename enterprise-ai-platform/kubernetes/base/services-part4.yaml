@@ -1,0 +1,300 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-service
+  namespace: salesgenie
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: customer-service
+  template:
+    metadata:
+      labels:
+        app: customer-service
+    spec:
+      containers:
+        - name: customer-service
+          image: salesgenie/customer-service:latest
+          ports:
+            - containerPort: 8015
+          envFrom:
+            - configMapRef:
+                name: salesgenie-config
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8015
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8015
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-service
+  namespace: salesgenie
+spec:
+  selector:
+    app: customer-service
+  ports:
+    - port: 8015
+      targetPort: 8015
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: support-service
+  namespace: salesgenie
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: support-service
+  template:
+    metadata:
+      labels:
+        app: support-service
+    spec:
+      containers:
+        - name: support-service
+          image: salesgenie/support-service:latest
+          ports:
+            - containerPort: 8016
+          envFrom:
+            - configMapRef:
+                name: salesgenie-config
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8016
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8016
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: support-service
+  namespace: salesgenie
+spec:
+  selector:
+    app: support-service
+  ports:
+    - port: 8016
+      targetPort: 8016
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conversation-service
+  namespace: salesgenie
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: conversation-service
+  template:
+    metadata:
+      labels:
+        app: conversation-service
+    spec:
+      containers:
+        - name: conversation-service
+          image: salesgenie/conversation-service:latest
+          ports:
+            - containerPort: 8017
+          envFrom:
+            - configMapRef:
+                name: salesgenie-config
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8017
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8017
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: conversation-service
+  namespace: salesgenie
+spec:
+  selector:
+    app: conversation-service
+  ports:
+    - port: 8017
+      targetPort: 8017
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-gateway-service
+  namespace: salesgenie
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-gateway-service
+  template:
+    metadata:
+      labels:
+        app: ai-gateway-service
+    spec:
+      containers:
+        - name: ai-gateway-service
+          image: salesgenie/ai-gateway-service:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: salesgenie-config
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-gateway-service
+  namespace: salesgenie
+spec:
+  selector:
+    app: ai-gateway-service
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: salesgenie
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: salesgenie/api-gateway:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: salesgenie-config
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: salesgenie
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - port: 80
+      targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: salesgenie-ingress
+  namespace: salesgenie
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.salesgenie.local
+      secretName: salesgenie-tls
+  rules:
+    - host: api.salesgenie.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 80

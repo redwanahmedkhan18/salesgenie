@@ -1,23 +1,113 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+---
+import '../styles/global.css';
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+export interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  openGraph?: {
+    type?: string;
+    image?: string;
+    url?: string;
+  };
+}
+
+const {
+  title = 'SalesGenie — Enterprise AI Customer Support & Sales Agent Platform',
+  description = 'AI-powered multi-agent platform for customer support, sales automation, and enterprise knowledge management. 99.99% uptime, 500k concurrent connections, FAANG-grade architecture.',
+  canonical,
+  openGraph = {},
+} = Astro.props;
+
+const url = 'https://salesgenie.ai';
+const defaultImage = 'https://salesgenie.ai/og-image.png';
+---
+
+<!doctype html>
+<html lang="en" class="dark" suppressHydrationWarning>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <meta name="theme-color" content="#f7a501" />
+  <meta name="color-scheme" content="light dark" />
+  
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  
+  <!-- Canonical URL -->
+  {canonical && <link rel="canonical" href={canonical} />}
+  
+  <!-- SEO -->
+  <title>{title}</title>
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content={openGraph.type || 'website'} />
+  <meta property="og:image" content={openGraph.image || defaultImage} />
+  <meta property="og:url" content={openGraph.url || url} />
+  <meta property="og:site_name" content="SalesGenie" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="es_ES" />
+  <meta property="og:locale:alternate" content="fr_FR" />
+  <meta property="og:locale:alternate" content="de_DE" />
+  
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@salesgenie" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={openGraph.image || defaultImage} />
+  <meta name="twitter:creator" content="@salesgenie" />
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+    {JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'SalesGenie',
+      description: description,
+      url: url,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${url}/search?q={search_term_string}`,
+        'query-input': 'required name=search_term_string'
+      }
+    })}
+  </script>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  
+  <!-- Preconnect to external domains -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://api.groq.com" />
+  <link rel="preconnect" href="https://*.googleapis.com" />
+  
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  
+  <!-- DNS Prefetch -->
+  <link rel="dns-prefetch" href="//api.groq.com" />
+  <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+  
+  <!-- Performance -->
+  <link rel="preload" as="style" href="/styles/global.css" />
+  <link rel="prefetch" as="image" href="/og-image.png" />
+</head>
+<body>
+  <slot />
+
+  <!-- Global Command Palette Keyboard Shortcut -->
+  <script is:inline>
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent('open-command-palette'));
+      }
+    });
+  </script>
+</body>
+</html>

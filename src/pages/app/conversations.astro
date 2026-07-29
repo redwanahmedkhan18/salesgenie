@@ -1,0 +1,24 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="SalesGenie Conversations — Omnichannel Inbox">
+  <div id="conversations-root"></div>
+</Layout>
+
+<script type="module">
+  import { AuthProvider } from '../../auth/AuthProvider';
+  import { ProtectedRoute } from '../../auth/ProtectedRoute';
+  import ConversationInbox from '../../components/islands/ConversationInbox';
+  import React from 'react';
+  import { createRoot } from 'react-dom/client';
+
+  const root = createRoot(document.getElementById('conversations-root')!);
+  root.render(
+    React.createElement(AuthProvider, null,
+      React.createElement(ProtectedRoute, { requiredRoles: ['support_manager', 'support_agent', 'org_admin', 'super_admin'] },
+        React.createElement(ConversationInbox, null)
+      )
+    )
+  );
+</script>

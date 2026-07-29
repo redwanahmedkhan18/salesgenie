@@ -1,0 +1,24 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="SalesGenie Profile — User Settings">
+  <div id="profile-root"></div>
+</Layout>
+
+<script type="module">
+  import { AuthProvider } from '../../auth/AuthProvider';
+  import { ProtectedRoute } from '../../auth/ProtectedRoute';
+  import { UserProfile } from '../../auth/UserProfile';
+  import React from 'react';
+  import { createRoot } from 'react-dom/client';
+
+  const root = createRoot(document.getElementById('profile-root')!);
+  root.render(
+    React.createElement(AuthProvider, null,
+      React.createElement(ProtectedRoute, null,
+        React.createElement(UserProfile, null)
+      )
+    )
+  );
+</script>

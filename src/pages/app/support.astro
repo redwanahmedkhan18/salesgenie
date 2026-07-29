@@ -1,0 +1,24 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="SalesGenie Support — Ticket Management">
+  <div id="support-root"></div>
+</Layout>
+
+<script type="module">
+  import { AuthProvider } from '../../auth/AuthProvider';
+  import { ProtectedRoute } from '../../auth/ProtectedRoute';
+  import SupportTickets from '../../components/islands/SupportTickets';
+  import React from 'react';
+  import { createRoot } from 'react-dom/client';
+
+  const root = createRoot(document.getElementById('support-root')!);
+  root.render(
+    React.createElement(AuthProvider, null,
+      React.createElement(ProtectedRoute, { requiredRoles: ['support_manager', 'support_agent', 'org_admin', 'super_admin'] },
+        React.createElement(SupportTickets, null)
+      )
+    )
+  );
+</script>

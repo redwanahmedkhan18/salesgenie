@@ -1,0 +1,218 @@
+# SalesGenie API Routes Configuration
+# Maps all backend service endpoints to the API Gateway
+
+# Authentication Service (Port 8001)
+auth:
+  POST: /api/v1/auth/login
+  POST: /api/v1/auth/refresh
+  POST: /api/v1/auth/logout
+  POST: /api/v1/auth/mfa/setup
+  POST: /api/v1/auth/mfa/verify
+  GET: /api/v1/auth/sessions
+  DELETE: /api/v1/auth/sessions/{session_id}
+
+# User Service (Port 8002)
+users:
+  GET: /api/v1/users/me
+  PUT: /api/v1/users/me
+  GET: /api/v1/users/me/preferences
+  PUT: /api/v1/users/me/preferences
+
+# Organization Service (Port 8003)
+organizations:
+  GET: /api/v1/organizations/{org_id}
+  GET: /api/v1/organizations/{org_id}/metrics
+  PUT: /api/v1/organizations/{org_id}/branding
+  GET: /api/v1/organizations/{org_id}/members
+  POST: /api/v1/organizations/{org_id}/members
+  PATCH: /api/v1/organizations/{org_id}/members/{member_id}/role
+  DELETE: /api/v1/organizations/{org_id}/members/{member_id}
+
+# Billing Service (Port 8004)
+billing:
+  GET: /api/v1/billing/plans
+  POST: /api/v1/billing/subscriptions
+  GET: /api/v1/billing/usage
+  GET: /api/v1/billing/invoices
+
+# Notification Service (Port 8005)
+notifications:
+  GET: /api/v1/notifications
+  POST: /api/v1/notifications
+  PUT: /api/v1/notifications/{id}/read
+
+# Knowledge Service (Port 8006)
+knowledge:
+  GET: /api/v1/knowledge/categories
+  GET: /api/v1/knowledge/documents
+  POST: /api/v1/knowledge/documents
+  GET: /api/v1/knowledge/documents/{id}
+  PUT: /api/v1/knowledge/documents/{id}
+  DELETE: /api/v1/knowledge/documents/{id}
+  POST: /api/v1/knowledge/upload
+  POST: /api/v1/knowledge/ocr
+
+# Sales Service (Port 8007)
+sales:
+  GET: /api/v1/sales/leads
+  POST: /api/v1/sales/leads
+  GET: /api/v1/sales/leads/{id}
+  PUT: /api/v1/sales/leads/{id}
+  DELETE: /api/v1/sales/leads/{id}
+  GET: /api/v1/sales/recommendations
+  GET: /api/v1/sales/bookings
+
+# Ticket Service (Port 8008)
+tickets:
+  GET: /api/v1/tickets
+  POST: /api/v1/tickets
+  GET: /api/v1/tickets/{id}
+  PUT: /api/v1/tickets/{id}
+  PATCH: /api/v1/tickets/{id}
+  DELETE: /api/v1/tickets/{id}
+  GET: /api/v1/tickets/analytics/overview
+
+# Vector Service (Port 8009)
+vector:
+  POST: /api/v1/vector/embeddings
+  POST: /api/v1/vector/search
+  GET: /api/v1/vector/collections
+
+# Chat Service (Port 8010)
+chat:
+  POST: /api/v1/chat/messages
+  GET: /api/v1/chat/conversations
+  GET: /api/v1/chat/conversations/{id}
+  POST: /api/v1/chat/conversations
+  PUT: /api/v1/chat/conversations/{id}
+
+# Workflow Service (Port 8011)
+workflows:
+  GET: /api/v1/workflows
+  POST: /api/v1/workflows
+  GET: /api/v1/workflows/{id}
+  PUT: /api/v1/workflows/{id}
+  DELETE: /api/v1/workflows/{id}
+  POST: /api/v1/workflows/{id}/execute
+  GET: /api/v1/workflows/{id}/history
+
+# Analytics Service (Port 8012)
+analytics:
+  GET: /api/v1/analytics/kpis
+  GET: /api/v1/analytics/conversations
+  GET: /api/v1/analytics/revenue
+  GET: /api/v1/analytics/channels
+  GET: /api/v1/analytics/time-series
+
+# Search Service (Port 8013)
+search:
+  GET: /api/v1/search/search
+  POST: /api/v1/search/index
+  DELETE: /api/v1/search/index/{document_id}
+  GET: /api/v1/search/index/stats
+  GET: /api/v1/search/suggest
+
+# Audit Service (Port 8014)
+audit:
+  GET: /api/v1/audit/events
+  GET: /api/v1/audit/events/{id}
+  GET: /api/v1/audit/users/{user_id}/events
+  GET: /api/v1/audit/resources
+
+# File Service (Port 8015)
+files:
+  GET: /api/v1/files
+  POST: /api/v1/files
+  GET: /api/v1/files/{id}
+  DELETE: /api/v1/files/{id}
+  POST: /api/v1/files/upload
+  GET: /api/v1/files/{id}/download
+  GET: /api/v1/files/{id}/presigned-url
+
+# Customer Service (Port 8016)
+customers:
+  GET: /api/v1/customers
+  POST: /api/v1/customers
+  GET: /api/v1/customers/{id}
+  PUT: /api/v1/customers/{id}
+  DELETE: /api/v1/customers/{id}
+  GET: /api/v1/customers/segments
+  GET: /api/v1/customers/tags
+  POST: /api/v1/customers/tags
+
+# Support Service (Port 8017)
+support:
+  GET: /api/v1/support/tickets
+  POST: /api/v1/support/tickets
+  GET: /api/v1/support/tickets/{id}
+  PUT: /api/v1/support/tickets/{id}
+  GET: /api/v1/support/tickets/analytics
+  GET: /api/v1/support/knowledge-base
+
+# Conversation Service (Port 8018)
+conversations:
+  GET: /api/v1/conversations
+  POST: /api/v1/conversations
+  GET: /api/v1/conversations/{id}
+  PUT: /api/v1/conversations/{id}
+  DELETE: /api/v1/conversations/{id}
+  POST: /api/v1/conversations/{id}/messages
+  GET: /api/v1/conversations/{id}/handoff
+
+# AI Gateway Service (Port 8000)
+ai-gateway:
+  POST: /api/v1/agents/chat
+  POST: /api/v1/agents/execute
+  GET: /api/v1/agents/{id}
+  POST: /api/v1/agents
+  PUT: /api/v1/agents/{id}
+  DELETE: /api/v1/agents/{id}
+  GET: /api/v1/agents/{id}/memory
+  POST: /api/v1/tools
+  GET: /api/v1/tools
+  POST: /api/v1/workflows/execute
+
+# WhatsApp Service (Port 8018)
+whatsapp:
+  GET: /api/v1/whatsapp/accounts
+  POST: /api/v1/whatsapp/accounts
+  GET: /api/v1/whatsapp/accounts/{id}
+  PUT: /api/v1/whatsapp/accounts/{id}
+  DELETE: /api/v1/whatsapp/accounts/{id}
+  POST: /api/v1/whatsapp/messages
+  GET: /api/v1/whatsapp/messages/{id}
+  POST: /api/v1/whatsapp/templates
+  GET: /api/v1/whatsapp/webhook
+  POST: /api/v1/whatsapp/webhook
+
+# Telegram Service (Port 8019)
+telegram:
+  GET: /api/v1/telegram/bot-info
+  POST: /api/v1/telegram/messages
+  GET: /api/v1/telegram/updates
+  GET: /api/v1/telegram/webhook
+  POST: /api/v1/telegram/webhook
+
+# Messenger Service (Port 8020)
+messenger:
+  GET: /api/v1/messenger/webhook
+  POST: /api/v1/messenger/webhook
+  POST: /api/v1/messenger/messages
+  GET: /api/v1/messenger/conversations
+
+# Email Service (Port 8021)
+email:
+  POST: /api/v1/email/send
+  POST: /api/v1/email/template
+  GET: /api/v1/email/templates
+  POST: /api/v1/email/webhook
+
+# Lead Intelligence Service (Port 8022)
+lead-intelligence:
+  POST: /api/v1/lead-intelligence/companies/search
+  GET: /api/v1/lead-intelligence/companies/{company_id}
+  POST: /api/v1/lead-intelligence/companies/{company_id}/qualify
+  POST: /api/v1/lead-intelligence/companies/{company_id}/research
+  POST: /api/v1/lead-intelligence/companies/{company_id}/outreach
+  GET: /api/v1/lead-intelligence/profiles
+  POST: /api/v1/lead-intelligence/profiles

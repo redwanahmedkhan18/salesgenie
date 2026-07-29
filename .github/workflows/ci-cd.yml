@@ -1,0 +1,226 @@
+name: SalesGenie CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '22'
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+          npm ci
+      
+      - name: Run linting
+        run: |
+          poetry run ruff check enterprise-ai-platform/
+          npm run lint
+      
+      - name: Type checking
+        run: |
+          poetry run mypy enterprise-ai-platform/
+          npx tsc --noEmit
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    needs: code-quality
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+      
+      - name: Run unit tests
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        run: |
+          poetry run pytest tests/unit/ -v --cov=enterprise_ai_platform --cov-report=xml
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+      
+      - name: Run integration tests
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        run: |
+          poetry run pytest tests/integration/ -v
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+          pip install bandit safety
+      
+      - name: Run Bandit security scan
+        run: |
+          bandit -r enterprise-ai-platform/ -x enterprise_ai_platform/tests
+      
+      - name: Run Safety check
+        run: |
+          poetry export -f requirements.txt --without-hashes | safety check --stdin
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: security-scan
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          npm ci
+      
+      - name: Run Playwright tests
+        run: |
+          npx playwright install-deps
+          npm run test:e2e
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          pip install locust faker
+      
+      - name: Run load tests
+        run: |
+          locust -f tests/load-tests/locustfile.py --headless -u 50 -r 5 --run-time 1m --host http://localhost:8000
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: performance-tests
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Build and push images
+        run: |
+          docker build -t salesgenie/api-gateway:latest -f enterprise-ai-platform/api-gateway/Dockerfile .
+          docker build -t salesgenie/lead-intelligence-service:latest -f enterprise-ai-platform/lead-intelligence-service/Dockerfile .
+          docker build -t salesgenie/whatsapp-service:latest -f enterprise-ai-platform/whatsapp-service/Dockerfile .
+          docker push salesgenie/api-gateway:latest
+          docker push salesgenie/lead-intelligence-service:latest
+          docker push salesgenie/whatsapp-service:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    environment: production
+    steps:
+      - name: Deploy to Kubernetes
+        run: |
+          echo "Deploying to Kubernetes cluster..."
+          kubectl apply -f kubernetes/salesgenie-production.yaml
+          kubectl rollout status deployment/api-gateway -n salesgenie

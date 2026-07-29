@@ -1,0 +1,281 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+.venv*/
+venv*/
+pip-env/
+pipenv-env/
+.pyenv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+*.code-workspace
+*.idea/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.example
+.env.local.example
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Database
+*.sqlite3
+*.db
+*.sqlite
+.migration/
+migrations/
+db/
+data/
+pgdata/
+.postgres/
+.postgres*
+redis/
+.redis/
+.minio/
+minio-data/
+minio.log
+
+# Testing
+.pytest_cache/
+.pytest_cache
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.babel.json
+coverage/
+.nyc_output/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+*.ipynb
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ruff
+.ruff_cache/
+
+# Docker
+.docker/
+.dockerenv
+.dockerignore
+.docker-compose.override.yml
+.docker-compose.prod.yml
+.docker-compose.dev.yml
+.docker-compose.test.yml
+Dockerfile*
+docker-compose*.yml
+compose*.yml
+
+# Poetry
+poetry.lock
+
+# Pipenv
+Pipfile.lock
+
+# Conda
+environment.yml
+environment.yaml
+
+# pyenv
+.python-version
+
+# celery
+celerybeat-schedule
+celerybeat.pid
+*.celery
+
+# SAST/Security
+bandit.yaml
+bandit.yml
+safety-package-list.txt
+trivy.yaml
+trivy.yml
+
+# Performance
+*.prof
+*.mem
+*.hprof
+*.tdump
+*.dmp
+*.crash
+
+# AI/ML
+*.onnx
+*.pb
+*.pkl
+*.h5
+*.pth
+*.pt
+*.ckpt
+*.model
+*.bin
+*.weights
+*.tflite
+*.tfl
+*.mlmodel
+*.mlmodelc
+
+# MinIO
+.minio/
+minio-data/
+minio.log
+
+# Kafka
+*.kafka
+kafka-data/
+kafka-logs/
+zookeeper/
+.zookeeper/
+
+# ElasticSearch
+elasticsearch/
+.elastic/
+
+# Vector DB
+vectors/
+.vector/
+faiss/
+.faiss
+
+# Analytics
+*.analytics
+analytics.db
+analytics.log
+
+# Feature Flags
+*.flag
+flags.json
+
+# API Keys & Tokens
+*.apikey
+*.token
+*.jwt
+*.oauth
+*.oauth2
+
+# Sentry
+sentry*
+sentry*.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msp
+*.msd
+*.etl
+*.log
+*.tatum.log
+*.wdsync
+*.cat
+*.pdb
+*.appx
+*.appxbundle
+*.appxupload
+*.appxbundle
+*.msix
+*.msixbundle
+
+# Kubernetes
+*.kubeconfig
+.kube/
+.kubeconfig
+.kubeconfig.*
+*.kubeconfig
+.env.k8s
+.k8s/
+manifests/
+charts/
+.helm/
+helmfile.yaml
+helmfile.d/
+
+# Secrets & Credentials
+secrets.yaml
+secrets.json
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.pgp
+*.gpg
+*.asc
+credentials.json
+credential.json
+secrets.env
+*.secret
+*.credentials
+
+# Backup
+*.bak
+*.backup
+backup/
+backups/

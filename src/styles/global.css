@@ -1,0 +1,210 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap");
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   SALESGENIE DESIGN SYSTEM — DESIGN.md CONTRACT TOKENS
+   Primary: IBM Plex Sans Variable | Warm Cream Canvas #eeefe9
+   ============================================================ */
+
+@theme inline {
+  /* Typography */
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'Source Code Pro', ui-monospace, monospace;
+
+  /* Brand Color Palette */
+  --color-primary:           #f7a501;
+  --color-primary-pressed:   #dd9001;
+  --color-primary-active:    #b17816;
+  --color-on-primary:        #23251d;
+  --color-ink:               #23251d;
+  --color-body:              #4d4f46;
+  --color-charcoal:          #33342d;
+  --color-mute:              #6c6e63;
+  --color-ash:               #9b9c92;
+  --color-stone:             #b6b7af;
+  --color-hairline:          #bfc1b7;
+  --color-hairline-soft:     #dcdfd2;
+  --color-canvas:            #eeefe9;
+  --color-surface-soft:      #e5e7e0;
+  --color-surface-card:      #ffffff;
+  --color-surface-doc:       #fcfcfa;
+  --color-surface-dark:      #23251d;
+  --color-link-blue:         #1d4ed8;
+  --color-link-teal:         #1078a3;
+  --color-accent-blue:       #2c84e0;
+  --color-accent-blue-soft:  #dceaf6;
+  --color-accent-red:        #cd4239;
+  --color-accent-red-soft:   #f7d6d3;
+  --color-accent-green:      #2c8c66;
+  --color-accent-green-soft: #d9eddf;
+  --color-accent-purple:     #7c44a6;
+  --color-accent-purple-soft:#e7d8ee;
+
+  /* shadcn radius bridge */
+  --radius-sm: 2px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  --radius: 0.5rem;
+
+  /* shadcn semantic tokens */
+  --color-background:          var(--color-canvas);
+  --color-foreground:          var(--color-ink);
+  --color-card:                var(--color-surface-card);
+  --color-card-foreground:     var(--color-ink);
+  --color-popover:             var(--color-surface-card);
+  --color-popover-foreground:  var(--color-ink);
+  --color-primary-foreground:  var(--color-on-primary);
+  --color-secondary:           var(--color-surface-soft);
+  --color-secondary-foreground:var(--color-ink);
+  --color-muted:               var(--color-surface-soft);
+  --color-muted-foreground:    var(--color-mute);
+  --color-accent:              var(--color-surface-soft);
+  --color-accent-foreground:   var(--color-ink);
+  --color-destructive:         var(--color-accent-red);
+  --color-border:              var(--color-hairline);
+  --color-input:               var(--color-hairline);
+  --color-ring:                rgba(59,130,246,0.5);
+
+  /* Chart Colors */
+  --color-chart-1: #f7a501;
+  --color-chart-2: #2c84e0;
+  --color-chart-3: #2c8c66;
+  --color-chart-4: #cd4239;
+  --color-chart-5: #7c44a6;
+
+  /* Sidebar */
+  --color-sidebar:                     var(--color-surface-dark);
+  --color-sidebar-foreground:          #ffffff;
+  --color-sidebar-primary:             var(--color-primary);
+  --color-sidebar-primary-foreground:  var(--color-on-primary);
+  --color-sidebar-accent:              rgba(255,255,255,0.08);
+  --color-sidebar-accent-foreground:   #ffffff;
+  --color-sidebar-border:              rgba(255,255,255,0.10);
+  --color-sidebar-ring:                rgba(247,165,1,0.5);
+}
+
+/* ============================================================
+   DARK MODE OVERRIDES
+   ============================================================ */
+.dark {
+  --color-background:         #18191d;
+  --color-foreground:         #f0f0ec;
+  --color-card:               #1f2128;
+  --color-card-foreground:    #f0f0ec;
+  --color-border:             rgba(255,255,255,0.10);
+  --color-muted:              #2a2d36;
+  --color-muted-foreground:   #9b9c92;
+  --color-primary:            #f7a501;
+  --color-primary-foreground: #23251d;
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50 box-border;
+  }
+
+  html {
+    @apply font-sans scroll-smooth;
+    font-feature-settings: "kern" 1, "liga" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  ::selection {
+    background-color: #f7a501;
+    color: #23251d;
+  }
+}
+
+/* ============================================================
+   UTILITY COMPONENT CLASSES
+   ============================================================ */
+@layer components {
+
+  /* Glassmorphism Cards */
+  .card-glass {
+    background: rgba(255,255,255,0.07);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+  }
+
+  /* Premium Gradient Backgrounds */
+  .gradient-brand {
+    background: linear-gradient(135deg, #f7a501 0%, #dd9001 50%, #b17816 100%);
+  }
+
+  .gradient-dark-mesh {
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(247,165,1,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(44,132,224,0.06) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 90%, rgba(124,68,166,0.05) 0%, transparent 50%),
+      #18191d;
+  }
+
+  /* KPI Card */
+  .kpi-card {
+    @apply rounded-xl p-5 border;
+    background: var(--color-card);
+    border-color: var(--color-border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  /* Sidebar Nav Item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer;
+    color: rgba(255,255,255,0.65);
+  }
+  .nav-item:hover {
+    background: rgba(255,255,255,0.08);
+    color: #ffffff;
+  }
+  .nav-item.active {
+    background: rgba(247,165,1,0.15);
+    color: #f7a501;
+    border-left: 2px solid #f7a501;
+  }
+
+  /* Badge */
+  .badge-status {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  /* Skeleton Loading */
+  .skeleton {
+    @apply rounded animate-pulse;
+    background: linear-gradient(90deg, var(--color-surface-soft) 25%, var(--color-hairline-soft) 50%, var(--color-surface-soft) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+  }
+
+  @keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Command Palette */
+  .command-palette {
+    @apply fixed inset-0 z-50 flex items-start justify-center pt-24;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(4px);
+  }
+}

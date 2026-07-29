@@ -1,0 +1,93 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: salesgenie-prod
+
+resources:
+  - ../base
+
+namePrefix: prod-
+
+replicas:
+  - name: auth-service
+    count: 3
+  - name: user-service
+    count: 3
+  - name: organization-service
+    count: 3
+  - name: billing-service
+    count: 3
+  - name: notification-service
+    count: 3
+  - name: knowledge-service
+    count: 3
+  - name: sales-service
+    count: 3
+  - name: ticket-service
+    count: 3
+  - name: vector-service
+    count: 4
+  - name: chat-service
+    count: 3
+  - name: workflow-service
+    count: 3
+  - name: analytics-service
+    count: 3
+  - name: search-service
+    count: 3
+  - name: audit-service
+    count: 3
+  - name: file-service
+    count: 3
+  - name: customer-service
+    count: 3
+  - name: support-service
+    count: 3
+  - name: conversation-service
+    count: 3
+  - name: ai-gateway-service
+    count: 4
+  - name: api-gateway
+    count: 3
+
+images:
+  - name: salesgenie/auth-service
+    newTag: prod-latest
+  - name: salesgenie/user-service
+    newTag: prod-latest
+  - name: salesgenie/organization-service
+    newTag: prod-latest
+  - name: salesgenie/billing-service
+    newTag: prod-latest
+  - name: salesgenie/notification-service
+    newTag: prod-latest
+  - name: salesgenie/knowledge-service
+    newTag: prod-latest
+  - name: salesgenie/sales-service
+    newTag: prod-latest
+  - name: salesgenie/ticket-service
+    newTag: prod-latest
+  - name: salesgenie/vector-service
+    newTag: prod-latest
+  - name: salesgenie/chat-service
+    newTag: prod-latest
+  - name: salesgenie/workflow-service
+    newTag: prod-latest
+  - name: salesgenie/analytics-service
+    newTag: prod-latest
+  - name: salesgenie/search-service
+    newTag: prod-latest
+  - name: salesgenie/audit-service
+    newTag: prod-latest
+  - name: salesgenie/file-service
+    newTag: prod-latest
+  - name: salesgenie/customer-service
+    newTag: prod-latest
+  - name: salesgenie/support-service
+    newTag: prod-latest
+  - name: salesgenie/conversation-service
+    newTag: prod-latest
+  - name: salesgenie/ai-gateway-service
+    newTag: prod-latest
+  - name: salesgenie/api-gateway
+    newTag: prod-latest

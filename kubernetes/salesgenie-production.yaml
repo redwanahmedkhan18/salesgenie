@@ -1,0 +1,399 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: salesgenie
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: salesgenie-secrets
+  namespace: salesgenie
+type: Opaque
+data:
+  POSTGRES_PASSWORD: c2FsZXNnZW5pZV9zZWNyZXRfc2VjcmV0XzIwMjY=
+  JWT_SECRET_KEY: c2FsZXNnZW5pZV9zdXBlcl9zZWNyZXRfa2V5X2dhbGVfMjAyNl9jaGFuZ2VfaW5fcHJvZHVjdA==
+  GROQ_API_KEY: Z3NrX2R1bGx5
+  OPENAI_API_KEY: c2tX X3R1bHk=
+  STRIPE_SECRET_KEY: c2tfdGVzdF9kdWxseQ==
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: salesgenie-config
+  namespace: salesgenie
+data:
+  ENVIRONMENT: production
+  DEBUG: "false"
+  PROJECT_NAME: "SalesGenie"
+  API_V1_STR: "/api/v1"
+  DEFAULT_LANGUAGE: "en"
+  SUPPORTED_LANGUAGES: "en,es,fr,de,it,pt,nl,ru,zh,ja,ko,ar,he,hi,bn,ta,te,mr,gu,kn,ml,pa,ur,id,ms,th,vi,tr,sw,fa,ps,ug"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: salesgenie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        env:
+        - name: POSTGRES_USER
+          value: "salesgenie_admin"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: salesgenie-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          value: "salesgenie_db"
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: salesgenie
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: salesgenie
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  selector:
+    app: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: salesgenie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        args:
+        - redis-server
+        - --appendonly
+        - yes
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: salesgenie
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  selector:
+    app: redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: salesgenie
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: salesgenie/api-gateway:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: AUTH_SERVICE_URL
+          value: "http://auth-service.salesgenie.svc.cluster.local"
+        - name: USER_SERVICE_URL
+          value: "http://user-service.salesgenie.svc.cluster.local"
+        - name: ORGANIZATION_SERVICE_URL
+          value: "http://organization-service.salesgenie.svc.cluster.local"
+        - name: BILLING_SERVICE_URL
+          value: "http://billing-service.salesgenie.svc.cluster.local"
+        - name: KNOWLEDGE_SERVICE_URL
+          value: "http://knowledge-service.salesgenie.svc.cluster.local"
+        - name: SALES_SERVICE_URL
+          value: "http://sales-service.salesgenie.svc.cluster.local"
+        - name: TICKET_SERVICE_URL
+          value: "http://ticket-service.salesgenie.svc.cluster.local"
+        - name: VECTOR_SERVICE_URL
+          value: "http://vector-service.salesgenie.svc.cluster.local"
+        - name: WORKFLOW_SERVICE_URL
+          value: "http://workflow-service.salesgenie.svc.cluster.local"
+        - name: ANALYTICS_SERVICE_URL
+          value: "http://analytics-service.salesgenie.svc.cluster.local"
+        - name: SEARCH_SERVICE_URL
+          value: "http://search-service.salesgenie.svc.cluster.local"
+        - name: AUDIT_SERVICE_URL
+          value: "http://audit-service.salesgenie.svc.cluster.local"
+        - name: FILES_SERVICE_URL
+          value: "http://file-service.salesgenie.svc.cluster.local"
+        - name: CUSTOMER_SERVICE_URL
+          value: "http://customer-service.salesgenie.svc.cluster.local"
+        - name: SUPPORT_SERVICE_URL
+          value: "http://support-service.salesgenie.svc.cluster.local"
+        - name: CONVERSATION_SERVICE_URL
+          value: "http://conversation-service.salesgenie.svc.cluster.local"
+        - name: AI_GATEWAY_SERVICE_URL
+          value: "http://ai-gateway-service.salesgenie.svc.cluster.local"
+        - name: WHATSAPP_SERVICE_URL
+          value: "http://whatsapp-service.salesgenie.svc.cluster.local"
+        - name: LEAD_INTELLIGENCE_SERVICE_URL
+          value: "http://lead-intelligence-service.salesgenie.svc.cluster.local"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: salesgenie
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8000
+    name: http
+  selector:
+    app: api-gateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whatsapp-service
+  namespace: salesgenie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whatsapp-service
+  template:
+    metadata:
+      labels:
+        app: whatsapp-service
+    spec:
+      containers:
+      - name: whatsapp-service
+        image: salesgenie/whatsapp-service:latest
+        ports:
+        - containerPort: 8018
+        env:
+        - name: POSTGRES_USER
+          value: "salesgenie_admin"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: salesgenie-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_HOST
+          value: "postgres.salesgenie.svc.cluster.local"
+        - name: POSTGRES_DB
+          value: "salesgenie_db"
+        - name: WHATSAPP_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: salesgenie-secrets
+              key: WHATSAPP_ACCESS_TOKEN
+        - name: WHATSAPP_PHONE_NUMBER_ID
+          valueFrom:
+            secretKeyRef:
+              name: salesgenie-secrets
+              key: WHATSAPP_PHONE_NUMBER_ID
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whatsapp-service
+  namespace: salesgenie
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8018
+    targetPort: 8018
+    name: whatsapp
+  selector:
+    app: whatsapp-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lead-intelligence-service
+  namespace: salesgenie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lead-intelligence-service
+  template:
+    metadata:
+      labels:
+        app: lead-intelligence-service
+    spec:
+      containers:
+      - name: lead-intelligence-service
+        image: salesgenie/lead-intelligence-service:latest
+        ports:
+        - containerPort: 8022
+        env:
+        - name: POSTGRES_USER
+          value: "salesgenie_admin"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: salesgenie-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_HOST
+          value: "postgres.salesgenie.svc.cluster.local"
+        - name: POSTGRES_DB
+          value: "salesgenie_db"
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: salesgenie-secrets
+              key: GROQ_API_KEY
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lead-intelligence-service
+  namespace: salesgenie
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8022
+    targetPort: 8022
+    name: lead-intelligence
+  selector:
+    app: lead-intelligence-service
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: salesgenie-ingress
+  namespace: salesgenie
+  annotations:
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - salesgenie.ai
+    secretName: salesgenie-tls
+  rules:
+  - host: salesgenie.ai
+    http:
+      paths:
+      - path: /api/v1
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway
+            port:
+              number: 80
+  - host: www.salesgenie.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 3000

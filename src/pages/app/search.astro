@@ -1,0 +1,24 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="SalesGenie Search — Enterprise Search">
+  <div id="search-root"></div>
+</Layout>
+
+<script type="module">
+  import { AuthProvider } from '../../auth/AuthProvider';
+  import { ProtectedRoute } from '../../auth/ProtectedRoute';
+  import SearchInterface from '../../components/islands/SearchInterface';
+  import React from 'react';
+  import { createRoot } from 'react-dom/client';
+
+  const root = createRoot(document.getElementById('search-root')!);
+  root.render(
+    React.createElement(AuthProvider, null,
+      React.createElement(ProtectedRoute, { requiredRoles: ['sales_manager', 'sales_agent', 'support_manager', 'support_agent', 'knowledge_manager', 'org_admin', 'super_admin'] },
+        React.createElement(SearchInterface, null)
+      )
+    )
+  );
+</script>
