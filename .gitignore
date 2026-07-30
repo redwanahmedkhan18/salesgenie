@@ -186,6 +186,12 @@ environment.yaml
 # pyenv
 .python-version
 
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
 # celery
 celerybeat-schedule
 celerybeat.pid
