@@ -1,3 +1,3 @@
 """
-Analytics Service Package
+Analytics Service Source Package
 """

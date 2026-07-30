@@ -3,17 +3,15 @@ Analytics Service API Router
 Endpoints for real-time KPI metrics, chart data series, and report downloads.
 """
 
-from typing import List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 
 from enterprise_ai_platform.common.security_rbac import (
-    get_current_user,
-    TokenPayload,
-    RequirePermissions,
     Permission,
+    RequirePermissions,
 )
-from .metrics_engine import metrics_engine, PlatformAnalyticsSummaryDTO
+
+from .metrics_engine import PlatformAnalyticsSummaryDTO, metrics_engine
 
 router = APIRouter(prefix="/api/v1/analytics", tags=["Analytics & Prometheus Dashboard"])
 
@@ -36,7 +34,13 @@ async def get_kpis():
 )
 async def download_report(format: str = "csv"):
     """Export performance report in CSV or PDF format."""
-    csv_data = "Metric,Value\nAI Accuracy,99.2%\nAvg Response Time,1.12s\nTotal Revenue,$128450.00\nHallucination Rate,0.28%\n"
+    csv_data = (
+        "Metric,Value\n"
+        "AI Accuracy,99.2%\n"
+        "Avg Response Time,1.12s\n"
+        "Total Revenue,$128450.00\n"
+        "Hallucination Rate,0.28%\n"
+    )
     return Response(
         content=csv_data,
         media_type="text/csv",

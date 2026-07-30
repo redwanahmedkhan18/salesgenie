@@ -8,10 +8,12 @@ from datetime import datetime, timezone
 from typing import Optional, List, Any
 from sqlalchemy import Column, String, Text, Boolean, Integer, DateTime, JSON, ForeignKey, Float, Enum
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from pydantic import BaseModel
 from enum import Enum as PyEnum
 
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
 
 class MessageType(str, PyEnum):
@@ -85,7 +87,7 @@ class WhatsAppMessage(Base):
     caption: Optional[str] = Column(Text, nullable=True)
     status: str = Column(String(20), default="pending")
     reply_to_message_id: Optional[str] = Column(String(100), nullable=True)
-    metadata: Optional[dict] = Column(JSON, nullable=True)
+    metadata_data: Optional[dict] = Column(JSON, nullable=True)
     created_at: datetime = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -119,10 +121,7 @@ class ConversationSession(Base):
     created_at: datetime = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    __table_args__ = (
-        # Ensure one active session per customer phone
-        {"sqlite_where": "is_active = true"},
-    )
+    __table_args__ = {}
 
 
 class MediaFile(Base):
