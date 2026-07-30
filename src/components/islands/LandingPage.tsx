@@ -52,7 +52,7 @@ export default function LandingPage() {
         <div className="relative z-10 max-w-5xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm mb-8"
             style={{ background: 'rgba(247,165,1,0.12)', border: '1px solid rgba(247,165,1,0.25)', color: 'var(--color-primary)' }}>
-            🚀 Now serving 10M+ enterprise users · 99.99% uptime SLA
+            Now serving 10M+ enterprise users · 99.99% uptime SLA
           </div>
           <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tight mb-6">
             <span style={{ color: 'var(--color-foreground)' }}>Enterprise AI</span>

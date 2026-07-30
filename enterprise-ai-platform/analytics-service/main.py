@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from enterprise_ai_platform.common.config import settings
-from src.router_analytics import router as analytics_router
+from enterprise_ai_platform.analytics_service.src.router_analytics import router as analytics_router
 
 app = FastAPI(
     title=f"{settings.PROJECT_NAME} - Analytics Service",

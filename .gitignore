@@ -98,16 +98,12 @@ sentry*.json
 .dockerenv
 .dockerignore
 .docker-compose.override.yml
-.docker-compose.prod.yml
-.docker-compose.dev.yml
-.docker-compose.test.yml
-Dockerfile*
+# .docker-compose.prod.yml (uncomment if needed)
+# .docker-compose.dev.yml (uncomment if needed)
+# .docker-compose.test.yml (uncomment if needed)
+Dockerfile
 docker-compose*.yml
 compose*.yml
-.docker/
-containerd/
-podman/
-podman.sock/
 
 # Kubernetes
 *.kubeconfig
@@ -117,9 +113,10 @@ podman.sock/
 *.kubeconfig
 .env.k8s
 .k8s/
-manifests/
-charts/
+
+# Helm
 .helm/
+charts/
 helmfile.yaml
 helmfile.d/
 

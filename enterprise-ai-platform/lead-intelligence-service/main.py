@@ -7,7 +7,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .router_lead_intelligence import router
+from enterprise_ai_platform.common.config import settings
+from enterprise_ai_platform.lead_intelligence_service.src.router_lead_intelligence import router
 
 app = FastAPI(
     title="SalesGenie Lead Intelligence Engine",

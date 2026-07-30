@@ -1,19 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
+import LandingPage from "../components/islands/LandingPage";
 ---
 
 <Layout title="SalesGenie — Enterprise AI Sales & Support Platform">
-  <div id="landing-root"></div>
+  <LandingPage client:load />
 </Layout>
-
-<script>
-  // Landing page is rendered by the React island
-  import('../components/islands/LandingPage').then(({ default: LandingPage }) => {
-    import('react').then(React => {
-      import('react-dom/client').then(({ createRoot }) => {
-        const root = createRoot(document.getElementById('landing-root')!);
-        root.render(React.createElement(LandingPage));
-      });
-    });
-  });
-</script>

@@ -1,18 +1,8 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
+import LoginApp from "../auth/LoginApp";
 ---
 
 <Layout title="Login — SalesGenie Enterprise">
-  <div id="login-root"></div>
+  <LoginApp client:load />
 </Layout>
-
-<script>
-  import('../../auth/LoginPage').then(({ LoginPage }) => {
-    import('react').then(React => {
-      import('react-dom/client').then(({ createRoot }) => {
-        const root = createRoot(document.getElementById('login-root')!);
-        root.render(React.createElement(LoginPage));
-      });
-    });
-  });
-</script>

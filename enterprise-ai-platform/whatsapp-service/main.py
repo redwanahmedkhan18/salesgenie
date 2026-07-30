@@ -7,8 +7,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .router_whatsapp import router
-from ..common.config import settings
+from enterprise_ai_platform.whatsapp_service.src.router_whatsapp import router
+from enterprise_ai_platform.common.config import settings
 
 app = FastAPI(
     title="WhatsApp Business API Service",
