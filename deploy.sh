@@ -25,9 +25,9 @@ nohup python3 -m uvicorn enterprise_ai_platform.analytics_service.main:app \
 nohup python3 -m uvicorn enterprise_ai_platform.whatsapp_service.main:app \
   --host 0.0.0.0 --port 8005 --reload > /tmp/whatsapp.log 2>&1 &
 
-# Lead Intelligence Service (Port 8006)
+# Lead Intelligence Service (Port 8022)
 nohup python3 -m uvicorn enterprise_ai_platform.lead_intelligence_service.main:app \
-  --host 0.0.0.0 --port 8006 --reload > /tmp/lead-intel.log 2>&1 &
+  --host 0.0.0.0 --port 8022 --reload > /tmp/lead-intel.log 2>&1 &
 
 # Facebook Messenger Service (Port 8020)
 nohup python3 -m uvicorn enterprise_ai_platform.messenger_service.main:app \
@@ -53,7 +53,7 @@ echo "  Frontend:  http://localhost:4321"
 echo "  Auth:      http://localhost:8001"
 echo "  Analytics: http://localhost:8010"
 echo "  WhatsApp:  http://localhost:8005"
-echo "  Lead Intel: http://localhost:8006"
+echo "  Lead Intel: http://localhost:8022"
 echo "  Messenger: http://localhost:8020/api/v1/messenger"
 echo ""
 echo "To stop all services:"
@@ -66,6 +66,6 @@ echo "Service Status:"
 curl -s http://localhost:8001/health/live && echo " - Auth Service OK"
 curl -s http://localhost:8010/health/live && echo " - Analytics OK"
 curl -s http://localhost:8005/docs > /dev/null && echo "WhatsApp OK"
-curl -s http://localhost:8006/docs > /dev/null && echo "Lead Intel OK"
+curl -s http://localhost:8022/health/live && echo "Lead Intel OK"
 curl -s http://localhost:8020/docs > /dev/null && echo "Messenger OK"
 curl -s http://localhost:4321/ > /dev/null && echo "Frontend OK"

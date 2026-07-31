@@ -5,8 +5,8 @@ API endpoints for Facebook Messenger integration.
 
 import logging
 import httpx
-from fastapi import APIRouter, Request, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Request, HTTPException, status, Query
+from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import ValidationError
 
 from enterprise_ai_platform.common.config import settings
@@ -18,19 +18,32 @@ logger = logging.getLogger("salesgenie.messenger")
 
 @router.get("/webhook")
 async def verify_webhook(
-    hub_mode: str = None,
-    hub_verify_token: str = None,
-    hub_challenge: str = None,
+    hub_mode: str = Query(None, alias="hub.mode"),
+    hub_verify_token: str = Query(None, alias="hub.verify_token"),
+    hub_challenge: str = Query(None, alias="hub.challenge"),
 ):
     """Verify webhook with Facebook."""
-    logger.info(f"Webhook verification attempt: mode={hub_mode}, token={hub_verify_token}")
-    
-    if hub_mode == "subscribe" and hub_verify_token == settings.FACEBOOK_VERIFY_TOKEN:
+    logger.info(
+        f"Webhook verification attempt: mode={hub_mode}, token={hub_verify_token}"
+    )
+
+    if (
+        hub_mode == "subscribe"
+        and hub_verify_token == settings.FACEBOOK_VERIFY_TOKEN
+    ):
         logger.info("Webhook verified successfully")
-        return hub_challenge
-    
+
+        return PlainTextResponse(
+            content=hub_challenge,
+            status_code=200
+        )
+
     logger.warning("Webhook verification failed")
-    raise HTTPException(status_code=403, detail="Webhook verification failed")
+
+    raise HTTPException(
+        status_code=403,
+        detail="Webhook verification failed"
+    )
 
 
 @router.post("/webhook")
