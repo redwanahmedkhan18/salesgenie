@@ -1,13 +1,21 @@
 """
-Notification Microservice Entrypoint
-Initializes FastAPI microservice for email, Slack, SMS, and webhook notifications.
+Notification Service Main Application
+FastAPI application entry point for multi-channel notifications.
 """
 
+import os
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from enterprise_ai_platform.common.config import settings
-from src.router_notification import router as notification_router
+from enterprise_ai_platform.notification_service.src.router_notification import router as notification_router
+
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+)
 
 app = FastAPI(
     title=f"{settings.PROJECT_NAME} - Notification Service",
@@ -40,4 +48,4 @@ app.include_router(notification_router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8011, reload=settings.DEBUG)
+    uvicorn.run(app, host="0.0.0.0", port=8014, reload=settings.DEBUG)

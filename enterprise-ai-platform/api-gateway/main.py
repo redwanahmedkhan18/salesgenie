@@ -4,6 +4,10 @@ Handles routing, rate limiting, and centralized JWT validation.
 Routes requests to appropriate backend microservices.
 """
 
+
+import os
+import sentry_sdk
+
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -14,6 +18,12 @@ import logging
 from enterprise_ai_platform.common.config import settings
 
 logger = logging.getLogger("salesgenie.api-gateway")
+
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+)
 
 app = FastAPI(title="SalesGenie API Gateway", version="1.0.0")
 

@@ -184,7 +184,7 @@ async def delete_from_index(chunk_id: str):
     "/rebuild",
     response_model=Dict[str, Any],
     summary="Rebuild Vector Index",
-    dependencies=[Depends(RequirePermissions(Permission.KNOWLEDGE_ADMIN))],
+    dependencies=[Depends(RequirePermissions(Permission.VECTOR_MANAGE))],
 )
 async def rebuild_index(req: IndexRebuildRequest = IndexRebuildRequest()):
     """
