@@ -22,23 +22,21 @@ httpx>=0.24.0
 kafka-python>=2.0.2
 aiokafka>=0.10.0
 
-# LLM & AI
+# LLM & AI (Groq, Google, Mistral)
 groq>=0.13.0
 google-generativeai>=0.8.6
-openai>=1.59.0
-anthropic>=0.4.0
+mistralai>=1.0.0
 langchain>=0.3.0
 langgraph>=0.2.0
 langchain-community>=0.3.0
 langchain-core>=0.3.0
+langchain-google-genai>=0.1.0
 
 # RAG & Embeddings
 paddleocr>=2.7.0
 pdfplumber>=0.11.4
 python-docx>=1.1.2
 unstructured>=0.17.0
-langchain-openai>=0.2.0
-langchain-google-genai>=0.1.0
 
 # Vector Database
 pgvector>=0.2.4
