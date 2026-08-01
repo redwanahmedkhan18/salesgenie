@@ -5,7 +5,6 @@ AI-powered lead discovery, enrichment, and qualification.
 
 
 import os
-import sentry_sdk
 
 import uvicorn
 from fastapi import FastAPI
@@ -14,11 +13,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from enterprise_ai_platform.common.config import settings
 from enterprise_ai_platform.lead_intelligence_service.src.router_lead_intelligence import router
 
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
-    traces_sample_rate=1.0,
-    send_default_pii=True,
-)
 
 app = FastAPI(
     title="SalesGenie Lead Intelligence Engine",
@@ -37,6 +31,16 @@ app.add_middleware(
 
 # Include routers
 app.include_router(router)
+
+
+@app.get("/health/live", tags=["Health Checks"])
+async def health_live():
+    return {"status": "UP", "service": "lead-intelligence-service"}
+
+
+@app.get("/health/ready", tags=["Health Checks"])
+async def health_ready():
+    return {"status": "READY", "service": "lead-intelligence-service"}
 
 
 @app.on_event("startup")

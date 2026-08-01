@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../auth/AuthProvider';
-import type { PlatformRole } from '../lib/types';
+import { useAuth } from './AuthProvider';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -53,9 +52,18 @@ export function LoginPage() {
     }
   };
 
-  const handleOAuthLogin = (provider: string) => {
-    const redirectUri = encodeURIComponent(window.location.origin + '/auth/callback');
-    window.location.href = `http://localhost:8001/api/v1/auth/callback/${provider}?code=dev&redirect_uri=${redirectUri}`;
+  const handleOAuthLogin = async () => {
+    try {
+      const state = btoa(JSON.stringify({ provider: 'google', timestamp: Date.now() }));
+      const response = await fetch(`http://localhost:8001/api/v1/auth/redirect/google?state=${state}`);
+      const data = await response.json();
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url;
+      }
+    } catch (err) {
+      console.error('OAuth redirect failed:', err);
+      alert('Unable to connect to authentication service. Please try again.');
+    }
   };
 
   return (
@@ -120,25 +128,6 @@ export function LoginPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-foreground)' }}>
-                  Organization ID <span style={{ color: 'var(--color-muted-foreground)' }}>(optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={tenantId}
-                  onChange={(e) => setTenantId(e.target.value)}
-                  placeholder="your-org-id"
-                  disabled={isSubmitting}
-                  className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-colors"
-                  style={{
-                    background: 'var(--color-background)',
-                    color: 'var(--color-foreground)',
-                    border: '1px solid var(--color-border)',
-                  }}
-                />
-              </div>
-
               {error && (
                 <div className="p-3 rounded-lg text-sm"
                   style={{ background: 'rgba(205,66,63,0.15)', color: '#cd4239', border: '1px solid rgba(205,66,63,0.3)' }}>
@@ -157,12 +146,49 @@ export function LoginPage() {
               >
                 {isSubmitting ? 'Signing In...' : 'Sign In'}
               </button>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center" style={{ borderTop: '1px solid var(--color-border)' }} />
+                <div className="relative flex justify-center">
+                  <span className="px-3 text-xs" style={{ color: 'var(--color-muted-foreground)', background: 'var(--color-card)' }}>
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleOAuthLogin}
+                className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                style={{
+                  background: 'var(--color-background)',
+                  color: 'var(--color-foreground)',
+                  border: '1px solid var(--color-border)',
+                }}
+              >
+                <svg className="w-5 h-5" viewBox="0 0 532 544">
+                  <path fill="#4285F4" d="M532 274.9c0-18.5-1.5-36.3-4.5-53.3-12.3-55.7-60.3-95.5-117.6-95.5C232.6 126 186.2 165.4 151.2 211.7c-3.2 4.7-5.8 9.8-7.8 14.9l-61.8-15.3C85.5 185.7 39.7 225.8 27.5 281.7c-18.4 85.1 11.4 172.3 76.5 211.8 30.2 17.1 65.4 29.9 103.8 29.9 49.9 0 97.2-20.5 132.1-54.3 30.6-28.4 50.7-63.7 56.6-103.5 5.3-32.2-5.5-61.3-24.6-84.3z"/>
+                </svg>
+                Continue with Google
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.location.href = '/signup'}
+                className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors"
+                style={{
+                  background: 'transparent',
+                  color: 'var(--color-muted-foreground)',
+                }}
+              >
+                Create Account
+              </button>
             </form>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-foreground)' }}>
-                  Multi-Factor Authentication Code
+                  MFA Code
                 </label>
                 <p className="text-xs mb-3" style={{ color: 'var(--color-muted-foreground)' }}>
                   Enter the 6-digit code from your authenticator app
@@ -216,49 +242,6 @@ export function LoginPage() {
               </button>
             </form>
           )}
-
-          {!showMfa && (
-            <>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center" style={{ borderTop: '1px solid var(--color-border)' }} />
-                <div className="relative flex justify-center">
-                  <span className="px-3 text-xs" style={{ color: 'var(--color-muted-foreground)', background: 'var(--color-card)' }}>
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleOAuthLogin('google')}
-                  className="py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  style={{
-                    background: 'var(--color-background)',
-                    color: 'var(--color-foreground)',
-                    border: '1px solid var(--color-border)',
-                  }}
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 533.98 544.02">
-                    <path fill="#4285F4" d="M533.98 278.93c.03-26.53-7.06-52.38-19.61-74.87L359.05 199.67c-5.88-10.83-14.31-20.44-24.82-27.85-14.92-9.27-32.8-14.89-51.64-14.89-39.8 0-72.6 25.76-85.3 60.38-5.72 16.63-5.72 34.21 0 50.84-12.7 34.62-45.5 60.38-85.3 60.38-18.84 0-36.72-5.62-51.64-14.89-10.51-7.41-18.94-17-24.82-27.85L87.03 193.28C74.43 217.77 67.4 243.83 67.4 271.43c0 45.83 18.94 88.21 50.21 120.59 15.73 15.28 34.35 26.23 54.35 33.12 6.36 2.34 12.9 3.55 19.4 3.55 20.45 0 39.8-8.19 54.82-22.31 19.38-17.68 32.52-40.17 36.95-65.83 4.23-24.98 2.38-51.12-5.34-74.87L185.63 278.93c6.36 18.95 23.54 33.25 43.54 33.25 20.45 0 36.95-14.3 38.75-34.25 2.8-2.78 5.63-5.56 8.4-8.34 5.33-5.17 10.63-10.34 15.92-15.51 8.35-8.1 16.47-16.28 24.3-24.51 8.11-8.07 15.81-16.22 24.02-24.23 5.33-5.17 10.63-10.34 15.92-15.51 2.8-2.78 5.63-5.56 8.4-8.34 1.94-1.89 3.89-3.78 5.83-5.67 1.94-1.89 3.89-3.78 5.83-5.67 3.88-3.78 7.77-7.56 11.65-11.34 8.35-8.1 16.47-16.28 24.3-24.51 5.33-5.17 10.63-10.34 15.92-15.51 8.11-8.07 15.81-16.22 24.02-24.23 5.33-5.17 10.63-10.34 15.92-15.51 2.8-2.78 5.63-5.56 8.4-8.34 1.94-1.89 3.89-3.78 5.83-5.67 1.94-1.89 3.89-3.78 5.83-5.67 3.88-3.78 7.77-7.56 11.65-11.34L441.7 108.43c1.94 1.89 3.89 3.78 5.83 5.67 8.11 8.07 15.81 16.22 24.02 24.23 8.11 8.07 16.19 16.16 24.3 24.51 5.33 5.17 10.63 10.34 15.92 15.51 8.35 8.1 16.47 16.28 24.3 24.51 8.11 8.07 15.81 16.22 24.02 24.23 5.33 5.17 10.63 10.34 15.92 15.51 2.8 2.78 5.63 5.56 8.4 8.34 1.94 1.89 3.89 3.78 5.83 5.67 1.94 1.89 3.89 3.78 5.83 5.67 3.88 3.78 7.77 7.56 11.65 11.34l161.86 161.86c3.17 3.17 6.02 6.51 8.5 9.91L533.98 278.93z"/>
-                    <path fill="#DB4437" d="M432 161.86C417.33 151.01 400.88 145.61 383.18 145.61c-30.89 0-56.68 20.02-66.5 47.57-3.8 11.59-3.8 23.98 0 35.58-9.82 27.55-35.61 47.57-66.5 47.57-19.88 0-38.28-7.52-52.08-20.18-6.88-6.07-12.58-12.91-17.92-20.51-1.83-2.64-3.48-5.43-5.04-8.22-3.2-5.66-6.3-11.31-9.37-16.95-5.58-9.82-11.67-19.27-18.28-28.16L383.18 145.61c2.53 3.55 5.43 6.81 8.5 9.91L432 161.86z"/>
-                    <path fill="#F4B400" d="M276 377.97c26.48 0 49.02-9.77 66.82-26.35-3.17-3.17-6.51-6.51-9.91-9.91L276 318.19c-3.17 3.17-6.51 6.51-9.91 9.91 17.8 16.58 40.34 26.35 66.82 26.35m-66.82-80.36c-17.66 0-32.52-12.4-36.28-29.06-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L120.25 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67L43.82 193.28c-3.17 1.89-6.51 3.78-9.91 5.67-3.17 1.89-6.51 3.78-9.91 5.67z"/>
-                    <path fill="#34A853" d="M120.25 193.28c11.45-11.45 25.12-17.75 39.82-17.75 13.25 0 24.82 4.9 33.95 13.05 10.32 9.65 16.47 22.88 17.3 35.91-1.08 5.78-3.32 11.45-6.64 16.52-5.59 8.38-12.92 15.21-21.67 20.35-7.75 4.94-16.28 8.59-25.36 10.93L120.25 193.28z"/>
-                  </svg>
-                  Continue with Google
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="mt-6 text-center">
-          <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
-            Don't have an account?{' '}
-            <a href="#" className="font-medium" style={{ color: 'var(--color-primary)' }}>
-              Contact your administrator
-            </a>
-          </p>
         </div>
       </div>
     </div>

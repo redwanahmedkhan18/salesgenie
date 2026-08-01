@@ -5,7 +5,6 @@ FastAPI application entry point.
 
 
 import os
-import sentry_sdk
 
 import uvicorn
 from fastapi import FastAPI
@@ -14,11 +13,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from enterprise_ai_platform.whatsapp_service.src.router_whatsapp import router
 from enterprise_ai_platform.common.config import settings
 
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
-    traces_sample_rate=1.0,
-    send_default_pii=True,
-)
 
 app = FastAPI(
     title="WhatsApp Business API Service",
@@ -37,6 +31,16 @@ app.add_middleware(
 
 # Include routers
 app.include_router(router)
+
+
+@app.get("/health/live", tags=["Health Checks"])
+async def health_live():
+    return {"status": "UP", "service": "whatsapp-service"}
+
+
+@app.get("/health/ready", tags=["Health Checks"])
+async def health_ready():
+    return {"status": "READY", "service": "whatsapp-service"}
 
 
 @app.on_event("startup")

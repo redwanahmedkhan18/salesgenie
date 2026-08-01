@@ -5,7 +5,6 @@ FastAPI application entry point.
 
 
 import os
-import sentry_sdk
 
 import uvicorn
 from fastapi import FastAPI
@@ -14,11 +13,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from enterprise_ai_platform.messenger_service.src.router_messenger import router
 from enterprise_ai_platform.common.config import settings
 
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
-    traces_sample_rate=1.0,
-    send_default_pii=True,
-)
 
 app = FastAPI(
     title="Facebook Messenger Service",
@@ -35,6 +29,16 @@ app.add_middleware(
 )
 
 app.include_router(router, prefix="/api/v1/messenger")
+
+
+@app.get("/health/live", tags=["Health Checks"])
+async def health_live():
+    return {"status": "UP", "service": "messenger-service"}
+
+
+@app.get("/health/ready", tags=["Health Checks"])
+async def health_ready():
+    return {"status": "READY", "service": "messenger-service"}
 
 
 @app.on_event("startup")

@@ -140,3 +140,16 @@ class InvitationDTO(BaseModel):
     status: str
     created_at: datetime
     expires_at: datetime
+
+
+class SignupRequest(BaseModel):
+    full_name: str
+    email: EmailStr
+    password: str
+    company: str
+
+
+class SignupResponse(BaseModel):
+    status: str
+    message: str
+    requires_verification: bool = False

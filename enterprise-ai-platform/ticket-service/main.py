@@ -5,7 +5,6 @@ Initializes FastAPI microservice for ticket state management and human handoff r
 
 
 import os
-import sentry_sdk
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,11 +12,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from enterprise_ai_platform.common.config import settings
 from enterprise_ai_platform.ticket_service.src.router_ticket import router as ticket_router
 
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
-    traces_sample_rate=1.0,
-    send_default_pii=True,
-)
 
 app = FastAPI(
     title=f"{settings.PROJECT_NAME} - Ticket Service",

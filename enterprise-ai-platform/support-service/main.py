@@ -5,7 +5,6 @@ Manages support tickets, live chat handoff, and customer support operations.
 
 
 import os
-import sentry_sdk
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,11 +12,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from enterprise_ai_platform.common.config import settings
 from enterprise_ai_platform.support_service.src.router_support import router as support_router
 
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
-    traces_sample_rate=1.0,
-    send_default_pii=True,
-)
 
 app = FastAPI(
     title=f"{settings.PROJECT_NAME} - Support Service",

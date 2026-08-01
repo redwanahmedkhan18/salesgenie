@@ -16,20 +16,19 @@ class PlatformSettings(BaseSettings):
         case_sensitive=False,
     )
 
-    # Environment
     ENVIRONMENT: str = Field(default="development", description="Environment mode: development, staging, production")
     DEBUG: bool = Field(default=True, description="Debug flag")
     PROJECT_NAME: str = "SalesGenie Enterprise AI Platform"
     API_V1_STR: str = "/api/v1"
 
-    # Database Settings (PostgreSQL + pgvector)
     POSTGRES_USER: str = Field(default="salesgenie_admin", description="PostgreSQL Username")
     POSTGRES_PASSWORD: str = Field(default="salesgenie_secret_pass_2026", description="PostgreSQL Password")
     POSTGRES_HOST: str = Field(default="localhost", description="PostgreSQL Host")
     POSTGRES_PORT: int = Field(default=5432, description="PostgreSQL Port")
     POSTGRES_DB: str = Field(default="salesgenie_db", description="PostgreSQL Database Name")
     
-    # DB Pool Tuning
+    USE_SQLITE: bool = Field(default=False, description="Use SQLite instead of PostgreSQL (for development)")
+    
     DB_POOL_SIZE: int = Field(default=20, description="SQLAlchemy connection pool size")
     DB_MAX_OVERFLOW: int = Field(default=10, description="SQLAlchemy connection max overflow")
     DB_POOL_TIMEOUT: int = Field(default=30, description="Pool timeout seconds")
@@ -37,10 +36,14 @@ class PlatformSettings(BaseSettings):
 
     @property
     def ASYNC_DATABASE_URL(self) -> str:
+        if self.USE_SQLITE:
+            return "sqlite+aiosqlite:///./salesgenie_dev.db"
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     @property
     def SYNC_DATABASE_URL(self) -> str:
+        if self.USE_SQLITE:
+            return "sqlite:///./salesgenie_dev.db"
         return f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     # Keycloak & Auth Settings

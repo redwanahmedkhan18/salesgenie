@@ -16,16 +16,22 @@ from .config import settings
 
 logger = logging.getLogger("salesgenie.database")
 
-# Initialize Async Engine with production pool tuning
-async_engine: AsyncEngine = create_async_engine(
-    settings.ASYNC_DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_size=settings.DB_POOL_SIZE,
-    max_overflow=settings.DB_MAX_OVERFLOW,
-    pool_timeout=settings.DB_POOL_TIMEOUT,
-    pool_recycle=settings.DB_POOL_RECYCLE,
-    pool_pre_ping=True,
-)
+# Initialize Async Engine
+if settings.USE_SQLITE:
+    async_engine: AsyncEngine = create_async_engine(
+        settings.ASYNC_DATABASE_URL,
+        echo=settings.DEBUG,
+    )
+else:
+    async_engine: AsyncEngine = create_async_engine(
+        settings.ASYNC_DATABASE_URL,
+        echo=settings.DEBUG,
+        pool_size=settings.DB_POOL_SIZE,
+        max_overflow=settings.DB_MAX_OVERFLOW,
+        pool_timeout=settings.DB_POOL_TIMEOUT,
+        pool_recycle=settings.DB_POOL_RECYCLE,
+        pool_pre_ping=True,
+    )
 
 # Async Session Factory
 AsyncSessionFactory: async_sessionmaker[AsyncSession] = async_sessionmaker(

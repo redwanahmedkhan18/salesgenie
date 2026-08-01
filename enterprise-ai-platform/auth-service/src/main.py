@@ -3,20 +3,12 @@ Auth Microservice Entrypoint
 Initializes FastAPI microservice with CORS, security headers, routers, and health checks.
 """
 
-import os
-import sentry_sdk
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from enterprise_ai_platform.common.config import settings
 from enterprise_ai_platform.auth_service.src.router_auth import router as auth_router
-
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
-    traces_sample_rate=1.0,
-    send_default_pii=True,
-)
 
 app = FastAPI(
     title=f"{settings.PROJECT_NAME} - Auth Service",

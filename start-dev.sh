@@ -9,7 +9,7 @@ source .venv/bin/activate
 
 # Start infrastructure (if not running)
 echo "Starting infrastructure services..."
-docker-compose up -d postgres redis minio
+docker compose up -d postgres redis minio
 
 # Start Mailpit for local email testing (zero cost)
 echo "Starting Mailpit for email testing..."
@@ -143,5 +143,10 @@ echo "Lead Intelligence: http://localhost:8022"
 echo ""
 echo "Mailpit (Email Testing): http://localhost:8025"
 echo "Mailpit SMTP:            localhost:1025"
+echo ""
+echo "Starting Frontend..."
+npm run dev &
+FRONTEND_PID=$!
+echo "Frontend started: http://localhost:4321"
 echo ""
 echo "Press Ctrl+C to stop all services"

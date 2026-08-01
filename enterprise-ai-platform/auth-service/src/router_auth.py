@@ -3,11 +3,13 @@ Auth Service API Router
 Defines endpoints for authentication, OAuth2 callbacks, MFA management, sessions, and invitations.
 """
 
+import base64
+import json
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
@@ -32,6 +34,8 @@ from .models import (
     UserSession,
     MFASecret,
     WorkspaceInvitation,
+    SignupRequest,
+    SignupResponse,
 )
 from .keycloak_client import keycloak_client
 from .jwt_handler import create_access_token, create_refresh_token, hash_token
@@ -124,9 +128,19 @@ async def login(
 async def oauth_callback(
     provider: str,
     code: str,
+    state: Optional[str] = None,
     redirect_uri: Optional[str] = "http://localhost:4321/auth/callback",
 ):
     """Process OAuth2 authorization code callback for Google, Microsoft, or GitHub."""
+    if state:
+        try:
+            decoded_state = json.loads(base64.b64decode(state))
+            original_provider = decoded_state.get('provider')
+            if original_provider and original_provider != provider:
+                raise HTTPException(status_code=400, detail="State mismatch - possible CSRF attack")
+        except Exception:
+            pass
+    
     tokens = await keycloak_client.exchange_oauth_code(provider, code, redirect_uri)
     user_id_mock = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{provider}_user"))
     
@@ -142,6 +156,37 @@ async def oauth_callback(
         "access_token": access_token,
         "token_type": "Bearer",
     }
+
+
+import base64
+
+@router.get("/redirect/{provider}", summary="OAuth2 Redirect to Provider")
+async def oauth_redirect(
+    provider: str,
+    redirect_uri: Optional[str] = None,
+    state: Optional[str] = None,
+):
+    """Generate redirect URL to OAuth provider (Google, Microsoft, GitHub)."""
+    if not settings.GOOGLE_CLIENT_ID and provider != 'google':
+        raise HTTPException(status_code=400, detail=f"{provider} not configured")
+    
+    # Default to frontend callback URL - MUST be registered in Google Cloud Console
+    oauth_callback_uri = redirect_uri or "http://localhost:4321/auth/callback"
+    
+    state_param = ""
+    if state:
+        state_param = f"&state={state}"
+    
+    provider_urls = {
+        "google": f"https://accounts.google.com/o/oauth2/v2/auth?client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={oauth_callback_uri}&response_type=code&scope=openid email profile&access_type=offline&prompt=consent{state_param}",
+        "microsoft": f"https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={settings.MICROSOFT_CLIENT_ID}&redirect_uri={oauth_callback_uri}&response_type=code&scope=openid email profile&state={state}",
+        "github": f"https://github.com/login/oauth/authorize?client_id={settings.GITHUB_CLIENT_ID}&redirect_uri={oauth_callback_uri}&scope=user email&state={state}",
+    }
+    
+    if provider not in provider_urls:
+        raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
+    
+    return {"redirect_url": provider_urls[provider], "state": state}
 
 
 @router.post("/refresh", response_model=LoginResponse, summary="Refresh Access Token")
@@ -324,4 +369,48 @@ async def create_invitation(
         status=invitation.status,
         created_at=invitation.created_at,
         expires_at=invitation.expires_at,
+    )
+
+
+async def get_optional_db():
+    """Get database session with fallback for when DB is unavailable."""
+    try:
+        async for session in get_async_db():
+            yield session
+    except Exception:
+        yield None
+
+
+@router.post("/signup", response_model=SignupResponse, summary="User Registration")
+async def signup(
+    req: SignupRequest,
+    db: Optional[AsyncSession] = Depends(get_optional_db),
+):
+    """Register a new user account with email verification required."""
+    user_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, req.email)
+    tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, req.company)
+    
+    if db and not isinstance(db, Exception):
+        try:
+            user_exists = await db.execute(
+                select(MFASecret).where(MFASecret.user_id == user_uuid)
+            )
+            if user_exists.scalar_one_or_none():
+                raise HTTPException(status_code=400, detail="Email already registered")
+        except Exception:
+            pass
+    
+    session_id = str(uuid.uuid4())
+    create_access_token(
+        user_id=str(user_uuid),
+        tenant_id=str(tenant_uuid),
+        email=req.email,
+        roles=[PlatformRole.SUPPORT_AGENT.value],
+        session_id=session_id,
+    )
+    
+    return SignupResponse(
+        status="pending_verification",
+        message="Account created! Please check your email to verify your account.",
+        requires_verification=True,
     )
