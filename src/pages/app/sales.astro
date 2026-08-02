@@ -1,24 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../../layouts/Layout.astro";
+import SalesCRM from "../../components/islands/SalesCRM";
 ---
-
-<Layout title="SalesGenie Sales — CRM & Pipeline">
-  <div id="sales-root"></div>
+<Layout title="Sales CRM">
+  <SalesCRM client:load />
 </Layout>
-
-<script type="module">
-  import { AuthProvider } from '../../auth/AuthProvider';
-  import { ProtectedRoute } from '../../auth/ProtectedRoute';
-  import SalesCRM from '../../components/islands/SalesCRM';
-  import React from 'react';
-  import { createRoot } from 'react-dom/client';
-
-  const root = createRoot(document.getElementById('sales-root')!);
-  root.render(
-    React.createElement(AuthProvider, null,
-      React.createElement(ProtectedRoute, { requiredRoles: ['sales_manager', 'sales_agent', 'org_admin', 'super_admin'] },
-        React.createElement(SalesCRM, null)
-      )
-    )
-  );
-</script>

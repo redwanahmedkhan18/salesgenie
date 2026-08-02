@@ -1,24 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../../layouts/Layout.astro";
+import { TeamManagement } from "../../components/team/TeamManagement";
 ---
-
-<Layout title="SalesGenie Team — Team & Roles">
-  <div id="team-root"></div>
+<Layout title="SalesGenie Team">
+  <TeamManagement tenantId="default_tenant" client:load />
 </Layout>
-
-<script type="module">
-  import { AuthProvider } from '../../auth/AuthProvider';
-  import { ProtectedRoute } from '../../auth/ProtectedRoute';
-  import { TeamManagement } from '../../components/team/TeamManagement';
-  import React from 'react';
-  import { createRoot } from 'react-dom/client';
-
-  const root = createRoot(document.getElementById('team-root')!);
-  root.render(
-    React.createElement(AuthProvider, null,
-      React.createElement(ProtectedRoute, { requiredRoles: ['org_admin', 'super_admin', 'workspace_admin'] },
-        React.createElement(TeamManagement, { tenantId: 'default_tenant' })
-      )
-    )
-  );
-</script>

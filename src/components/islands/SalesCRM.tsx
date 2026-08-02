@@ -174,7 +174,7 @@ export default function SalesCRM() {
               style={{ borderColor: 'var(--color-border)', color: 'var(--color-foreground)' }}>
               Export CSV
             </button>
-            <button className="px-4 py-2 text-xs font-semibold rounded-lg"
+            <button onClick={() => alert('New Lead form would open here')} className="px-4 py-2 text-xs font-semibold rounded-lg"
               style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}>
               + New Lead
             </button>

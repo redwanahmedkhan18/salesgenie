@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { useAuth } from '../auth/AuthProvider';
+import { useAuth } from './AuthProvider';
 import type { PlatformRole } from '../lib/types';
 
 interface ProtectedRouteProps {
@@ -9,18 +10,100 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
+function AccessDenied({
+  requiredRoles = [],
+  userRoles = [],
+}: {
+  requiredRoles?: PlatformRole[];
+  userRoles?: PlatformRole[];
+}) {
+  return (
+    <div
+      className="flex items-center justify-center min-h-screen"
+      style={{ background: 'var(--color-background)' }}
+    >
+      <div
+        className="text-center p-8 rounded-xl max-w-lg"
+        style={{
+          background: 'var(--color-card)',
+          border: '1px solid var(--color-border)',
+        }}
+      >
+        <div className="text-5xl mb-4">🔒</div>
+
+        <h2
+          className="text-2xl font-bold mb-2"
+          style={{ color: 'var(--color-foreground)' }}
+        >
+          Access Denied
+        </h2>
+
+        <p
+          className="text-sm mb-4"
+          style={{ color: 'var(--color-muted-foreground)' }}
+        >
+          Your account doesn't have permission to access this page.
+        </p>
+
+        {requiredRoles.length > 0 && (
+          <>
+            <div
+              className="text-xs font-semibold mb-1"
+              style={{ color: 'var(--color-foreground)' }}
+            >
+              Required Roles
+            </div>
+
+            <div
+              className="text-xs mb-3"
+              style={{ color: 'var(--color-muted-foreground)' }}
+            >
+              {requiredRoles.join(', ')}
+            </div>
+          </>
+        )}
+
+        <div
+          className="text-xs font-semibold mb-1"
+          style={{ color: 'var(--color-foreground)' }}
+        >
+          Your Roles
+        </div>
+
+        <div
+          className="text-xs"
+          style={{ color: 'var(--color-muted-foreground)' }}
+        >
+          {userRoles.length > 0 ? userRoles.join(', ') : 'No roles assigned'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ProtectedRoute({
   children,
   requiredRoles = [],
   requiredPermissions = [],
   redirectTo = '/login',
 }: ProtectedRouteProps) {
-  const { user, isAuthenticated, roles, permissions, isLoading } = useAuth();
+  const {
+    isLoading,
+    isAuthenticated,
+    roles,
+    permissions,
+  } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ background: 'var(--color-background)' }}>
-        <div className="flex items-center gap-3" style={{ color: 'var(--color-foreground)' }}>
+      <div
+        className="flex items-center justify-center min-h-screen"
+        style={{ background: 'var(--color-background)' }}
+      >
+        <div
+          className="flex items-center gap-3"
+          style={{ color: 'var(--color-foreground)' }}
+        >
           <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
           <span>Loading...</span>
         </div>
@@ -29,52 +112,62 @@ export function ProtectedRoute({
   }
 
   if (!isAuthenticated) {
-    window.location.href = redirectTo;
+    if (typeof window !== 'undefined' && !window.location) {
+      return null;
+    }
+    if (typeof window !== 'undefined') {
+      window.location.replace(redirectTo);
+    }
     return null;
   }
 
-  if (requiredRoles.length > 0 && !roles.some(role => requiredRoles.includes(role))) {
-    window.location.href = '/unauthorized';
-    return null;
+  if (
+    requiredRoles.length > 0 &&
+    !roles.some(role => requiredRoles.includes(role))
+  ) {
+    return (
+      <AccessDenied
+        requiredRoles={requiredRoles}
+        userRoles={roles}
+      />
+    );
   }
 
   if (requiredPermissions.length > 0) {
-    const hasAllPermissions = requiredPermissions.every(perm => permissions.includes(perm));
+    const hasAllPermissions = requiredPermissions.every(permission =>
+      permissions.includes(permission)
+    );
+
     if (!hasAllPermissions) {
-      window.location.href = '/unauthorized';
-      return null;
+      return (
+        <AccessDenied
+          requiredRoles={requiredRoles}
+          userRoles={roles}
+        />
+      );
     }
   }
 
   return <>{children}</>;
 }
 
+interface RoleBasedRouteProps {
+  children: React.ReactNode;
+  requiredRoles: PlatformRole[];
+}
+
 export function RoleBasedRoute({
   children,
   requiredRoles,
-}: {
-  children: React.ReactNode;
-  requiredRoles: PlatformRole[];
-}) {
+}: RoleBasedRouteProps) {
   const { roles, hasAnyRole } = useAuth();
 
   if (!hasAnyRole(requiredRoles)) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ background: 'var(--color-background)' }}>
-        <div className="text-center p-8 rounded-xl" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <div className="text-4xl mb-4">🚫</div>
-          <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--color-foreground)' }}>Access Denied</h2>
-          <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>
-            You don't have permission to access this page.
-          </p>
-          <p className="text-xs mt-2" style={{ color: 'var(--color-muted-foreground)' }}>
-            Required roles: {requiredRoles.join(', ')}
-          </p>
-          <p className="text-xs mt-1" style={{ color: 'var(--color-muted-foreground)' }}>
-            Your roles: {roles.join(', ')}
-          </p>
-        </div>
-      </div>
+      <AccessDenied
+        requiredRoles={requiredRoles}
+        userRoles={roles}
+      />
     );
   }
 

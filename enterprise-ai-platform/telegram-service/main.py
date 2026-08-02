@@ -34,4 +34,4 @@ async def liveness_probe():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8019)
+    uvicorn.run(app, host="0.0.0.0", port=settings.TELEGRAM_SERVICE_PORT)

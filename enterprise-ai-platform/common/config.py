@@ -141,6 +141,7 @@ class PlatformSettings(BaseSettings):
     MESSENGER_SERVICE_PORT: int = Field(default=8020, description="Messenger Service Port")
     TELEGRAM_SERVICE_PORT: int = Field(default=8019, description="Telegram Service Port")
     LEAD_INTELLIGENCE_SERVICE_PORT: int = Field(default=8022, description="Lead Intelligence Service Port")
+    AUDIT_SERVICE_PORT: int = Field(default=8023, description="Audit Service Port")
     FILE_SERVICE_PORT: int = Field(default=8015, description="File Service Port")
     CUSTOMER_SERVICE_PORT: int = Field(default=8016, description="Customer Service Port")
     SUPPORT_SERVICE_PORT: int = Field(default=8017, description="Support Service Port")

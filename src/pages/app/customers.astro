@@ -1,24 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../../layouts/Layout.astro";
+import CustomerManagement from "../../components/islands/CustomerManagement";
 ---
-
-<Layout title="SalesGenie Customers — Customer Management">
-  <div id="customers-root"></div>
+<Layout title="SalesGenie Customers">
+  <CustomerManagement client:load />
 </Layout>
-
-<script type="module">
-  import { AuthProvider } from '../../auth/AuthProvider';
-  import { ProtectedRoute } from '../../auth/ProtectedRoute';
-  import CustomerManagement from '../../components/islands/CustomerManagement';
-  import React from 'react';
-  import { createRoot } from 'react-dom/client';
-
-  const root = createRoot(document.getElementById('customers-root')!);
-  root.render(
-    React.createElement(AuthProvider, null,
-      React.createElement(ProtectedRoute, { requiredRoles: ['sales_manager', 'sales_agent', 'support_manager', 'support_agent', 'org_admin', 'super_admin'] },
-        React.createElement(CustomerManagement, null)
-      )
-    )
-  );
-</script>

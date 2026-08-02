@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { NavItem } from '../../lib/types';
+import { useAuth } from '../../auth/AuthProvider';
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard',    label: 'Dashboard',        icon: '⊡', href: '/app/dashboard' },
-  { id: 'inbox',        label: 'Conversation Inbox',icon: '💬', href: '/app/inbox',   badge: 12 },
+  { id: 'inbox',        label: 'Conversation Inbox',icon: '💬', href: '/app/conversations',   badge: 12 },
   { id: 'agents',       label: 'AI Agent Builder',  icon: '🤖', href: '/app/agents' },
   { id: 'knowledge',    label: 'Knowledge Base',    icon: '📚', href: '/app/knowledge' },
   { id: 'tickets',      label: 'Ticket Center',     icon: '🎫', href: '/app/support',  badge: 3 },
@@ -27,6 +28,7 @@ interface SidebarProps {
 
 export function Sidebar({ activeRoute, onRouteChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const { user } = useAuth();
 
   return (
     <aside
@@ -57,11 +59,10 @@ export function Sidebar({ activeRoute, onRouteChange }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5" role="navigation" aria-label="Main navigation">
         {NAV_ITEMS.map((item) => (
-          <button
+          <a
             key={item.id}
-            id={`nav-${item.id}`}
-            onClick={() => onRouteChange(item.id)}
-            className={`nav-item w-full text-left ${activeRoute === item.id ? 'active' : ''}`}
+            href={item.href}
+            className={`nav-item w-full text-left flex items-center gap-3 px-2 py-1.5 rounded transition-colors ${activeRoute === item.id ? 'active bg-secondary/10' : 'hover:bg-secondary/5'}`}
             title={collapsed ? item.label : undefined}
           >
             <span className="text-base flex-shrink-0">{item.icon}</span>
@@ -76,7 +77,7 @@ export function Sidebar({ activeRoute, onRouteChange }: SidebarProps) {
                 )}
               </>
             )}
-          </button>
+          </a>
         ))}
       </nav>
 
@@ -86,11 +87,15 @@ export function Sidebar({ activeRoute, onRouteChange }: SidebarProps) {
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
               style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}>
-              AD
+              {user?.email ? user.email[0].toUpperCase() : 'A'}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-white text-xs font-semibold truncate">Admin User</div>
-              <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.45)' }}>admin@salesgenie.ai</div>
+              <div className="text-white text-xs font-semibold truncate">
+                {user?.full_name || user?.email || 'Admin User'}
+              </div>
+              <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                {user?.email || 'admin@salesgenie.ai'}
+              </div>
             </div>
           </div>
         </div>
@@ -149,15 +154,16 @@ export function CommandPalette({ open, onClose, onNavigate }: CommandPaletteProp
             <p className="text-center py-6 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>No results found</p>
           ) : (
             filtered.map(item => (
-              <button
+              <a
                 key={item.id}
-                onClick={() => { onNavigate(item.id); onClose(); }}
+                href={item.href}
+                onClick={onClose}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left hover:bg-white/6 transition-colors"
                 style={{ color: 'rgba(255,255,255,0.75)' }}
               >
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
-              </button>
+              </a>
             ))
           )}
         </div>

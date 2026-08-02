@@ -153,7 +153,7 @@ export function SEO({
         noIndexTag.setAttribute('content', 'noindex, nofollow');
       }
 
-      const structuredData = {
+      const structuredData: Record<string, string> = {
         '@context': 'https://schema.org',
         '@type': type === 'website' ? 'WebSite' : type === 'article' ? 'Article' : 'Product',
         name: pageTitle,

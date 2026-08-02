@@ -45,7 +45,7 @@ export default function SearchInterface() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${import.meta.env.DEV ? 'http://localhost:8008' : '/api'}/search/search?q=${encodeURIComponent(searchQuery)}&size=20`,
+        `${import.meta.env.DEV ? 'http://localhost:8013/api/v1' : '/api/v1'}/search/search?q=${encodeURIComponent(searchQuery)}&size=20`,
         {
           headers: { 'Content-Type': 'application/json' },
         }

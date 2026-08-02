@@ -35,7 +35,13 @@ async def liveness_probe():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    from enterprise_ai_platform.common.config import settings
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=settings.AI_GATEWAY_SERVICE_PORT,
+        reload=settings.DEBUG,
+    )
 
 @app.get("/health/ready", tags=["Health Checks"])
 async def readiness_probe():

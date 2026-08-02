@@ -40,6 +40,11 @@ import type {
   QualificationReport,
   OutreachDraft,
   SearchProfile,
+  KnowledgeDocument,
+  AIAgent,
+  PlatformMetrics,
+  OrganizationListItem,
+  OrganizationDetail,
 } from './types';
 
 export type {
@@ -74,9 +79,38 @@ export type {
   QualificationReport,
   OutreachDraft,
   SearchProfile,
+  PlatformMetrics,
+  OrganizationListItem,
+  OrganizationDetail,
+  KnowledgeDocument,
+  AIAgent,
 };
 
-const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:8008' : '/api';
+const API_BASE_URL = import.meta.env.DEV ? "http://localhost:8001" : "/api";
+const USER_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8002" : "/api";
+const ORGANIZATION_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8003" : "/api";
+const BILLING_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8004" : "/api";
+const NOTIFICATION_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8014" : "/api";
+const AUDIT_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8023" : "/api";
+const KNOWLEDGE_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8006" : "/api";
+const SALES_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8007" : "/api";
+const TICKETS_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8008" : "/api";
+const VECTOR_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8009" : "/api";
+const CHAT_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8010" : "/api";
+const WORKFLOW_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8011" : "/api";
+const ANALYTICS_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8012" : "/api";
+const SEARCH_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8013" : "/api";
+const FILE_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8015" : "/api";
+const CUSTOMERS_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8016" : "/api";
+const SUPPORT_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8017" : "/api";
+const CONVERSATIONS_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8018" : "/api";
+const AI_GATEWAY_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8000" : "/api";
+const WHATSAPP_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8005" : "/api";
+const TELEGRAM_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8019" : "/api";
+const MESSENGER_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8020" : "/api";
+const EMAIL_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8021" : "/api";
+const LEAD_INTELLIGENCE_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8022" : "/api";
+const PLATFORM_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8001" : "/api";
 
 class APIClient {
   private baseHeaders: HeadersInit = {
@@ -332,7 +366,7 @@ class APIClient {
 
   async fetchKPIs(): Promise<AnalyticsKPIs> {
     try {
-      const response = await fetch(`${API_BASE_URL}/analytics/kpis`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/analytics/kpis`, {
         headers: this.baseHeaders,
       });
 
@@ -425,7 +459,7 @@ class APIClient {
   async fetchCustomers(params?: Record<string, string>): Promise<Customer[]> {
     try {
       const query = params ? '?' + new URLSearchParams(params).toString() : '';
-      const response = await fetch(`${API_BASE_URL}/customers${query}`, {
+      const response = await fetch(`${CUSTOMERS_API_BASE_URL}/api/v1/customers${query}`, {
         headers: this.baseHeaders,
       });
 
@@ -442,7 +476,7 @@ class APIClient {
 
   async createCustomer(customer: Partial<Customer>): Promise<Customer | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/customers`, {
+      const response = await fetch(`${CUSTOMERS_API_BASE_URL}/api/v1/customers`, {
         method: 'POST',
         headers: this.baseHeaders,
         body: JSON.stringify(customer),
@@ -461,7 +495,7 @@ class APIClient {
 
   async fetchSegments(): Promise<CustomerSegment[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/customers/segments`, {
+      const response = await fetch(`${CUSTOMERS_API_BASE_URL}/api/v1/customers/segments`, {
         headers: this.baseHeaders,
       });
 
@@ -478,7 +512,7 @@ class APIClient {
 
   async fetchTags(): Promise<CustomerTag[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/customers/tags`, {
+      const response = await fetch(`${CUSTOMERS_API_BASE_URL}/api/v1/customers/tags`, {
         headers: this.baseHeaders,
       });
 
@@ -497,8 +531,8 @@ class APIClient {
   async fetchTickets(params?: Record<string, string>): Promise<SupportTicket[]> {
     try {
       const query = params ? '?' + new URLSearchParams(params).toString() : '';
-      const response = await fetch(`${API_BASE_URL}/tickets${query}`, {
-        headers: this.baseHeaders,
+      const response = await fetch(`${TICKETS_API_BASE_URL}/api/v1/tickets${query}`, {
+        headers: this.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -514,9 +548,9 @@ class APIClient {
 
   async createTicket(ticket: Partial<SupportTicket>): Promise<SupportTicket | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/tickets`, {
+      const response = await fetch(`${TICKETS_API_BASE_URL}/api/v1/tickets`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(ticket),
       });
 
@@ -533,9 +567,9 @@ class APIClient {
 
   async updateTicket(ticketId: string, updates: Partial<SupportTicket>): Promise<SupportTicket | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}`, {
+      const response = await fetch(`${TICKETS_API_BASE_URL}/api/v1/tickets/${ticketId}`, {
         method: 'PATCH',
-        headers: this.baseHeaders,
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(updates),
       });
 
@@ -552,8 +586,8 @@ class APIClient {
 
   async fetchTicketAnalytics(): Promise<TicketAnalytics | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/tickets/analytics/overview`, {
-        headers: this.baseHeaders,
+      const response = await fetch(`${TICKETS_API_BASE_URL}/api/v1/tickets/analytics/overview`, {
+        headers: this.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -587,7 +621,7 @@ class APIClient {
       if (params.size) queryParams.set('size', String(params.size));
       if (params.from !== undefined) queryParams.set('from', String(params.from));
 
-      const response = await fetch(`${API_BASE_URL}/search/search?${queryParams.toString()}`, {
+      const response = await fetch(`${SEARCH_API_BASE_URL}/api/v1/search/search?${queryParams.toString()}`, {
         headers: this.baseHeaders,
       });
 
@@ -604,7 +638,7 @@ class APIClient {
 
   async indexDocument(document: IndexDocumentRequest): Promise<IndexDocumentResponse | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/search/index`, {
+      const response = await fetch(`${SEARCH_API_BASE_URL}/api/v1/search/index`, {
         method: 'POST',
         headers: this.baseHeaders,
         body: JSON.stringify(document),
@@ -626,7 +660,7 @@ class APIClient {
       const params = new URLSearchParams();
       if (indexType) params.set('index_type', indexType);
 
-      const response = await fetch(`${API_BASE_URL}/search/index/${documentId}?${params.toString()}`, {
+      const response = await fetch(`${SEARCH_API_BASE_URL}/api/v1/search/index/${documentId}?${params.toString()}`, {
         method: 'DELETE',
         headers: this.baseHeaders,
       });
@@ -640,7 +674,7 @@ class APIClient {
 
   async fetchIndexStats(): Promise<IndexStatsDTO[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/search/index/stats`, {
+      const response = await fetch(`${SEARCH_API_BASE_URL}/api/v1/search/index/stats`, {
         headers: this.baseHeaders,
       });
 
@@ -657,7 +691,7 @@ class APIClient {
 
   async fetchKnowledgeCategories(): Promise<KnowledgeCategory[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/knowledge/categories`, {
+      const response = await fetch(`${KNOWLEDGE_API_BASE_URL}/api/v1/knowledge/categories`, {
         headers: this.baseHeaders,
       });
 
@@ -676,7 +710,7 @@ class APIClient {
 
   async getWhatsAppAccounts(): Promise<WhatsAppAccount | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/whatsapp/accounts`, {
+      const response = await fetch(`${WHATSAPP_API_BASE_URL}/api/v1/whatsapp/accounts`, {
         headers: this.baseHeaders,
       });
 
@@ -698,7 +732,7 @@ class APIClient {
     webhook_url?: string;
   }): Promise<WhatsAppAccount | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/whatsapp/accounts`, {
+      const response = await fetch(`${WHATSAPP_API_BASE_URL}/api/v1/whatsapp/accounts`, {
         method: 'POST',
         headers: this.baseHeaders,
         body: JSON.stringify(req),
@@ -723,7 +757,7 @@ class APIClient {
     caption?: string;
   }): Promise<{ status: string; message_id?: string } | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/whatsapp/messages`, {
+      const response = await fetch(`${WHATSAPP_API_BASE_URL}/api/v1/whatsapp/messages`, {
         method: 'POST',
         headers: this.baseHeaders,
         body: JSON.stringify(req),
@@ -742,7 +776,7 @@ class APIClient {
 
   async listChannelIntegrations(): Promise<ChannelIntegration[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/channels/integrations`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/channels/integrations`, {
         headers: this.baseHeaders,
       });
 
@@ -782,7 +816,7 @@ class APIClient {
       }
       if (params.language) queryParams.set('language', params.language);
 
-      const response = await fetch(`${API_BASE_URL}/lead-intelligence/companies/search?${queryParams.toString()}`, {
+      const response = await fetch(`${LEAD_INTELLIGENCE_API_BASE_URL}/api/v1/lead-intelligence/companies/search?${queryParams.toString()}`, {
         headers: this.baseHeaders,
       });
 
@@ -802,7 +836,7 @@ class APIClient {
       const params = new URLSearchParams();
       if (language) params.set('language', language);
       
-      const response = await fetch(`${API_BASE_URL}/lead-intelligence/companies/${companyId}?${params.toString()}`, {
+      const response = await fetch(`${LEAD_INTELLIGENCE_API_BASE_URL}/api/v1/lead-intelligence/companies/${companyId}?${params.toString()}`, {
         headers: this.baseHeaders,
       });
 
@@ -822,7 +856,7 @@ class APIClient {
       const params = new URLSearchParams();
       if (language) params.set('language', language);
       
-      const response = await fetch(`${API_BASE_URL}/lead-intelligence/companies/${companyId}/qualify?${params.toString()}`, {
+      const response = await fetch(`${LEAD_INTELLIGENCE_API_BASE_URL}/api/v1/lead-intelligence/companies/${companyId}/qualify?${params.toString()}`, {
         method: 'POST',
         headers: this.baseHeaders,
       });
@@ -843,7 +877,7 @@ class APIClient {
       const params = new URLSearchParams();
       if (language) params.set('language', language);
       
-      const response = await fetch(`${API_BASE_URL}/lead-intelligence/companies/${companyId}/research?${params.toString()}`, {
+      const response = await fetch(`${LEAD_INTELLIGENCE_API_BASE_URL}/api/v1/lead-intelligence/companies/${companyId}/research?${params.toString()}`, {
         method: 'POST',
         headers: this.baseHeaders,
       });
@@ -865,7 +899,7 @@ class APIClient {
       params.set('channel', channel);
       if (language) params.set('language', language);
       
-      const response = await fetch(`${API_BASE_URL}/lead-intelligence/companies/${companyId}/outreach?${params.toString()}`, {
+      const response = await fetch(`${LEAD_INTELLIGENCE_API_BASE_URL}/api/v1/lead-intelligence/companies/${companyId}/outreach?${params.toString()}`, {
         method: 'POST',
         headers: this.baseHeaders,
       });
@@ -883,7 +917,7 @@ class APIClient {
 
   async listSearchProfiles(): Promise<SearchProfile[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/lead-intelligence/profiles`, {
+      const response = await fetch(`${LEAD_INTELLIGENCE_API_BASE_URL}/api/v1/lead-intelligence/profiles`, {
         headers: this.baseHeaders,
       });
 
@@ -913,7 +947,7 @@ class APIClient {
     language?: string;
   }): Promise<SearchProfile | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/lead-intelligence/profiles`, {
+      const response = await fetch(`${LEAD_INTELLIGENCE_API_BASE_URL}/api/v1/lead-intelligence/profiles`, {
         method: 'POST',
         headers: this.baseHeaders,
         body: JSON.stringify(req),
@@ -934,7 +968,7 @@ class APIClient {
 
   async listBillingPlans(): Promise<{ plan_key: string; name: string; price_usd: number; max_seats: number; monthly_token_quota: number }[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/billing/plans`, {
+      const response = await fetch(`${BILLING_API_BASE_URL}/api/v1/billing/plans`, {
         headers: this.baseHeaders,
       });
 
@@ -951,7 +985,7 @@ class APIClient {
 
   async createSubscription(plan: string): Promise<{ subscription_id: string; tenant_id: string; plan: string; price_usd: number; status: string } | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/billing/subscriptions?plan=${plan}`, {
+      const response = await fetch(`${BILLING_API_BASE_URL}/api/v1/billing/subscriptions?plan=${plan}`, {
         method: 'POST',
         headers: this.baseHeaders,
       });
@@ -969,7 +1003,7 @@ class APIClient {
 
   async getBillingUsage(tokensUsed: number, plan: string): Promise<{ current_tokens_used: number; quota: number; percentage_used: number; estimated_cost_usd: number; plan: string } | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/billing/usage?tokens_used=${tokensUsed}&plan=${plan}`, {
+      const response = await fetch(`${BILLING_API_BASE_URL}/api/v1/billing/usage?tokens_used=${tokensUsed}&plan=${plan}`, {
         headers: this.baseHeaders,
       });
 
@@ -986,9 +1020,8 @@ class APIClient {
 
   async listInvoices(): Promise<{ subscription_id: string; tenant_id: string; plan: string; amount_usd: number; status: string; period_start: string; period_end: string }[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/billing/invoices`, {
-        headers: this.baseHeaders,
-      });
+      const response = await fetch(`${BILLING_API_BASE_URL}/api/v1/billing/invoices`, {
+        headers: { ...this.baseHeaders, Authorization: `Bearer ${localStorage.getItem('auth_token')}` } });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -998,6 +1031,191 @@ class APIClient {
     } catch (error) {
       console.error('Failed to list invoices:', error);
       return [];
+    }
+  }
+
+  async downloadInvoicePdf(invoiceId: string): Promise<Blob | null> {
+    try {
+      const response = await fetch(`${BILLING_API_BASE_URL}/api/v1/billing/invoices/${invoiceId}/pdf`, {
+        headers: { 'Accept': 'application/pdf' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error('Failed to download invoice PDF:', error);
+      return null;
+    }
+  }
+
+  // Platform Service API methods (Super Admin)
+
+  async fetchPlatformMetrics(): Promise<PlatformMetrics | null> {
+    try {
+      const response = await fetch(`${PLATFORM_API_BASE_URL}/api/v1/platform/metrics`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch platform metrics:', error);
+      return null;
+    }
+  }
+
+  async fetchOrganizations(status?: 'all' | 'active' | 'suspended'): Promise<OrganizationListItem[]> {
+    try {
+      const params = status && status !== 'all' ? `?status=${status}` : '';
+      const response = await fetch(`${PLATFORM_API_BASE_URL}/api/v1/platform/organizations${params}`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch organizations:', error);
+      return [];
+    }
+  }
+
+  async suspendOrganization(orgId: string): Promise<OrganizationDetail | null> {
+    try {
+      const response = await fetch(`${PLATFORM_API_BASE_URL}/api/v1/platform/organizations/${orgId}/suspend`, {
+        method: 'PATCH',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to suspend organization:', error);
+      return null;
+    }
+  }
+
+  async resumeOrganization(orgId: string): Promise<OrganizationDetail | null> {
+    try {
+      const response = await fetch(`${PLATFORM_API_BASE_URL}/api/v1/platform/organizations/${orgId}/resume`, {
+        method: 'PATCH',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to resume organization:', error);
+      return null;
+    }
+  }
+
+  async deleteOrganization(orgId: string): Promise<{ status: string; message: string; org_id: string } | null> {
+    try {
+      const response = await fetch(`${PLATFORM_API_BASE_URL}/api/v1/platform/organizations/${orgId}`, {
+        method: 'DELETE',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to delete organization:', error);
+      return null;
+    }
+  }
+
+  // Knowledge Base Document Methods
+
+  async fetchDocuments(tenantId?: string): Promise<KnowledgeDocument[]> {
+    try {
+      const params = tenantId ? `?tenant_id=${tenantId}` : '';
+      const response = await fetch(`${KNOWLEDGE_API_BASE_URL}/api/v1/knowledge/documents${params}`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch documents:', error);
+      return [];
+    }
+  }
+
+  async createDocument(doc: { title: string; content: string; category?: string; tags?: string[]; tenant_id: string }): Promise<KnowledgeDocument | null> {
+    try {
+      const response = await fetch(`${KNOWLEDGE_API_BASE_URL}/api/v1/knowledge/documents`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(doc),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to create document:', error);
+      return null;
+    }
+  }
+
+  // AI Agent Methods
+
+  async fetchAIAgents(tenantId: string): Promise<AIAgent[]> {
+    try {
+      const response = await fetch(`${KNOWLEDGE_API_BASE_URL}/api/v1/agents?tenant_id=${tenantId}`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch AI agents:', error);
+      return [];
+    }
+  }
+
+  async createAIAgent(agent: { name: string; type: string; model: string; temperature?: number; tenant_id: string }): Promise<AIAgent | null> {
+    try {
+      const response = await fetch(`${KNOWLEDGE_API_BASE_URL}/api/v1/agents`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(agent),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to create AI agent:', error);
+      return null;
     }
   }
 }

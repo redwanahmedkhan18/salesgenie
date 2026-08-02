@@ -90,7 +90,7 @@ export default function AgentBuilder() {
             <div className="p-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
               <div className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted-foreground)' }}>Version History</div>
               {['v3 · Current', 'v2 · Jul 25', 'v1 · Jul 18'].map(v => (
-                <button key={v} className="w-full text-left text-xs py-1.5 transition-colors hover:text-amber-400"
+                <button key={v} onClick={() => alert(`Version: ${v}`)} className="w-full text-left text-xs py-1.5 transition-colors hover:text-amber-400"
                   style={{ color: 'var(--color-muted-foreground)' }}>
                   📋 {v}
                 </button>

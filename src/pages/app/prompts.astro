@@ -1,24 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../../layouts/Layout.astro";
+import PromptManagement from "../../components/islands/PromptManagement";
 ---
-
-<Layout title="SalesGenie Prompts — Prompt Management">
-  <div id="prompts-root"></div>
+<Layout title="SalesGenie Prompts">
+  <PromptManagement client:load />
 </Layout>
-
-<script type="module">
-  import { AuthProvider } from '../../auth/AuthProvider';
-  import { ProtectedRoute } from '../../auth/ProtectedRoute';
-  import PromptManagement from '../../components/islands/PromptManagement';
-  import React from 'react';
-  import { createRoot } from 'react-dom/client';
-
-  const root = createRoot(document.getElementById('prompts-root')!);
-  root.render(
-    React.createElement(AuthProvider, null,
-      React.createElement(ProtectedRoute, { requiredRoles: ['knowledge_manager', 'org_admin', 'super_admin'] },
-        React.createElement(PromptManagement, null)
-      )
-    )
-  );
-</script>

@@ -350,6 +350,7 @@ export default function PromptManagement() {
                 Cancel
               </button>
               <button
+                onClick={() => alert('Create Prompt action not implemented yet')}
                 className="px-4 py-2 text-sm font-semibold rounded-lg transition-all"
                 style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
               >

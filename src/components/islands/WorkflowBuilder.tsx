@@ -173,6 +173,7 @@ export default function WorkflowBuilder() {
                   style={{ background: 'var(--color-card)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
                 />
                 <button
+                  onClick={() => alert('New Workflow form would open here')}
                   className="px-4 py-2 text-sm font-semibold rounded-xl transition-all"
                   style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
                 >

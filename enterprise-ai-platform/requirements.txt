@@ -22,6 +22,19 @@ httpx>=0.24.0
 kafka-python>=2.0.2
 aiokafka>=0.10.0
 
+# Stripe Payment Integration
+stripe>=10.0.0
+
+# PDF Generation & Document Processing
+weasyprint>=60.0
+reportlab>=4.2.0
+pdfplumber>=0.11.4
+python-docx>=1.1.2
+
+# Email & SMTP
+email-validator>=2.2.0
+aiosmtplib>=2.0.0
+
 # LLM & AI (Groq, Google, Mistral)
 groq>=0.13.0
 google-generativeai>=0.8.6
@@ -34,8 +47,6 @@ langchain-google-genai>=0.1.0
 
 # RAG & Embeddings
 paddleocr>=2.7.0
-pdfplumber>=0.11.4
-python-docx>=1.1.2
 unstructured>=0.17.0
 
 # Vector Database
@@ -53,6 +64,8 @@ structlog>=24.11.0
 orjson>=3.10.7
 tenacity>=8.5.0
 cryptography>=44.0.0
+jinja2>=3.1.4
+markdown>=3.6
 
 # Monitoring & Observability
 opentelemetry-api>=1.26.0
@@ -79,3 +92,6 @@ black>=24.10.0
 mypy>=1.13.0
 isort>=5.5.13
 pre-commit>=3.8.0
+
+# Payment Webhook Validation
+pycryptodome>=3.20.0

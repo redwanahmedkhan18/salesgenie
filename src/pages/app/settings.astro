@@ -1,24 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../../layouts/Layout.astro";
+import SettingsAdmin from "../../components/islands/SettingsAdmin";
 ---
-
-<Layout title="SalesGenie Settings — Administration">
-  <div id="settings-root"></div>
+<Layout title="SalesGenie Settings">
+  <SettingsAdmin client:load />
 </Layout>
-
-<script type="module">
-  import { AuthProvider } from '../../auth/AuthProvider';
-  import { ProtectedRoute } from '../../auth/ProtectedRoute';
-  import SettingsAdmin from '../../components/islands/SettingsAdmin';
-  import React from 'react';
-  import { createRoot } from 'react-dom/client';
-
-  const root = createRoot(document.getElementById('settings-root')!);
-  root.render(
-    React.createElement(AuthProvider, null,
-      React.createElement(ProtectedRoute, { requiredRoles: ['org_admin', 'super_admin', 'workspace_admin'] },
-        React.createElement(SettingsAdmin, null)
-      )
-    )
-  );
-</script>

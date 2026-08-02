@@ -1,24 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../../layouts/Layout.astro";
+import AnalyticsDashboard from "../../components/islands/AnalyticsDashboard";
 ---
-
-<Layout title="SalesGenie Analytics — Dashboard">
-  <div id="analytics-root"></div>
+<Layout title="SalesGenie Analytics">
+  <AnalyticsDashboard client:load />
 </Layout>
-
-<script type="module">
-  import { AuthProvider } from '../../auth/AuthProvider';
-  import { ProtectedRoute } from '../../auth/ProtectedRoute';
-  import AnalyticsDashboard from '../../components/islands/AnalyticsDashboard';
-  import React from 'react';
-  import { createRoot } from 'react-dom/client';
-
-  const root = createRoot(document.getElementById('analytics-root')!);
-  root.render(
-    React.createElement(AuthProvider, null,
-      React.createElement(ProtectedRoute, { requiredRoles: ['sales_manager', 'support_manager', 'org_admin', 'super_admin', 'auditor'] },
-        React.createElement(AnalyticsDashboard, null)
-      )
-    )
-  );
-</script>

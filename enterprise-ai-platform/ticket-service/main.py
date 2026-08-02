@@ -44,4 +44,9 @@ app.include_router(ticket_router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8004, reload=settings.DEBUG)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=settings.TICKET_SERVICE_PORT,
+        reload=settings.DEBUG,
+    )

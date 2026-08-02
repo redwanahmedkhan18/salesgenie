@@ -10,6 +10,8 @@ import AnalyticsDashboard from '../components/islands/AnalyticsDashboard';
 import WorkflowBuilder from '../components/islands/WorkflowBuilder';
 import SettingsAdmin from '../components/islands/SettingsAdmin';
 import AuditLogs from '../components/islands/AuditLogs';
+import PlatformDashboard from '../components/islands/SuperAdminDashboard';
+import OrganizationDashboard from '../components/islands/OrganizationAdminDashboard';
 import type { PlatformRole } from '../lib/types';
 
 export function RoleDashboard() {
@@ -17,11 +19,11 @@ export function RoleDashboard() {
 
   const renderDashboardByRole = (): React.ReactNode => {
     if (hasAnyRole(['super_admin', 'workspace_admin'])) {
-      return <SuperAdminDashboard />;
+      return <PlatformDashboard />;
     }
 
-    if (hasAnyRole(['org_admin'])) {
-      return <OrgAdminDashboard />;
+if (hasAnyRole(['org_admin'])) {
+      return <OrganizationDashboard />;
     }
 
     if (hasAnyRole(['sales_manager', 'sales_agent'])) {
@@ -72,7 +74,7 @@ function RoleBasedSidebar({ roles }: { roles: PlatformRole[] }) {
     ],
     support: [
       { label: 'Support Dashboard', icon: '⊡', href: '/app/dashboard', minRole: ['support_manager', 'support_agent'] },
-      { label: 'Inbox', icon: '💬', href: '/app/inbox', minRole: ['support_manager', 'support_agent'] },
+      { label: 'Inbox', icon: '💬', href: '/app/conversations', minRole: ['support_manager', 'support_agent'] },
       { label: 'Tickets', icon: '🎫', href: '/app/support', minRole: ['support_manager', 'support_agent'] },
       { label: 'Knowledge Base', icon: '📚', href: '/app/knowledge', minRole: ['support_manager', 'support_agent'] },
       { label: 'Analytics', icon: '📊', href: '/app/analytics', minRole: ['support_manager'] },
@@ -157,14 +159,8 @@ function SuperAdminDashboard() {
 
 function OrgAdminDashboard() {
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-foreground)' }}>Organization Dashboard</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-muted-foreground)' }}>Complete system oversight and management</p>
-        </div>
-      </div>
-      <Dashboard />
+    <div className="flex-1 overflow-y-auto">
+      <OrganizationDashboard />
     </div>
   );
 }

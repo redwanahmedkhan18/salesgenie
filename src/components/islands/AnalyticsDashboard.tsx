@@ -73,20 +73,23 @@ export default function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30d');
 
-  const convServiceUrl = import.meta.env.DEV ? 'http://localhost:8017' : '/api';
-  const ticketServiceUrl = import.meta.env.DEV ? 'http://localhost:8008' : '/api';
-  const analyticsServiceUrl = import.meta.env.DEV ? 'http://localhost:8011' : '/api';
+  const convServiceUrl = import.meta.env.DEV ? 'http://localhost:8017/api/v1' : '/api/v1';
+  const ticketServiceUrl = import.meta.env.DEV ? 'http://localhost:8008/api/v1' : '/api/v1';
+  const analyticsServiceUrl = import.meta.env.DEV ? 'http://localhost:8011/api/v1' : '/api/v1';
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
+        const token = localStorage.getItem('auth_token');
+        const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+        
         const [overviewRes, ticketsRes] = await Promise.all([
           fetch(`${convServiceUrl}/conversations/overview`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...authHeaders } as HeadersInit,
           }),
           fetch(`${ticketServiceUrl}/tickets/analytics/overview`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...authHeaders } as HeadersInit,
           }),
         ]);
 

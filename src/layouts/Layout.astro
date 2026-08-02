@@ -15,7 +15,7 @@ export interface Props {
 const {
   title = "SalesGenie — Enterprise AI Customer Support & Sales Agent Platform",
   description =
-    "AI-powered multi-agent platform for customer support, sales automation, and enterprise knowledge management. 99.99% uptime, 500k concurrent connections, FAANG-grade architecture.",
+    "AI-powered multi-agent platform for customer support, sales automation, and enterprise knowledge management. 99.99% uptime, 500k concurrent connections.",
   canonical,
   openGraph = {},
 } = Astro.props;
@@ -54,7 +54,7 @@ const structuredData = {
 
     <!-- Security -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
+
 
     <!-- Canonical -->
     {canonical && <link rel="canonical" href={canonical} />}

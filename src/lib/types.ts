@@ -317,6 +317,40 @@ export interface TenantMetrics {
   sales_conversion_rate: number;
 }
 
+export interface PlatformMetrics {
+  total_organizations: number;
+  active_organizations: number;
+  suspended_organizations: number;
+  total_users: number;
+  total_tokens_used: number;
+  ai_cost_usd: number;
+  platform_uptime_percent: number;
+}
+
+export interface OrganizationListItem {
+  id: string;
+  name: string;
+  slug: string;
+  domain: string | null;
+  subscription_tier: string;
+  is_active: boolean;
+  created_at: string;
+  max_seats: number;
+  max_monthly_tokens: number;
+}
+
+export interface OrganizationDetail {
+  id: string;
+  name: string;
+  slug: string;
+  domain: string | null;
+  subscription_tier: string;
+  is_active: boolean;
+  created_at: string;
+  max_seats: number;
+  max_monthly_tokens: number;
+}
+
 export interface Branding {
   tenant_id: string;
   primary_color: string;
@@ -364,6 +398,17 @@ export interface KnowledgeCategory {
   created_at: string;
 }
 
+export interface AIAgent {
+  id: string;
+  name: string;
+  type: 'sales' | 'support' | 'refund' | 'booking' | 'hr';
+  model: 'groq' | 'google' | 'mistral';
+  temperature: number;
+  is_active: boolean;
+  created_at: string;
+  tenant_id: string;
+}
+
 // Channel Integration Types
 
 export interface ChannelIntegration {
@@ -397,6 +442,20 @@ export interface ChannelStats {
   received_messages: number;
   pending_messages: number;
   last_activity: string;
+}
+
+export interface SecurityEvent {
+  id: string;
+  type: 'failed_login' | 'permission_escalation' | 'unusual_export' | 'geographic_anomaly' | 'brute_force' | 'suspicious_activity';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  user_id?: string;
+  user_email?: string;
+  ip_address?: string;
+  location?: string;
+  user_agent?: string;
+  timestamp: string;
+  description: string;
+  resolved: boolean;
 }
 
 // Lead Intelligence Types

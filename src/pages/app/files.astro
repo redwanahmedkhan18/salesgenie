@@ -1,24 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../../layouts/Layout.astro";
+import FileManager from "../../components/islands/FileManager";
 ---
-
-<Layout title="SalesGenie Files — File Manager">
-  <div id="files-root"></div>
+<Layout title="SalesGenie Files">
+  <FileManager client:load />
 </Layout>
-
-<script type="module">
-  import { AuthProvider } from '../../auth/AuthProvider';
-  import { ProtectedRoute } from '../../auth/ProtectedRoute';
-  import FileManager from '../../components/islands/FileManager';
-  import React from 'react';
-  import { createRoot } from 'react-dom/client';
-
-  const root = createRoot(document.getElementById('files-root')!);
-  root.render(
-    React.createElement(AuthProvider, null,
-      React.createElement(ProtectedRoute, { requiredRoles: ['org_admin', 'super_admin', 'workspace_admin'] },
-        React.createElement(FileManager, null)
-      )
-    )
-  );
-</script>

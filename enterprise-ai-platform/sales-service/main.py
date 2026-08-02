@@ -44,4 +44,4 @@ app.include_router(sales_router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8005, reload=settings.DEBUG)
+    uvicorn.run(app, host="0.0.0.0", port=settings.SALES_SERVICE_PORT, reload=settings.DEBUG)

@@ -1,24 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../../layouts/Layout.astro";
+import { LeadIntelligence } from "../../components/islands/leads/LeadIntelligence";
 ---
-
-<Layout title="SalesGenie Lead Intelligence — AI Lead Discovery">
-  <div id="lead-intelligence-root"></div>
+<Layout title="Lead Intelligence">
+  <LeadIntelligence client:load />
 </Layout>
-
-<script type="module">
-  import { AuthProvider } from '../../auth/AuthProvider';
-  import { ProtectedRoute } from '../../auth/ProtectedRoute';
-  import { LeadIntelligence } from '../../components/islands/leads/LeadIntelligence';
-  import React from 'react';
-  import { createRoot } from 'react-dom/client';
-
-  const root = createRoot(document.getElementById('lead-intelligence-root')!);
-  root.render(
-    React.createElement(AuthProvider, null,
-      React.createElement(ProtectedRoute, { requiredRoles: ['org_admin', 'super_admin', 'sales_manager', 'sales_agent', 'knowledge_manager'] },
-        React.createElement(LeadIntelligence, null)
-      )
-    )
-  );
-</script>

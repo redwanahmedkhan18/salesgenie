@@ -44,4 +44,4 @@ app.include_router(support_router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8016, reload=settings.DEBUG)
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.SUPPORT_SERVICE_PORT, reload=settings.DEBUG)

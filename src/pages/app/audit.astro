@@ -1,24 +1,7 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../../layouts/Layout.astro";
+import AuditLogs from "../../components/islands/AuditLogs";
 ---
-
-<Layout title="SalesGenie Audit — Audit Logs">
-  <div id="audit-root"></div>
+<Layout title="SalesGenie Audit">
+  <AuditLogs client:load />
 </Layout>
-
-<script type="module">
-  import { AuthProvider } from '../../auth/AuthProvider';
-  import { ProtectedRoute } from '../../auth/ProtectedRoute';
-  import AuditLogs from '../../components/islands/AuditLogs';
-  import React from 'react';
-  import { createRoot } from 'react-dom/client';
-
-  const root = createRoot(document.getElementById('audit-root')!);
-  root.render(
-    React.createElement(AuthProvider, null,
-      React.createElement(ProtectedRoute, { requiredRoles: ['super_admin', 'workspace_admin', 'auditor'] },
-        React.createElement(AuditLogs, null)
-      )
-    )
-  );
-</script>

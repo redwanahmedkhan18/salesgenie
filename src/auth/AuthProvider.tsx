@@ -341,6 +341,23 @@ function derivePermissions(roles: PlatformRole[]): string[] {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
+    if (typeof window === 'undefined') {
+      return {
+        user: null,
+        session: null,
+        roles: [],
+        permissions: [],
+        isLoading: true,
+        isAuthenticated: false,
+        login: async () => ({ access_token: '', refresh_token: '', expires_in: 0, user_id: '', tenant_id: '', roles: [], mfa_required: false } as any),
+        logout: () => {},
+        refreshSession: async () => {},
+        hasPermission: () => false,
+        hasRole: () => false,
+        hasAnyRole: () => false,
+        switchOrganization: () => {},
+      };
+    }
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
