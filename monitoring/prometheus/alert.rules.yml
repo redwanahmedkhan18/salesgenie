@@ -1,0 +1,110 @@
+groups:
+  - name: salesgenie.rules
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.service }} is down"
+          description: "Service {{ $labels.service }} has been down for more than 1 minute"
+
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value }}% on {{ $labels.service }}"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency on {{ $labels.service }}"
+          description: "95th percentile latency is {{ $value }}s on {{ $labels.service }}"
+
+      - alert: DatabaseHighConnections
+        expr: pg_stat_database_numbackends > 100
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database connections"
+          description: "Database has {{ $value }} active connections"
+
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis memory usage high"
+          description: "Redis memory usage is {{ $value }}%"
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage on {{ $labels.mountpoint }} is {{ $value }}%"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) by (instance) * 100) > 85
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}"
+
+      - alert: CircuitBreakerTripped
+        expr: sum(circuit_breaker_state{state="open"}) > 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Circuit breaker open"
+          description: "Circuit breaker is open for service {{ $labels.service }}"
+
+      - alert: RateLimitExceeded
+        expr: rate(api_rate_limit_exceeded_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Rate limit exceeded"
+          description: "Rate limits exceeded {{ $value }} times in the last 5 minutes"
+
+      - alert: SecurityThreatDetected
+        expr: sum(security_events_total{threat_level="high"}) > 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Security threat detected"
+          description: "High severity security event detected"
+
+      - alert: DriftDetected
+        expr: model_drift_detected{service=~".*"} == 1
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model drift detected"
+          description: "Performance drift detected for AI model {{ $labels.service }}"
+
+      - alert: DatabaseReplicationLag
+        expr: pg_replication_lag > 30
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database replication lag"
+          description: "Replication lag is {{ $value }} seconds"

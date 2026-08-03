@@ -1,0 +1,105 @@
+# SalesGenie Security Configuration
+# Version: 2.0.0
+# Last Updated: 2026-08-03
+
+[security]
+# CORS Configuration
+allowed_origins = https://salesgenie.ai,https://app.salesgenie.ai,https://localhost:3000
+allowed_methods = GET,POST,PUT,PATCH,DELETE,OPTIONS
+allowed_headers = Authorization,Content-Type,X-Request-ID,X-Forwarded-For,Accept,Origin,X-Requested-With
+exposed_headers = X-Request-ID,RateLimit-Limit,RateLimit-Remaining,RateLimit-Reset
+max_age = 86400
+allow_credentials = true
+
+# Rate Limiting
+global_rate_limit = 100000
+global_rate_window = 60
+ip_rate_limit = 1000
+ip_rate_window = 60
+auth_rate_limit = 10
+auth_rate_window = 60
+auth_burst = 5
+
+# Security Headers
+enable_hsts = true
+hsts_max_age = 31536000
+hsts_include_subdomains = true
+enable_frame_options = true
+enable_xss_protection = true
+enable_content_type_nosniff = true
+enable_referrer_policy = true
+
+# DDoS Protection
+ddos_threshold = 500
+ddos_window = 60
+ddos_ban_duration = 1440
+
+# Brute Force Protection
+brute_force_threshold = 10
+brute_force_window = 300
+brute_force_ban_duration = 1440
+
+# Threat Detection
+enable_sql_injection_protection = true
+enable_xss_protection = true
+enable_path_traversal_protection = true
+enable_prohibited_methods_block = true
+
+[security.threat_levels]
+low = { log_only = true, block = false }
+medium = { log_only = false, block = false, notify = true }
+high = { log_only = false, block = true, ban_duration = 60 }
+critical = { log_only = false, block = true, ban_duration = 1440 }
+
+[security.blocked_endpoints]
+"/admin" = "admin_only"
+"/internal" = "internal_only"
+"/debug" = "disabled"
+"/.env" = "disabled"
+"/.git" = "disabled"
+
+[logging]
+security_log_path = /var/log/salesgenie/security.log
+access_log_path = /var/log/salesgenie/access.log
+audit_log_path = /var/log/salesgenie/audit.log
+log_level = INFO
+log_rotation = daily
+log_retention_days = 90
+
+[monitoring]
+health_check_interval = 10
+heartbeat_timeout = 300
+alert_threshold_cpu = 80
+alert_threshold_memory = 85
+alert_threshold_disk = 90
+
+[recovery]
+max_restart_attempts = 3
+restart_cooldown_minutes = 5
+max_uptime_hours = 24
+auto_rollback_on_error = true
+rollback_error_threshold = 5
+
+[network]
+enable_private_network = true
+private_networks = 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+enable_waf = true
+enable_ddos_protection = true
+
+[application]
+secure_cookies = true
+cookie_httponly = true
+cookie_samesite = strict
+session_timeout = 3600
+max_session_age = 86400
+
+[api_keys]
+key_rotation_days = 90
+min_key_length = 32
+require_api_key_rotation = true
+
+[database]
+connection_pool_size = 20
+connection_timeout = 30
+enable_ssl = true
+verify_cert = true

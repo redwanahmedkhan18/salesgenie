@@ -1,0 +1,166 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "SalesGenie Enterprise Dashboard",
+    "tags": ["salesgenie", "enterprise", "ai-platform"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Security Score",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "avg(security_score)",
+            "format": "time_series",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "orange", "value": 80},
+                {"color": "green", "value": 90}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Active Threats",
+        "type": "stat",
+        "gridPos": {"x": 4, "y": 0, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(security_events_total{threat_level=\"high\"})",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Request Rate",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m])) by (service)",
+            "legendFormat": "{{service}}"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 10, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) by (service)",
+            "legendFormat": "{{service}} errors"
+          },
+          {
+            "expr": "sum(rate(http_requests_total[5m])) by (service)",
+            "legendFormat": "{{service}} total"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Database Connections",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 16, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends",
+            "legendFormat": "{{database}} connections"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "API Latency (p95)",
+        "type": "timeseries",
+        "gridPos": {"x": 6, "y": 16, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))",
+            "legendFormat": "{{service}} p95"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "AI Model Performance",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 20, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "avg_factual_accuracy{service=~\".*\"}",
+            "legendFormat": "{{service}} accuracy"
+          },
+          {
+            "expr": "avg_hallucination_score{service=~\".*\"}",
+            "legendFormat": "{{service}} hallucination"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "System Resources",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 26, "w": 12, "h": 6},
+        "targets": [
+          {
+            "expr": "100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) by (instance) * 100)",
+            "legendFormat": "{{instance}} CPU"
+          },
+          {
+            "expr": "(node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100",
+            "legendFormat": "{{instance}} Memory Available"
+          },
+          {
+            "expr": "(node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100",
+            "legendFormat": "{{instance}} Disk Available"
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "datasource": "Prometheus",
+          "refresh": 1,
+          "options": [
+            {"selected": true, "text": "All", "value": ".*"},
+            {"selected": false, "text": "auth-service", "value": "auth-service"},
+            {"selected": false, "text": "billing-service", "value": "billing-service"},
+            {"selected": false, "text": "ai-gateway", "value": "ai-gateway"},
+            {"selected": false, "text": "knowledge-service", "value": "knowledge-service"}
+          ]
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "Prometheus",
+          "query": "changes(process_start_time_seconds[1m]) > 0"
+        }
+      ]
+    }
+  }
+}

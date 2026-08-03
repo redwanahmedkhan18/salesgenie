@@ -1,152 +1,53 @@
 #!/bin/bash
-# SalesGenie Development Startup Script
-# Starts all development services including Mailpit for email testing
 
-echo "Starting SalesGenie Development Environment..."
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-# Activate virtual environment
-source .venv/bin/activate
+echo -e "${YELLOW}Starting infrastructure...${NC}"
+docker compose up -d postgres redis minio mailpit 2>&1
 
-# Start infrastructure (if not running)
-echo "Starting infrastructure services..."
-docker compose up -d postgres redis minio
+echo -e "${YELLOW}Waiting for services...${NC}"
+sleep 3
+docker compose ps --format "table {{.Name}}\t{{.Status}}"
 
-# Start Mailpit for local email testing (zero cost)
-echo "Starting Mailpit for email testing..."
-if ! docker ps | grep -q mailpit; then
-    docker run -d --name mailpit -p 1025:1025 -p 8025:8025 axllent/mailpit 2>/dev/null || true
-fi
+echo -e "${YELLOW}Running database migrations...${NC}"
+PGPASSWORD=salesgenie_secret_pass_2026 psql -h localhost -p 5433 -U salesgenie_admin -d salesgenie -f enterprise-ai-platform/database/full_migration.sql 2>/dev/null && echo -e "${GREEN}Database ready${NC}" || echo "Database may already be migrated"
 
-# Wait for services to be ready
-echo "Waiting for services to be ready..."
-sleep 5
+echo -e "${YELLOW}Activating Python environment...${NC}"
+source .venv/bin/activate 2>/dev/null || true
 
-# Run database migrations
-echo "Running database migrations..."
-alembic upgrade head
+echo -e "${YELLOW}Starting all services...${NC}"
 
-# Start services in development mode
-echo "Starting services..."
+cd "$(pwd)"
 
-# Auth Service (Port 8001)
-echo "Starting Auth Service on port 8001..."
-uvicorn enterprise_ai_platform.auth_service.main:app --host 0.0.0.0 --port 8001 --reload &
+# Core services
+nohup python3 -m uvicorn enterprise_ai_platform.ai_gateway_service.main:app --host 0.0.0.0 --port 8000 > /tmp/gateway.log 2>&1 &
+nohup python3 -m uvicorn enterprise_ai_platform.auth_service.main:app --host 0.0.0.0 --port 8001 > /tmp/auth.log 2>&1 &
 
-# User Service (Port 8002)
-echo "Starting User Service on port 8002..."
-uvicorn enterprise_ai_platform.user_service.main:app --host 0.0.0.0 --port 8002 --reload &
+# Integration services (from enterprise-ai-platform/)
+cd enterprise-ai-platform/discord-service && nohup python3 -c "from main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8026)" > /tmp/discord.log 2>&1 &
+cd ../slack-service && nohup python3 -c "from main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8024)" > /tmp/slack.log 2>&1 &
+cd ../instagram-service && nohup python3 main.py > /tmp/instagram.log 2>&1 &
 
-# Organization Service (Port 8003)
-echo "Starting Organization Service on port 8003..."
-uvicorn enterprise_ai_platform.organization_service.main:app --host 0.0.0.0 --port 8003 --reload &
+# Enterprise services
+cd ../sso-service && nohup python3 -c "from main import create_app; import uvicorn; uvicorn.run(create_app(), host='0.0.0.0', port=8028)" > /tmp/sso.log 2>&1 &
+cd ../ai-evaluation-framework/src && nohup python3 -c "from main import create_app; import uvicorn; uvicorn.run(create_app(), host='0.0.0.0', port=8029)" > /tmp/evaluation.log 2>&1 &
 
-# Billing Service (Port 8004)
-echo "Starting Billing Service on port 8004..."
-uvicorn enterprise_ai_platform.billing_service.main:app --host 0.0.0.0 --port 8004 --reload &
+cd ../ABAC-engine && nohup python3 -c "from main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8030)" > /tmp/abac.log 2>&1 &
 
-# WhatsApp Service (Port 8005)
-echo "Starting WhatsApp Service on port 8005..."
-uvicorn enterprise_ai_platform.whatsapp_service.main:app --host 0.0.0.0 --port 8005 --reload &
+cd "$(pwd)"
 
-# AI Gateway Service (Port 8000)
-echo "Starting AI Gateway Service on port 8000..."
-uvicorn enterprise_ai_platform.ai_gateway_service.main:app --host 0.0.0.0 --port 8000 --reload &
-
-# Knowledge Service (Port 8006)
-echo "Starting Knowledge Service on port 8006..."
-uvicorn enterprise_ai_platform.knowledge_service.main:app --host 0.0.0.0 --port 8006 --reload &
-
-# Sales Service (Port 8007)
-echo "Starting Sales Service on port 8007..."
-uvicorn enterprise_ai_platform.sales_service.main:app --host 0.0.0.0 --port 8007 --reload &
-
-# Ticket Service (Port 8008)
-echo "Starting Ticket Service on port 8008..."
-uvicorn enterprise_ai_platform.ticket_service.main:app --host 0.0.0.0 --port 8008 --reload &
-
-# Vector Service (Port 8009)
-echo "Starting Vector Service on port 8009..."
-uvicorn enterprise_ai_platform.vector_service.main:app --host 0.0.0.0 --port 8009 --reload &
-
-# Analytics Service (Port 8010)
-echo "Starting Analytics Service on port 8010..."
-uvicorn enterprise_ai_platform.analytics_service.main:app --host 0.0.0.0 --port 8010 --reload &
-
-# Workflow Service (Port 8011)
-echo "Starting Workflow Service on port 8011..."
-uvicorn enterprise_ai_platform.workflow_service.main:app --host 0.0.0.0 --port 8011 --reload &
-
-# Search Service (Port 8013)
-echo "Starting Search Service on port 8013..."
-uvicorn enterprise_ai_platform.search_service.main:app --host 0.0.0.0 --port 8013 --reload &
-
-# Notification Service (Port 8014)
-echo "Starting Notification Service on port 8014..."
-uvicorn enterprise_ai_platform.notification_service.main:app --host 0.0.0.0 --port 8014 --reload &
-
-# File Service (Port 8015)
-echo "Starting File Service on port 8015..."
-uvicorn enterprise_ai_platform.file_service.main:app --host 0.0.0.0 --port 8015 --reload &
-
-# Customer Service (Port 8016)
-echo "Starting Customer Service on port 8016..."
-uvicorn enterprise_ai_platform.customer_service.main:app --host 0.0.0.0 --port 8016 --reload &
-
-# Support Service (Port 8017)
-echo "Starting Support Service on port 8017..."
-uvicorn enterprise_ai_platform.support_service.main:app --host 0.0.0.0 --port 8017 --reload &
-
-# Conversation Service (Port 8018)
-echo "Starting Conversation Service on port 8018..."
-uvicorn enterprise_ai_platform.conversation_service.main:app --host 0.0.0.0 --port 8018 --reload &
-
-# Telegram Service (Port 8019)
-echo "Starting Telegram Service on port 8019..."
-uvicorn enterprise_ai_platform.telegram_service.main:app --host 0.0.0.0 --port 8019 --reload &
-
-# Messenger Service (Port 8020)
-echo "Starting Messenger Service on port 8020..."
-uvicorn enterprise_ai_platform.messenger_service.main:app --host 0.0.0.0 --port 8020 --reload &
-
-# Email Service (Port 8021)
-echo "Starting Email Service on port 8021..."
-uvicorn enterprise_ai_platform.email_service.main:app --host 0.0.0.0 --port 8021 --reload &
-
-# Lead Intelligence Service (Port 8022)
-echo "Starting Lead Intelligence Service on port 8022..."
-uvicorn enterprise_ai_platform.lead_intelligence_service.main:app --host 0.0.0.0 --port 8022 --reload &
+# Frontend
+nohup npm run dev > /tmp/dev.log 2>&1 &
 
 echo ""
-echo "All services started!"
-echo "AI Gateway:       http://localhost:8000"
-echo "Auth:             http://localhost:8001"
-echo "User:             http://localhost:8002"
-echo "Organization:     http://localhost:8003"
-echo "Billing:          http://localhost:8004"
-echo "WhatsApp:         http://localhost:8005"
-echo "Knowledge:        http://localhost:8006"
-echo "Sales:            http://localhost:8007"
-echo "Ticket:           http://localhost:8008"
-echo "Vector:           http://localhost:8009"
-echo "Analytics:        http://localhost:8010"
-echo "Workflow:         http://localhost:8011"
-echo "Search:           http://localhost:8013"
-echo "Notification:     http://localhost:8014"
-echo "File:             http://localhost:8015"
-echo "Customer:         http://localhost:8016"
-echo "Support:          http://localhost:8017"
-echo "Conversation:     http://localhost:8018"
-echo "Telegram:         http://localhost:8019"
-echo "Messenger:        http://localhost:8020"
-echo "Email:            http://localhost:8021"
-echo "Lead Intelligence: http://localhost:8022"
+echo "=========================================="
+echo -e "${GREEN}SalesGenie Platform Running!${NC}"
+echo "=========================================="
 echo ""
-echo "Mailpit (Email Testing): http://localhost:8025"
-echo "Mailpit SMTP:            localhost:1025"
+echo "  Database:  psql -h localhost -p 5433 -U salesgenie_admin -d salesgenie"
+echo "  Logs:      tail -f /tmp/*.log"
+echo "  Stop all:  ./stop-dev.sh"
 echo ""
-echo "Starting Frontend..."
-npm run dev &
-FRONTEND_PID=$!
-echo "Frontend started: http://localhost:4321"
-echo ""
-echo "Press Ctrl+C to stop all services"

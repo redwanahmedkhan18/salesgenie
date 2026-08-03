@@ -111,6 +111,8 @@ const MESSENGER_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8020" : "
 const EMAIL_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8021" : "/api";
 const LEAD_INTELLIGENCE_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8022" : "/api";
 const PLATFORM_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8001" : "/api";
+const SLACK_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8024" : "/api";
+const DISCORD_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8026" : "/api";
 
 class APIClient {
   private baseHeaders: HeadersInit = {
@@ -1215,6 +1217,120 @@ class APIClient {
       return response.json();
     } catch (error) {
       console.error('Failed to create AI agent:', error);
+      return null;
+    }
+  }
+
+  // Slack Service API methods
+
+  async registerSlackIntegration(channelId: string, botToken: string, signingSecret: string): Promise<{ status: string; channel_id: string } | null> {
+    try {
+      const response = await fetch(`${SLACK_API_BASE_URL}/api/v1/slack/integrations`, {
+        method: 'POST',
+        headers: this.baseHeaders,
+        body: JSON.stringify({ channel_id: channelId, bot_token: botToken, signing_secret: signingSecret }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to register Slack integration:', error);
+      return null;
+    }
+  }
+
+  async listSlackIntegrations(): Promise<{ status: string; integrations: string[]; count: number } | null> {
+    try {
+      const response = await fetch(`${SLACK_API_BASE_URL}/api/v1/slack/integrations`, {
+        headers: this.baseHeaders,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to list Slack integrations:', error);
+      return null;
+    }
+  }
+
+  async sendSlackMessage(channelId: string, text: string, threadTs?: string): Promise<{ status: string; channel_id: string; text: string } | null> {
+    try {
+      const response = await fetch(`${SLACK_API_BASE_URL}/api/v1/slack/channels/${channelId}/messages`, {
+        method: 'POST',
+        headers: this.baseHeaders,
+        body: JSON.stringify({ text, thread_ts: threadTs }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to send Slack message:', error);
+      return null;
+    }
+  }
+
+  // Discord Service API methods
+
+  async registerDiscordIntegration(guildId: string, channelId: string, botToken: string): Promise<{ status: string; channel_id: string } | null> {
+    try {
+      const response = await fetch(`${DISCORD_API_BASE_URL}/api/v1/discord/integrations`, {
+        method: 'POST',
+        headers: this.baseHeaders,
+        body: JSON.stringify({ guild_id: guildId, channel_id: channelId, bot_token: botToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to register Discord integration:', error);
+      return null;
+    }
+  }
+
+  async listDiscordIntegrations(): Promise<{ status: string; integrations: string[]; count: number } | null> {
+    try {
+      const response = await fetch(`${DISCORD_API_BASE_URL}/api/v1/discord/integrations`, {
+        headers: this.baseHeaders,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to list Discord integrations:', error);
+      return null;
+    }
+  }
+
+  async sendDiscordMessage(channelId: string, content: string, username?: string): Promise<{ status: string; channel_id: string; content: string } | null> {
+    try {
+      const response = await fetch(`${DISCORD_API_BASE_URL}/api/v1/discord/channels/${channelId}/messages`, {
+        method: 'POST',
+        headers: this.baseHeaders,
+        body: JSON.stringify({ content, username }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to send Discord message:', error);
       return null;
     }
   }

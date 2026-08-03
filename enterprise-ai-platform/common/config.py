@@ -117,6 +117,14 @@ class PlatformSettings(BaseSettings):
     # Channel Integration Settings - SendGrid (Email)
     SENDGRID_API_KEY: Optional[str] = Field(default=None, description="SendGrid API Key")
 
+    # Channel Integration Settings - Slack
+    SLACK_BOT_TOKEN: Optional[str] = Field(default=None, description="Slack Bot Token")
+    SLACK_SIGNING_SECRET: Optional[str] = Field(default=None, description="Slack Signing Secret")
+    SLACK_WEBHOOK_URL: Optional[str] = Field(default=None, description="Slack Webhook URL")
+
+    # Channel Integration Settings - Discord
+    DISCORD_BOT_TOKEN: Optional[str] = Field(default=None, description="Discord Bot Token")
+
     # Language Settings
     DEFAULT_LANGUAGE: str = Field(default="en", description="Default application language (ISO 639-1 code)")
     SUPPORTED_LANGUAGES: str = Field(default="en,es,fr,de,it,pt,nl,ru,zh,ja,ko,ar,he,hi,bn,ta,te,mr,gu,kn,ml,pa,ur,id,ms,th,vi,tr,sw,fa,ps,ug", description="Comma-separated list of supported language codes")
@@ -128,24 +136,28 @@ class PlatformSettings(BaseSettings):
     ORGANIZATION_SERVICE_PORT: int = Field(default=8003, description="Organization Service Port")
     BILLING_SERVICE_PORT: int = Field(default=8004, description="Billing Service Port")
     AI_GATEWAY_SERVICE_PORT: int = Field(default=8000, description="AI Gateway Service Port")
+    WEBSOCKET_SERVICE_PORT: int = Field(default=8000, description="WebSocket Service Port")
     WHATSAPP_SERVICE_PORT: int = Field(default=8005, description="WhatsApp Service Port")
     KNOWLEDGE_SERVICE_PORT: int = Field(default=8006, description="Knowledge Service Port")
     SALES_SERVICE_PORT: int = Field(default=8007, description="Sales Service Port")
     TICKET_SERVICE_PORT: int = Field(default=8008, description="Ticket Service Port")
     VECTOR_SERVICE_PORT: int = Field(default=8009, description="Vector Service Port")
-    ANALYTICS_SERVICE_PORT: int = Field(default=8010, description="Analytics Service Port")
+    CHAT_SERVICE_PORT: int = Field(default=8010, description="Chat Service Port")
     WORKFLOW_SERVICE_PORT: int = Field(default=8011, description="Workflow Service Port")
+    ANALYTICS_SERVICE_PORT: int = Field(default=8012, description="Analytics Service Port")
     SEARCH_SERVICE_PORT: int = Field(default=8013, description="Search Service Port")
     NOTIFICATION_SERVICE_PORT: int = Field(default=8014, description="Notification Service Port")
-    EMAIL_SERVICE_PORT: int = Field(default=8021, description="Email Service Port")
-    MESSENGER_SERVICE_PORT: int = Field(default=8020, description="Messenger Service Port")
-    TELEGRAM_SERVICE_PORT: int = Field(default=8019, description="Telegram Service Port")
-    LEAD_INTELLIGENCE_SERVICE_PORT: int = Field(default=8022, description="Lead Intelligence Service Port")
-    AUDIT_SERVICE_PORT: int = Field(default=8023, description="Audit Service Port")
     FILE_SERVICE_PORT: int = Field(default=8015, description="File Service Port")
     CUSTOMER_SERVICE_PORT: int = Field(default=8016, description="Customer Service Port")
     SUPPORT_SERVICE_PORT: int = Field(default=8017, description="Support Service Port")
     CONVERSATION_SERVICE_PORT: int = Field(default=8018, description="Conversation Service Port")
+    TELEGRAM_SERVICE_PORT: int = Field(default=8019, description="Telegram Service Port")
+    MESSENGER_SERVICE_PORT: int = Field(default=8020, description="Messenger Service Port")
+    EMAIL_SERVICE_PORT: int = Field(default=8021, description="Email Service Port")
+    LEAD_INTELLIGENCE_SERVICE_PORT: int = Field(default=8022, description="Lead Intelligence Service Port")
+    AUDIT_SERVICE_PORT: int = Field(default=8023, description="Audit Service Port")
+    SLACK_SERVICE_PORT: int = Field(default=8024, description="Slack Service Port")
+    DISCORD_SERVICE_PORT: int = Field(default=8026, description="Discord Service Port")
 
 
 settings = PlatformSettings()

@@ -30,3 +30,55 @@ Before finalizing any full-stack implementation, compiling component libraries, 
 - **Zero Hallucination:** If a skill folder is omitted from the tracks above, do not implement it unless explicitly requested.
 - **Contract First:** Always inspect data serialization models, schemas, and API routes inside the backend pipeline prior to constructing UI pages or hooks.
 - **State Integrity:** Keep business logic completely decoupled from presentational components.
+
+## 4. Security Development Protocol
+
+### Security-First Development
+Never commit code that introduces security vulnerabilities. All changes must pass security validation:
+
+#### Input Validation Requirements
+- All user inputs must be sanitized using `security_protection.py` sanitizers
+- SQL injection protection must be applied to all database queries
+- XSS protection required for all string outputs
+- File path validation for any file operations
+
+#### Secrets Management
+- No secrets in source code (enforced by `secrets_detector` scan)
+- Use environment variables or secret managers only
+- Rotate API keys every 90 days minimum
+
+#### Rate Limiting
+- Apply rate limits to all public endpoints
+- Stricter limits on authentication endpoints
+- Adaptive throttling during high traffic
+
+#### Container Security
+- Use `dockerfile` with non-root user
+- Scan images with `trivy` or `clair` before deployment
+- Enable security scanning in CI/CD pipeline
+
+#### Runtime Protection
+- Enable `PYTHONSAFEPATH=1` in all services
+- Set appropriate resource limits (memory, CPU)
+- Enable watchdog monitoring for process health
+
+### Security Testing Pipeline
+All changes trigger:
+1. SAST scan (`bandit` or `semgrep`)
+2. Dependency scan (`safety` or `pip-audit`)
+3. Container scan (`trivy`)
+4. Security integration tests
+
+### Incident Response
+On security alert:
+1. Isolate affected services
+2. Review audit logs
+3. Apply IP blocks via `security_manager`
+4. Generate incident report
+5. Notify security team within 5 minutes
+
+### High Availability Requirements
+- Services must be accessible via load balancer
+- Circuit breakers must protect against cascade failures
+- Auto-scaling triggers at 80% resource utilization
+- Graceful degradation during partial outages

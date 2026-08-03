@@ -1,0 +1,38 @@
+[Unit]
+Description=SalesGenie AI Platform - Secure Server Manager
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/user/salesgenie
+Environment="PYTHONPATH=/home/user/salesgenie"
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=/usr/bin/python3 /home/user/salesgenie/enterprise-ai-platform/server_management.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Security restrictions
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/user/salesgenie/logs /home/user/salesgenie/data
+ReadOnlyPaths=/etc /usr
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=4G
+CPUQuota=800%
+
+# Kill mode
+KillMode=process
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

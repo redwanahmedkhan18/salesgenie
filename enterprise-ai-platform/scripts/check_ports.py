@@ -20,6 +20,7 @@ class ServiceStatus:
     details: str = ""
 
 SERVICES = [
+    {"name": "AI Gateway Service", "port": 8000, "endpoint": "/api/v1/gateway/models"},
     {"name": "Auth Service", "port": 8001, "endpoint": "/api/v1/auth/me"},
     {"name": "User Service", "port": 8002, "endpoint": "/api/v1/users/me"},
     {"name": "Organization Service", "port": 8003, "endpoint": "/api/v1/organizations"},
@@ -43,7 +44,8 @@ SERVICES = [
     {"name": "Email Service", "port": 8021, "endpoint": "/api/v1/email/templates"},
     {"name": "Lead Intelligence Service", "port": 8022, "endpoint": "/api/v1/lead-intelligence/profiles"},
     {"name": "Audit Service", "port": 8023, "endpoint": "/api/v1/audit/logs"},
-    {"name": "AI Gateway Service", "port": 8000, "endpoint": "/api/v1/gateway/models"},
+    {"name": "Slack Service", "port": 8024, "endpoint": "/api/v1/slack/integrations"},
+    {"name": "Discord Service", "port": 8026, "endpoint": "/api/v1/discord/integrations"},
 ]
 
 

@@ -1,0 +1,67 @@
+[Unit]
+Description=SalesGenie Security Orchestrator
+Documentation=https://docs.salesgenie.ai/security
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+User=salesgenie
+Group=salesgenie
+WorkingDirectory=/home/user/salesgenie
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=/home/user/salesgenie"
+Environment="PYTHONUNBUFFERED=1"
+Environment="PYTHONFAULTHANDLER=1"
+EnvironmentFile=/home/user/salesgenie/.env
+
+# ExecStart
+ExecStart=/usr/bin/python3 /home/user/salesgenie/enterprise-ai-platform/security_orchestrator.py
+ExecStartPre=/bin/sleep 10
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=60
+StartLimitBurst=3
+
+# Process management
+KillMode=process
+KillSignal=SIGTERM
+TimeoutStopSec=30
+NotifyAccess=all
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ReadWritePaths=/home/user/salesgenie/logs /home/user/salesgenie/data /var/log/salesgenie
+ReadOnlyPaths=/etc /usr /var/lib
+
+# Capabilities
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_SETGID CAP_SETUID CAP_SYS_NICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+SecureBits=keep-caps
+
+# Limits
+LimitNOFILE=65536
+LimitNPROC=4096
+MaxTasksMax=100000
+MemoryMax=4G
+MemoryHigh=3.5G
+CPUQuota=800%
+TasksMax=500
+
+# Watchdog (systemd watchdog)
+WatchdogSec=30
+RuntimeDirectory=salesgenie
+StateDirectory=salesgenie
+LogsDirectory=salesgenie
+
+[Install]
+WantedBy=multi-user.target
