@@ -8,37 +8,6 @@ export const prerender = false;
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Verify Email - SalesGenie</title>
-  <script>
-    function redirect() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      if (!token) {
-        window.location.href = '/login';
-        return;
-      }
-      
-      fetch('/api/auth/verify-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: token })
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          // Store verification status and redirect to dashboard
-          localStorage.setItem('email_verified', 'true');
-          window.location.href = '/app/dashboard';
-        } else {
-          document.getElementById('error').style.display = 'block';
-          document.getElementById('message').textContent = data.message || 'Verification failed';
-        }
-      })
-      .catch(() => {
-        document.getElementById('error').style.display = 'block';
-        document.getElementById('message').textContent = 'Unable to verify email. Please try again.';
-      });
-    }
-  </script>
 </head>
 <body style="background: linear-gradient(135deg, #0f1117 0%, #1a1d29 50%, #0f1117 100%); color: white; font-family: Arial, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
   <div style="background: var(--color-card); padding: 40px; border-radius: 16px; border: 1px solid var(--color-border); max-width: 400px; text-align: center;">
@@ -56,8 +25,42 @@ export const prerender = false;
       </button>
     </div>
   </div>
-  <script>
-    setTimeout(redirect, 1000);
+  <script is:inline>
+    (function() {
+      function redirect() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        if (!token) {
+          window.location.href = '/login';
+          return;
+        }
+        
+        fetch('/api/auth/verify-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token })
+        })
+        .then(r => r.json())
+        .then(function(data) {
+          if (data.success) {
+            localStorage.setItem('email_verified', 'true');
+            window.location.href = '/app/dashboard';
+          } else {
+            const errorEl = document.getElementById('error');
+            const messageEl = document.getElementById('message');
+            if (errorEl) errorEl.style.display = 'block';
+            if (messageEl) messageEl.textContent = data.message || 'Verification failed';
+          }
+        })
+        .catch(function() {
+          const errorEl = document.getElementById('error');
+          const messageEl = document.getElementById('message');
+          if (errorEl) errorEl.style.display = 'block';
+          if (messageEl) messageEl.textContent = 'Unable to verify email. Please try again.';
+        });
+      }
+      setTimeout(redirect, 1000);
+    })();
   </script>
 </body>
 </html>

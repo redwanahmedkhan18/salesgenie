@@ -130,6 +130,20 @@ class PlatformSettings(BaseSettings):
     # Channel Integration Settings - Discord
     DISCORD_BOT_TOKEN: Optional[str] = Field(default=None, description="Discord Bot Token")
 
+    # Super Admin Configuration
+    SALESGENIE_SUPER_ADMIN_EMAILS: str = Field(
+        default="admin@yourcompany.com,owner@yourcompany.com",
+        description="Comma-separated list of emails that receive super admin role on signup"
+    )
+    SALESGENIE_SUPER_ADMIN_NAME: str = Field(
+        default="Super Admin",
+        description="Default name for super admin users"
+    )
+    SALESGENIE_SUPER_ADMIN_PASSWORD: str = Field(
+        default="YourSecurePassword123!",
+        description="Default password for super admin users (change in production!)"
+    )
+
     # Language Settings
     DEFAULT_LANGUAGE: str = Field(default="en", description="Default application language (ISO 639-1 code)")
     SUPPORTED_LANGUAGES: str = Field(default="en,es,fr,de,it,pt,nl,ru,zh,ja,ko,ar,he,hi,bn,ta,te,mr,gu,kn,ml,pa,ur,id,ms,th,vi,tr,sw,fa,ps,ug", description="Comma-separated list of supported language codes")

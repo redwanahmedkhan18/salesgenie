@@ -409,6 +409,69 @@ export interface AIAgent {
   tenant_id: string;
 }
 
+// Super Admin Types
+
+export interface SuperAdminUser {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+  last_login_at: string | null;
+  tenant_id: string | null;
+}
+
+export interface AuditEvent {
+  id: string;
+  action: string;
+  resource_type: string;
+  resource_id: string | null;
+  user_id: string | null;
+  user_email: string | null;
+  tenant_id: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  details: Record<string, any>;
+  created_at: string;
+}
+
+export interface SystemHealth {
+  service: string;
+  status: 'healthy' | 'degraded' | 'down';
+  response_time_ms: number;
+  last_check: string;
+}
+
+export interface AIProviderStatus {
+  name: string;
+  status: 'healthy' | 'degraded' | 'down';
+  models: string[];
+  daily_limit: number;
+  daily_used: number;
+  rate_limit_remaining: number;
+}
+
+export interface PlatformSettings {
+  maintenance_mode: boolean;
+  feature_flags: Record<string, boolean>;
+  rate_limits_enabled: boolean;
+  max_api_requests_per_minute: number;
+  ai_token_budget_usd: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SystemInfo {
+  version: string;
+  instance_id: string;
+  environment: string;
+  python_version: string;
+  database: string;
+  redis: string;
+}
+
 // Channel Integration Types
 
 export interface ChannelIntegration {

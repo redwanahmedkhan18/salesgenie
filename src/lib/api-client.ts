@@ -45,6 +45,12 @@ import type {
   PlatformMetrics,
   OrganizationListItem,
   OrganizationDetail,
+  SuperAdminUser,
+  AuditEvent,
+  SystemHealth,
+  AIProviderStatus,
+  PlatformSettings,
+  SystemInfo,
 } from './types';
 
 export type {
@@ -84,6 +90,12 @@ export type {
   OrganizationDetail,
   KnowledgeDocument,
   AIAgent,
+  SuperAdminUser,
+  AuditEvent,
+  SystemHealth,
+  AIProviderStatus,
+  PlatformSettings,
+  SystemInfo,
 };
 
 export const AUTH_SERVICE_URL = import.meta.env.DEV
@@ -1202,7 +1214,7 @@ class APIClient {
 
   async fetchPlatformMetrics(): Promise<PlatformMetrics | null> {
     try {
-      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/platform/metrics`, {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/metrics`, {
         headers: this.getAuthHeaders(),
       });
 
@@ -1220,7 +1232,7 @@ class APIClient {
   async fetchOrganizations(status?: 'all' | 'active' | 'suspended'): Promise<OrganizationListItem[]> {
     try {
       const params = status && status !== 'all' ? `?status=${status}` : '';
-      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/platform/organizations${params}`, {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/organizations${params}`, {
         headers: this.getAuthHeaders(),
       });
 
@@ -1237,7 +1249,7 @@ class APIClient {
 
   async suspendOrganization(orgId: string): Promise<OrganizationDetail | null> {
     try {
-      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/platform/organizations/${orgId}/suspend`, {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/organizations/${orgId}/suspend`, {
         method: 'PATCH',
         headers: this.getAuthHeaders(),
       });
@@ -1255,7 +1267,7 @@ class APIClient {
 
   async resumeOrganization(orgId: string): Promise<OrganizationDetail | null> {
     try {
-      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/platform/organizations/${orgId}/resume`, {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/organizations/${orgId}/resume`, {
         method: 'PATCH',
         headers: this.getAuthHeaders(),
       });
@@ -1273,7 +1285,7 @@ class APIClient {
 
   async deleteOrganization(orgId: string): Promise<{ status: string; message: string; org_id: string } | null> {
     try {
-      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/platform/organizations/${orgId}`, {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/organizations/${orgId}`, {
         method: 'DELETE',
         headers: this.getAuthHeaders(),
       });
@@ -1477,6 +1489,167 @@ class APIClient {
     } catch (error) {
       console.error('Failed to send Discord message:', error);
       return null;
+    }
+  }
+
+  // Super Admin API methods
+
+  async fetchSuperAdminUsers(searchQuery?: string): Promise<SuperAdminUser[]> {
+    try {
+      const params = searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : '';
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/users${params}`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch super admin users:', error);
+      return [];
+    }
+  }
+
+  async fetchAuditEvents(): Promise<AuditEvent[]> {
+    try {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/audit-events?limit=100`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch audit events:', error);
+      return [];
+    }
+  }
+
+  async fetchSystemHealth(): Promise<SystemHealth[]> {
+    try {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/health`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch system health:', error);
+      return [];
+    }
+  }
+
+  async fetchAIProviderStatus(): Promise<AIProviderStatus[]> {
+    try {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/ai-providers`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch AI provider status:', error);
+      return [];
+    }
+  }
+
+  async fetchPlatformSettings(): Promise<PlatformSettings | null> {
+    try {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/settings`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch platform settings:', error);
+      return null;
+    }
+  }
+
+  async fetchSystemInfo(): Promise<SystemInfo | null> {
+    try {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/system-info`, {
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch system info:', error);
+      return null;
+    }
+  }
+
+  async updatePlatformSettings(updates: Partial<PlatformSettings>): Promise<PlatformSettings | null> {
+    try {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/settings`, {
+        method: 'PATCH',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to update platform settings');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to update platform settings:', error);
+      return null;
+    }
+  }
+
+  async suspendUser(userId: string): Promise<{ status: string; message: string }> {
+    try {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/users/${userId}/suspend`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to suspend user:', error);
+      return { status: 'error', message: 'Failed to suspend user' };
+    }
+  }
+
+  async resumeUser(userId: string): Promise<{ status: string; message: string }> {
+    try {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/users/${userId}/resume`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to resume user:', error);
+      return { status: 'error', message: 'Failed to resume user' };
     }
   }
 }

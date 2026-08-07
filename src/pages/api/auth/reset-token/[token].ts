@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-export const GET: APIRoute = async ({ params, url }) => {
+export const GET: APIRoute = async ({ url }) => {
   try {
     const token = url.pathname.split('/').pop() || '';
     

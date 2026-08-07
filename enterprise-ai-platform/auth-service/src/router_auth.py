@@ -155,6 +155,12 @@ async def login(
         pass
 
     assigned_roles = [PlatformRole.SUPPORT_AGENT.value, PlatformRole.SALES_AGENT.value]
+
+    # Check if user email matches super admin emails
+    super_admin_emails = [email.strip() for email in getattr(settings, 'SALESGENIE_SUPER_ADMIN_EMAILS', '').split(',')]
+    if req.email.lower() in [email.lower() for email in super_admin_emails if email]:
+        assigned_roles = [PlatformRole.SUPER_ADMIN.value]
+
     session_id = str(uuid.uuid4())
 
     access_token = create_access_token(
@@ -211,6 +217,10 @@ async def signup(
 
     verification_token = uuid.uuid4().hex
     expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+
+    # Check if user email matches super admin emails - will be assigned after verification
+    super_admin_emails = [email.strip() for email in getattr(settings, 'SALESGENIE_SUPER_ADMIN_EMAILS', '').split(',')]
+    is_super_admin_email = req.email.lower() in [email.lower() for email in super_admin_emails if email]
 
     org_id = None
     if db and not isinstance(db, Exception):
@@ -384,7 +394,9 @@ async def verify_email(
     body: dict,
     db: AsyncSession = Depends(get_async_db),
 ):
-    """Verify user email address using the verification token from signup."""
+    """Verify user email address using the verification token from signup.
+    Automatically assigns super_admin role if email is in SALESGENIE_SUPER_ADMIN_EMAILS.
+    """
     token = body.get("token", "")
     
     if not token:
@@ -404,10 +416,26 @@ async def verify_email(
         if verification.expires_at < datetime.now(timezone.utc):
             return {"success": False, "message": "Verification token has expired"}
         
+        # Check if this email should be a super admin
+        super_admin_emails = [email.strip() for email in getattr(settings, 'SALESGENIE_SUPER_ADMIN_EMAILS', '').split(',')]
+        is_super_admin = verification.email.lower() in [email.lower() for email in super_admin_emails if email]
+        
+        # Update user to verified and optionally set super admin role
+        user_stmt = select(User).where(User.email == verification.email)
+        user_result = await db.execute(user_stmt)
+        user = user_result.scalar_one_or_none()
+        
+        if user:
+            user.is_verified = True
+            if is_super_admin:
+                # Store that this user should have super admin role
+                # The JWT token during login will include this role
+                pass  # Role is determined during login based on email
+        
         verification.is_verified = True
         await db.commit()
         
-        return {"success": True, "message": "Email verified successfully! You can now log in."}
+        return {"success": True, "message": "Email verified successfully! You can now log in.", "is_super_admin": is_super_admin}
     except Exception as e:
         return {"success": False, "message": f"Verification failed: {str(e)}"}
 

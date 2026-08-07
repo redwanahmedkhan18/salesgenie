@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from enterprise_ai_platform.common.config import settings
 from enterprise_ai_platform.ai_gateway_service.src.router_ai import router as ai_router
+from enterprise_ai_platform.ai_gateway_service.src.router_admin import router as admin_router
 
 
 app = FastAPI(
@@ -26,6 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(ai_router)
+app.include_router(admin_router)
 
 
 @app.get("/health/live", tags=["Health Checks"])

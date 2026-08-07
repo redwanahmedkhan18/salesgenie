@@ -64,6 +64,7 @@ function RoleBasedSidebar({ roles }: { roles: PlatformRole[] }) {
       { label: 'Team & Roles', icon: '👥', href: '/app/team', minRole: ['super_admin', 'workspace_admin', 'org_admin'] },
       { label: 'Settings', icon: '⚙️', href: '/app/settings', minRole: ['super_admin', 'workspace_admin', 'org_admin'] },
       { label: 'Audit Logs', icon: '🔍', href: '/app/audit', minRole: ['super_admin', 'workspace_admin', 'auditor'] },
+      { label: 'Admin Routes', icon: '🛡️', href: '/app/super-admin-routes', minRole: ['super_admin'] },
     ],
     sales: [
       { label: 'Sales Dashboard', icon: '⊡', href: '/app/dashboard', minRole: ['sales_manager', 'sales_agent'] },
