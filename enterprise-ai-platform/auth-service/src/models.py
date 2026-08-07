@@ -7,9 +7,10 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, func, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from passlib.hash import bcrypt
 
 from enterprise_ai_platform.common.models_base import (
     Base,
@@ -18,6 +19,37 @@ from enterprise_ai_platform.common.models_base import (
     TenantIsolationMixin,
 )
 from enterprise_ai_platform.common.security_rbac import PlatformRole
+
+
+class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Registered user account with bcrypt-hashed password and unique email."""
+    __tablename__ = "auth_users"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    organization_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    company: Mapped[str] = mapped_column(String(255), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    def set_password(self, plaintext: str) -> None:
+        self.password_hash = bcrypt.hash(plaintext)
+
+    def verify_password(self, plaintext: str) -> bool:
+        return bcrypt.verify(plaintext, self.password_hash)
+
+
+class Organization(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Organization entity for multi-tenant support."""
+    __tablename__ = "organizations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    domain: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    plan_tier: Mapped[str] = mapped_column(String(50), default="starter", nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
 
 # -------------------------------------------------------------------
@@ -79,6 +111,28 @@ class OAuthAccount(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     provider_user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     access_token: Mapped[str] = mapped_column(Text, nullable=False)
     refresh_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class UserVerificationToken(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Store email verification tokens for new user accounts."""
+    __tablename__ = "auth_user_verification_tokens"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, unique=True, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    token: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
+class PasswordResetToken(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Stores password reset tokens for users who forgot their passwords."""
+    __tablename__ = "auth_password_reset_tokens"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, unique=True, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    token: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 # -------------------------------------------------------------------
@@ -153,3 +207,13 @@ class SignupResponse(BaseModel):
     status: str
     message: str
     requires_verification: bool = False
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+    confirm_password: str

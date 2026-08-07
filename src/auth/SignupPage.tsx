@@ -1,28 +1,39 @@
 import React, { useState } from 'react';
-import { useAuth } from './AuthProvider';
+import { AUTH_SERVICE_URL } from '../lib/api-client';
 
 export function SignupPage() {
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     password: '',
+    confirm_password: '',
     company: '',
+    agree_terms: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [verificationSent, setVerificationSent] = useState(false);
 
-  const { login } = useAuth();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.password !== formData.confirm_password) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (!formData.agree_terms) {
+      setError('You must agree to the Terms of Service and Privacy Policy');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const response = await fetch('http://localhost:8001/api/v1/auth/signup', {
+      const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -51,7 +62,7 @@ export function SignupPage() {
   const handleOAuthLogin = async () => {
     try {
       const state = btoa(JSON.stringify({ provider: 'google', timestamp: Date.now(), signup: true }));
-      const response = await fetch(`http://localhost:8001/api/v1/auth/redirect/google?state=${state}`);
+      const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/redirect/google?state=${state}`);
       const data = await response.json();
       if (data.redirect_url) {
         window.location.href = data.redirect_url;
@@ -144,6 +155,28 @@ export function SignupPage() {
                     required
                     disabled={isSubmitting}
                     minLength={8}
+                    className="w-full px-4 py-2.5rounded-xl text-sm outline-none transition-colors"
+                    style={{
+                      background: 'var(--color-background)',
+                      color: 'var(--color-foreground)',
+                      border: '1px solid var(--color-border)',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-foreground)' }}>
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirm_password"
+                    value={formData.confirm_password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    required
+                    disabled={isSubmitting}
+                    minLength={8}
                     className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-colors"
                     style={{
                       background: 'var(--color-background)',
@@ -180,6 +213,45 @@ export function SignupPage() {
                     {error}
                   </div>
                 )}
+
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center h-5">
+                    <input
+                      type="checkbox"
+                      checked={formData.agree_terms}
+                      onChange={(e) => setFormData({ ...formData, agree_terms: e.target.checked })}
+                      className="h-4 w-4 rounded border border-color-border focus:ring-color-primary focus:ring-color-primary"
+                      style={{
+                        borderColor: 'var(--color-border)',
+                        backgroundColor: formData.agree_terms ? 'var(--color-primary)' : 'transparent',
+                      }}
+                    />
+                  </div>
+                  <div className="text-sm">
+                    <span style={{ color: 'var(--color-foreground)' }}>
+                      I agree to the{' '}
+                    </span>
+                    <a
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-color-primary hover:underline font-medium"
+                      style={{ color: 'var(--color-primary)' }}
+                    >
+                      Terms of Service
+                    </a>
+                    <span style={{ color: 'var(--color-foreground)' }}> and </span>
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-color-primary hover:underline font-medium"
+                      style={{ color: 'var(--color-primary)' }}
+                    >
+                      Privacy Policy
+                    </a>
+                  </div>
+                </div>
 
                 <button
                   type="submit"

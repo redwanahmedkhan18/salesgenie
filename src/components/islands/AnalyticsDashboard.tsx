@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar, CommandPalette } from './AppShell';
+import { CONVERSATION_SERVICE_URL, TICKETS_SERVICE_URL, ANALYTICS_SERVICE_URL } from '../../lib/api-client';
 import {
   AreaChart,
   Area,
@@ -73,9 +74,9 @@ export default function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30d');
 
-  const convServiceUrl = import.meta.env.DEV ? 'http://localhost:8017/api/v1' : '/api/v1';
-  const ticketServiceUrl = import.meta.env.DEV ? 'http://localhost:8008/api/v1' : '/api/v1';
-  const analyticsServiceUrl = import.meta.env.DEV ? 'http://localhost:8011/api/v1' : '/api/v1';
+  const convServiceUrl = `${CONVERSATION_SERVICE_URL}/api/v1`;
+  const ticketServiceUrl = `${TICKETS_SERVICE_URL}/api/v1`;
+  const analyticsServiceUrl = `${ANALYTICS_SERVICE_URL}/api/v1`;
 
   useEffect(() => {
     const loadData = async () => {

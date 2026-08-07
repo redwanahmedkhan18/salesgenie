@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar, CommandPalette } from './AppShell';
+import { AUDIT_SERVICE_URL } from '../../lib/api-client';
 
 interface AuditLog {
   id: string;
@@ -74,9 +75,9 @@ export default function AuditLogs() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [overview, setOverview] = useState<AuditOverview | null>(null);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
   const [totalHits, setTotalHits] = useState(0);
   const [tookMs, setTookMs] = useState(0);
-  const [query, setQuery] = useState('');
   const [filterSeverity, setFilterSeverity] = useState<string | null>(null);
   const [filterEventType, setFilterEventType] = useState<string | null>(null);
   const [filterCompliance, setFilterCompliance] = useState<boolean | null>(null);
@@ -87,19 +88,19 @@ export default function AuditLogs() {
       setLoading(true);
       try {
         const [logsRes, overviewRes] = await Promise.all([
-          fetch(`${import.meta.env.DEV ? 'http://localhost:8013' : '/api'}/audit/logs?size=50`, {
+          fetch(`${AUDIT_SERVICE_URL}/api/v1/audit/events?size=50`, {
             headers: { 'Content-Type': 'application/json' },
           }),
-          fetch(`${import.meta.env.DEV ? 'http://localhost:8013' : '/api'}/audit/overview`, {
+          fetch(`${AUDIT_SERVICE_URL}/api/v1/audit/events/overview`, {
             headers: { 'Content-Type': 'application/json' },
           }),
         ]);
 
         if (logsRes.ok) {
           const logsData: AuditSearchResponse = await logsRes.json();
-          setLogs(logsData.hits);
-          setTotalHits(logsData.total_hits);
-          setTookMs(logsData.took_ms);
+          setLogs(logsData.hits || logsData as any);
+          setTotalHits(logsData.total_hits || 0);
+          setTookMs(logsData.took_ms || 0);
         }
 
         if (overviewRes.ok) {
@@ -129,7 +130,7 @@ export default function AuditLogs() {
       if (filterCompliance !== null) params.set('is_compliance', String(filterCompliance));
 
       const response = await fetch(
-        `${import.meta.env.DEV ? 'http://localhost:8013' : '/api'}/audit/logs?${params.toString()}`,
+        `${AUDIT_SERVICE_URL}/api/v1/audit/events?${params.toString()}`,
         { headers: { 'Content-Type': 'application/json' } }
       );
 

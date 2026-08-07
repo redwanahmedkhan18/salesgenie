@@ -18,19 +18,22 @@ export default function SupportTickets() {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [ticketData, analyticsData] = await Promise.all([
+        const [ticketData, analyticsData] = await Promise.allSettled([
           apiClient.fetchTickets(),
           apiClient.fetchTicketAnalytics(),
         ]);
-        setTickets(ticketData);
-        setAnalytics(analyticsData);
+        if (ticketData.status === 'fulfilled' && ticketData.value) {
+          setTickets(Array.isArray(ticketData.value) ? ticketData.value : []);
+        }
+        if (analyticsData.status === 'fulfilled' && analyticsData.value) {
+          setAnalytics(analyticsData.value);
+        }
       } catch (error) {
         console.error('Error loading ticket data:', error);
       } finally {
         setLoading(false);
       }
     };
-
     loadData();
   }, []);
 
@@ -51,17 +54,43 @@ export default function SupportTickets() {
   const handleCreateTicket = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const ticket = await apiClient.createTicket({
-      customer_id: formData.get('customer_id') as string,
-      title: formData.get('title') as string,
-      description: formData.get('description') as string,
-      priority: formData.get('priority') as string,
-      category: formData.get('category') as string,
-      source: 'web',
-    });
-    if (ticket) {
-      setTickets([ticket, ...tickets]);
-      setShowModal(false);
+    
+    const customerId = formData.get('customer_id') as string;
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const priority = (formData.get('priority') as string) || 'medium';
+    const category = (formData.get('category') as string) || 'general';
+    
+    if (!customerId || !title || !description) {
+      alert('Please fill in all required fields (Customer ID, Title, Description)');
+      return;
+    }
+    
+    try {
+      console.debug('Creating ticket with data:', { customerId, title, description, priority, category });
+      const ticket = await apiClient.createTicket({
+        customer_id: customerId,
+        title: title,
+        description: description,
+        priority: priority as 'low' | 'medium' | 'high' | 'urgent' | 'critical',
+        category: category as 'general' | 'technical' | 'billing' | 'sales' | 'account',
+        source: 'web',
+      });
+      
+      console.debug('Ticket creation response:', ticket);
+      
+      if (ticket && ticket.id) {
+        setTickets([ticket, ...tickets]);
+        setShowModal(false);
+        e.currentTarget.reset();
+        alert(`Ticket created successfully! Ticket ID: ${ticket.id}`);
+      } else {
+        console.error('Failed to create ticket: no response or invalid response');
+        alert('Failed to create ticket: Server returned no valid response. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Error creating ticket:', err);
+      alert(`Failed to create ticket: ${err.message || 'Unknown error'}. Please try again.`);
     }
   };
 
@@ -89,7 +118,7 @@ export default function SupportTickets() {
     critical: 'bg-red-600/15 text-red-500',
   };
 
-  return (
+return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--color-background)' }}>
       <Sidebar activeRoute={activeRoute} onRouteChange={setActiveRoute} />
 
@@ -352,15 +381,15 @@ export default function SupportTickets() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm rounded-lg transition-colors"
-                  style={{ background: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }}
+                  className="px-4 py-2 text-sm rounded-lg transition-colors cursor-pointer hover:opacity-80"
+                  style={{ background: 'var(--color-muted)', color: 'var(--color-muted-foreground)', border: '1px solid var(--color-border)' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-semibold rounded-lg transition-all"
-                  style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
+                  className="px-4 py-2 text-sm font-semibold rounded-lg transition-all cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)', border: '1px solid var(--color-primary)' }}
                 >
                   Create Ticket
                 </button>

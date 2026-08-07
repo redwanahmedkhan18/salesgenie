@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
 import { apiClient } from '../lib/api-client';
-import type { User, Session, PlatformRole, LoginRequest, LoginResponse } from '../lib/types';
+import type { User, Session, PlatformRole, LoginResponse } from '../lib/types';
 
 interface AuthState {
   user: User | null;
@@ -19,12 +19,16 @@ interface AuthContextType extends AuthState {
   hasRole: (role: PlatformRole) => boolean;
   hasAnyRole: (roles: PlatformRole[]) => boolean;
   switchOrganization: (orgId: string) => void;
+  forgotPassword: (email: string) => Promise<{ success: boolean; message: string; token?: string }>;
+  resetPassword: (token: string, newPassword: string, confirmPassword: string) => Promise<{ success: boolean; message: string }>;
+  validateResetToken: (token: string) => Promise<{ valid: boolean; email?: string; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 type AuthAction =
   | { type: 'SET_LOADING' }
+  | { type: 'SET_NOT_LOADING' }
   | { type: 'SET_AUTH'; payload: { user: User; session: Session; roles: PlatformRole[]; permissions: string[] } }
   | { type: 'SET_MFA_REQUIRED'; payload: { user_id: string; tenant_id: string } }
   | { type: 'LOGOUT' }
@@ -34,6 +38,8 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'SET_LOADING':
       return { ...state, isLoading: true };
+    case 'SET_NOT_LOADING':
+      return { ...state, isLoading: false };
     case 'SET_AUTH':
       return {
         ...state,
@@ -69,7 +75,11 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 function decodeJWT(token: string): { sub: string; email?: string; roles?: PlatformRole[]; tenant_id?: string; exp?: number } {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return { sub: '', roles: [], tenant_id: 'default_tenant' };
+    }
+    const payload = JSON.parse(atob(parts[1]));
     return payload;
   } catch {
     return { sub: '', roles: [], tenant_id: 'default_tenant' };
@@ -99,8 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token) {
         const decoded = decodeJWT(token);
         const now = Math.floor(Date.now() / 1000);
+        const isTokenValid = decoded.exp ? decoded.exp > now : true;
+        const isRefreshTokenValid = !!refreshToken;
 
-        if (decoded.exp && decoded.exp > now) {
+        if (isTokenValid || isRefreshTokenValid) {
           const userData = localStorage.getItem('user_data');
           let user: User | null = null;
           if (userData) {
@@ -123,8 +135,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
 
-          const roles = (decoded.roles || []) as PlatformRole[];
+          let roles: PlatformRole[] = (decoded.roles || []) as PlatformRole[];
+          if (roles.length === 0) {
+            const storedRoles = localStorage.getItem('roles');
+            if (storedRoles) {
+              try {
+                roles = JSON.parse(storedRoles) as PlatformRole[];
+              } catch {}
+            }
+          }
+          
+          if (roles.length === 0) {
+            roles = ['end_user'];
+          }
+          
           const permissions = derivePermissions(roles);
+          localStorage.setItem('roles', JSON.stringify(roles));
+          localStorage.setItem('permissions', JSON.stringify(permissions));
+          
+          if (decoded.roles) {
+            localStorage.setItem('jwt_roles', JSON.stringify(decoded.roles));
+          }
 
           dispatch({
             type: 'SET_AUTH',
@@ -133,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               session: {
                 token,
                 refreshToken: refreshToken || '',
-                expiresAt: (decoded.exp || 0) * 1000,
+                expiresAt: (decoded.exp || now + 3600) * 1000,
                 user,
                 roles,
                 permissions,
@@ -142,17 +173,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               permissions,
             },
           });
-        } else if (refreshToken) {
-          await refreshSession();
         } else {
           dispatch({ type: 'LOGOUT' });
         }
+      } else if (refreshToken) {
+        await refreshSession();
       } else {
         dispatch({ type: 'LOGOUT' });
       }
     } catch (error) {
       console.error('Auth initialization error:', error);
       dispatch({ type: 'AUTH_ERROR' });
+    } finally {
+      dispatch({ type: 'SET_NOT_LOADING' });
     }
   };
 
@@ -265,6 +298,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_data');
+    localStorage.removeItem('roles');
+    localStorage.removeItem('permissions');
+    localStorage.removeItem('oauth_provider');
     dispatch({ type: 'LOGOUT' });
   };
 
@@ -298,6 +334,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const forgotPassword = async (email: string): Promise<{ success: boolean; message: string; token?: string }> => {
+    dispatch({ type: 'SET_LOADING' });
+    try {
+      const response = await apiClient.forgotPassword(email);
+      dispatch({ type: 'SET_NOT_LOADING' });
+      return response;
+    } catch (error) {
+      dispatch({ type: 'SET_NOT_LOADING' });
+      throw error;
+    }
+  };
+
+  const validateResetToken = async (token: string): Promise<{ valid: boolean; email?: string; error?: string }> => {
+    dispatch({ type: 'SET_LOADING' });
+    try {
+      const response = await apiClient.getResetToken(token);
+      dispatch({ type: 'SET_NOT_LOADING' });
+      return { valid: true, email: response.email };
+    } catch (error: any) {
+      dispatch({ type: 'SET_NOT_LOADING' });
+      return { valid: false, error: error.message || 'Invalid or expired reset token' };
+    }
+  };
+
+  const resetPassword = async (token: string, newPassword: string, confirmPassword: string): Promise<{ success: boolean; message: string }> => {
+    dispatch({ type: 'SET_LOADING' });
+    try {
+      const response = await apiClient.resetPassword({
+        token,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+      dispatch({ type: 'SET_NOT_LOADING' });
+      return response;
+    } catch (error) {
+      dispatch({ type: 'SET_NOT_LOADING' });
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     ...state,
     login,
@@ -307,12 +383,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     hasRole,
     hasAnyRole,
     switchOrganization,
+    forgotPassword,
+    resetPassword,
+    validateResetToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-function derivePermissions(roles: PlatformRole[]): string[] {
+export function derivePermissions(roles: PlatformRole[]): string[] {
   const permissions: string[] = [];
 
   const rolePermissions: Record<string, string[]> = {
@@ -346,8 +425,8 @@ export const useAuth = () => {
         user: null,
         session: null,
         roles: [],
-        permissions: [],
-        isLoading: true,
+        permissions: [] as string[],
+        isLoading: false,
         isAuthenticated: false,
         login: async () => ({ access_token: '', refresh_token: '', expires_in: 0, user_id: '', tenant_id: '', roles: [], mfa_required: false } as any),
         logout: () => {},
@@ -356,6 +435,9 @@ export const useAuth = () => {
         hasRole: () => false,
         hasAnyRole: () => false,
         switchOrganization: () => {},
+        forgotPassword: async () => ({ success: false, message: '' }),
+        resetPassword: async () => ({ success: false, message: '' }),
+        validateResetToken: async () => ({ valid: false }),
       };
     }
     throw new Error('useAuth must be used within an AuthProvider');

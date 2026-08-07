@@ -13,6 +13,8 @@
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "jsx": "react",
+    "jsxImportSource": "react"
   }
 }

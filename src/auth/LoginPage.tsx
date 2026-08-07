@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthProvider';
+import { AUTH_SERVICE_URL } from '../lib/api-client';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,6 +30,8 @@ export function LoginPage() {
       if (response.mfa_required) {
         setMfaRequired(true);
         setShowMfa(true);
+      } else {
+        window.location.href = '/app/dashboard';
       }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
@@ -55,10 +58,12 @@ export function LoginPage() {
   const handleOAuthLogin = async () => {
     try {
       const state = btoa(JSON.stringify({ provider: 'google', timestamp: Date.now() }));
-      const response = await fetch(`http://localhost:8001/api/v1/auth/redirect/google?state=${state}`);
+      const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/redirect/google?state=${state}`);
       const data = await response.json();
       if (data.redirect_url) {
         window.location.href = data.redirect_url;
+      } else if (data.mock) {
+        alert(data.message || 'OAuth not configured. Please use the regular login form.');
       }
     } catch (err) {
       console.error('OAuth redirect failed:', err);
@@ -170,6 +175,14 @@ export function LoginPage() {
                   <path fill="#4285F4" d="M532 274.9c0-18.5-1.5-36.3-4.5-53.3-12.3-55.7-60.3-95.5-117.6-95.5C232.6 126 186.2 165.4 151.2 211.7c-3.2 4.7-5.8 9.8-7.8 14.9l-61.8-15.3C85.5 185.7 39.7 225.8 27.5 281.7c-18.4 85.1 11.4 172.3 76.5 211.8 30.2 17.1 65.4 29.9 103.8 29.9 49.9 0 97.2-20.5 132.1-54.3 30.6-28.4 50.7-63.7 56.6-103.5 5.3-32.2-5.5-61.3-24.6-84.3z"/>
                 </svg>
                 Continue with Google
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.location.href = '/forgot-password'}
+                className="text-xs underline text-amber-400 hover:text-amber-300 transition-colors"
+                style={{ color: '#f7a501' }}>
+                Forgot Password?
               </button>
 
               <button

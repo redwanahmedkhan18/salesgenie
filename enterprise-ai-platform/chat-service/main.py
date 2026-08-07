@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from enterprise_ai_platform.common.config import settings
-from src.router_chat import router as chat_router
+from enterprise_ai_platform.chat_service.src.router_chat import router as chat_router
 
 
 app = FastAPI(

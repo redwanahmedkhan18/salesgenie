@@ -1,4 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { derivePermissions } from './AuthProvider';
+import type { PlatformRole } from '../lib/types';
+import { AUTH_SERVICE_URL } from '../lib/api-client';
+
+const VALID_ROLES: PlatformRole[] = [
+  'super_admin', 'workspace_admin', 'org_admin',
+  'sales_manager', 'sales_agent',
+  'support_manager', 'support_agent',
+  'knowledge_manager', 'auditor', 'end_user'
+];
 
 export default function OAuthCallback() {
   const [loading, setLoading] = useState(true);
@@ -25,7 +35,7 @@ export default function OAuthCallback() {
           return;
         }
         
-        const response = await fetch(`http://localhost:8001/api/v1/auth/callback/${provider}?code=${code}${state ? `&state=${encodeURIComponent(state)}` : ''}`, {
+        const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/callback/${provider}?code=${code}${state ? `&state=${encodeURIComponent(state)}` : ''}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -44,8 +54,47 @@ export default function OAuthCallback() {
         
         const data = await response.json();
         
+        // Handle mock/dev mode response
+        if (data.mock) {
+          const devToken = `dev_token_${provider}_${Date.now()}`;
+          localStorage.setItem('auth_token', devToken);
+          localStorage.setItem('refresh_token', devToken);
+          localStorage.setItem('oauth_provider', provider);
+          localStorage.setItem('roles', JSON.stringify(['end_user']));
+          localStorage.setItem('permissions', JSON.stringify(['agent:execute', 'knowledge:read', 'ticket:read']));
+          localStorage.setItem('user_data', JSON.stringify({
+            id: `oauth_${provider}_${Date.now()}`,
+            email: `user@${provider}.com`,
+            full_name: null,
+            avatar_url: null,
+            tenant_id: 'oauth_tenant',
+            created_at: new Date().toISOString(),
+          }));
+          localStorage.setItem('session_timestamp', Date.now().toString());
+          window.location.href = '/app/dashboard';
+          return;
+        }
+        
         localStorage.setItem('auth_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token || '');
         localStorage.setItem('oauth_provider', provider);
+        
+        let rolesFromResponse = data.roles || ['end_user'];
+        
+        if (Array.isArray(rolesFromResponse)) {
+          rolesFromResponse = rolesFromResponse.map((r: unknown) => String(r));
+        } else {
+          rolesFromResponse = [String(rolesFromResponse)];
+        }
+        
+        const roles = rolesFromResponse.map((r: string) => {
+          if (VALID_ROLES.includes(r as PlatformRole)) {
+            return r as PlatformRole;
+          }
+          return 'end_user';
+        });
+        
+        localStorage.setItem('roles', JSON.stringify(roles));
         
         try {
           const tokenPayload = atob(data.access_token.split('.')[1]);
@@ -69,6 +118,12 @@ export default function OAuthCallback() {
             created_at: new Date().toISOString(),
           }));
         }
+        
+        const permissions = derivePermissions(roles);
+        localStorage.setItem('permissions', JSON.stringify(permissions));
+        localStorage.setItem('session_timestamp', Date.now().toString());
+        
+        console.debug('OAuth success, roles:', roles, 'perms:', permissions);
         
         window.location.href = '/app/dashboard';
         

@@ -14,10 +14,11 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
-      include: ['react-is'],
+      include: ['react', 'react-dom', 'react-is'],
     },
   },
   server: {
     host: '0.0.0.0',
+    port: 4321,
   },
 });

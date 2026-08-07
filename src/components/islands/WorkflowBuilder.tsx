@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar, CommandPalette } from './AppShell';
+import { WORKFLOW_SERVICE_URL } from '../../lib/api-client';
 
 interface WorkflowDefinition {
   id: string;
@@ -9,44 +10,56 @@ interface WorkflowDefinition {
   definition_json: Record<string, unknown>;
   trigger_type: string;
   is_active: boolean;
-  created_by: string | null;
+  version: number;
   created_at: string;
-  updated_at: string;
 }
 
-interface WorkflowExecution {
+interface ExecutionLog {
   id: string;
   workflow_id: string;
+  tenant_id: string;
+  trigger_event: string;
   status: string;
-  trigger_data: Record<string, unknown> | null;
-  result_data: Record<string, unknown> | null;
-  error_message: string | null;
-  started_at: string;
-  completed_at: string | null;
-  duration_ms: number | null;
+  current_step: string | null;
+  execution_time_ms: number | null;
+  error_details: string | null;
+  created_at: string;
 }
 
 export default function WorkflowBuilder() {
   const [activeRoute, setActiveRoute] = useState('workflows');
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [workflows, setWorkflows] = useState<WorkflowDefinition[]>([]);
-  const [executions, setExecutions] = useState<WorkflowExecution[]>([]);
+  const [executions, setExecutions] = useState<ExecutionLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowDefinition | null>(null);
   const [activeTab, setActiveTab] = useState<'workflows' | 'executions'>('workflows');
 
-  const workflowServiceUrl = import.meta.env.DEV ? 'http://localhost:8010' : '/api';
+  interface WorkflowDefinitionExtended extends WorkflowDefinition {
+    updated_at?: string;
+  }
+  
+  interface ExecutionLogExtended extends ExecutionLog {
+    duration_ms?: number;
+    started_at?: string;
+    error_message?: string | null;
+  }
+
+  const wfData = workflows as WorkflowDefinitionExtended[];
+  const execData = executions as ExecutionLogExtended[];
+
+  const workflowServiceUrl = WORKFLOW_SERVICE_URL;
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
         const [wfRes, execRes] = await Promise.all([
-          fetch(`${workflowServiceUrl}/workflows`, {
+          fetch(`${workflowServiceUrl}/api/v1/workflows`, {
             headers: { 'Content-Type': 'application/json' },
           }),
-          fetch(`${workflowServiceUrl}/workflows/executions?size=50`, {
+          fetch(`${workflowServiceUrl}/api/v1/workflows/executions?size=50`, {
             headers: { 'Content-Type': 'application/json' },
           }),
         ]);
@@ -208,7 +221,7 @@ export default function WorkflowBuilder() {
                           </td>
                         </tr>
                       ) : (
-                        filteredWorkflows.map(wf => (
+                        filteredWorkflows.map((wf: WorkflowDefinitionExtended) => (
                           <tr key={wf.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                             <td className="px-4 py-3">
                               <div className="font-semibold text-sm" style={{ color: 'var(--color-foreground)' }}>{wf.name}</div>
@@ -232,7 +245,7 @@ export default function WorkflowBuilder() {
                               </span>
                             </td>
                             <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
-                              {new Date(wf.updated_at).toLocaleDateString()}
+                              {wf.updated_at ? new Date(wf.updated_at).toLocaleDateString() : '-'}
                             </td>
                           </tr>
                         ))
@@ -283,13 +296,13 @@ export default function WorkflowBuilder() {
                               </span>
                             </td>
                             <td className="px-4 py-3 text-sm" style={{ color: 'var(--color-muted-foreground)' }}>
-                              {formatDuration(exec.duration_ms)}
+                              {formatDuration((exec as any).duration_ms ?? exec.execution_time_ms)}
                             </td>
                             <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
-                              {new Date(exec.started_at).toLocaleString()}
+                              {((exec as any).started_at ?? exec.created_at) ? new Date((exec as any).started_at ?? exec.created_at).toLocaleString() : '-'}
                             </td>
                             <td className="px-4 py-3 text-xs" style={{ color: '#cd4239' }}>
-                              {exec.error_message ? exec.error_message.substring(0, 50) + '...' : '-'}
+                              {((exec as any).error_message ?? exec.error_details) ? ((exec as any).error_message ?? exec.error_details)?.substring(0, 50) + '...' : '-'}
                             </td>
                           </tr>
                         );

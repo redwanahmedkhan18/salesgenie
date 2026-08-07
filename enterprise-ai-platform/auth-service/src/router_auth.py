@@ -6,23 +6,29 @@ Defines endpoints for authentication, OAuth2 callbacks, MFA management, sessions
 import base64
 import json
 import uuid
+import smtplib
+import traceback
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from typing import List, Optional, AsyncGenerator
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Body
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from sqlalchemy import String, Boolean, DateTime
 
 from enterprise_ai_platform.common.config import settings
 from enterprise_ai_platform.common.database import get_async_db
+from enterprise_ai_platform.common.models_base import Base, UUIDPrimaryKeyMixin, TimestampMixin
 from enterprise_ai_platform.common.security_rbac import (
-    get_current_user,
-    TokenPayload,
-    RequirePermissions,
-    Permission,
-    PlatformRole,
+  get_current_user,
+  TokenPayload,
+  RequirePermissions,
+  Permission,
+  PlatformRole,
 )
-from .models import (
+from enterprise_ai_platform.auth_service.src.models import (
     LoginRequest,
     LoginResponse,
     RefreshTokenRequest,
@@ -36,11 +42,27 @@ from .models import (
     WorkspaceInvitation,
     SignupRequest,
     SignupResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    PasswordResetToken,
+    UserVerificationToken,
+    User,
 )
-from .keycloak_client import keycloak_client
-from .jwt_handler import create_access_token, create_refresh_token, hash_token
+from enterprise_ai_platform.auth_service.src.keycloak_client import keycloak_client
+from enterprise_ai_platform.auth_service.src.jwt_handler import create_access_token, create_refresh_token, hash_token
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication & Security"])
+
+
+async def get_optional_db() -> AsyncGenerator[Optional[AsyncSession], None]:
+    """Get database session with fallback for when DB is unavailable."""
+    try:
+        async for session in get_async_db():
+            yield session
+            return
+    except Exception:
+        yield None
+        return
 
 
 @router.post("/login", response_model=LoginResponse, summary="User Authentication Login")
@@ -52,40 +74,89 @@ async def login(
     """
     Authenticate user via Keycloak credentials and issue JWT tokens with RBAC roles.
     Includes MFA verification step if enabled for user account.
+    Falls back to local bcrypt password verification when Keycloak is unavailable.
     """
-    # 1. Keycloak Credential Exchange
-    auth_data = await keycloak_client.authenticate_user_credentials(req.email, req.password)
-    
-    # 2. Check MFA Secret Status in DB
     user_id_str = str(uuid.uuid5(uuid.NAMESPACE_DNS, req.email))
-    mfa_stmt = select(MFASecret).where(MFASecret.user_id == uuid.UUID(user_id_str), MFASecret.is_enabled == True)
-    mfa_res = await db.execute(mfa_stmt)
-    mfa_secret_rec = mfa_res.scalar_one_or_none()
+    auth_success = False
 
-    if mfa_secret_rec:
-        if not req.mfa_code:
-            return LoginResponse(
-                access_token="",
-                refresh_token="",
-                expires_in=0,
-                user_id=user_id_str,
-                roles=[],
-                tenant_id=req.tenant_id or "default_tenant",
-                mfa_required=True,
-            )
-        # Verify MFA Code
-        valid_mfa = keycloak_client.verify_mfa_code(mfa_secret_rec.secret_key, req.mfa_code)
-        if not valid_mfa:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid Multi-Factor Authentication Code",
-            )
+    try:
+        auth_data = await keycloak_client.authenticate_user_credentials(req.email, req.password)
+        if auth_data and auth_data.get("access_token"):
+            auth_success = True
+    except HTTPException:
+        pass
+    except Exception:
+        pass
 
-    # Default assigned roles (e.g. Sales & Support roles)
+    if not auth_success:
+        if db and not isinstance(db, Exception):
+            try:
+                user_stmt = select(User).where(User.email == req.email)
+                user_result = await db.execute(user_stmt)
+                user = user_result.scalar_one_or_none()
+
+                if user is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid email or password credentials",
+                    )
+
+                if not user.verify_password(req.password):
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid email or password credentials",
+                    )
+
+                if not user.is_active:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Account is deactivated",
+                    )
+
+                user_id_str = str(user.id)
+                auth_success = True
+            except HTTPException:
+                raise
+            except Exception:
+                pass
+
+    if not auth_success:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password credentials",
+        )
+
+    mfa_record_exists = False
+    try:
+        mfa_stmt = select(MFASecret).where(MFASecret.user_id == uuid.UUID(user_id_str), MFASecret.is_enabled == True)
+        mfa_res = await db.execute(mfa_stmt)
+        mfa_secret_rec = mfa_res.scalar_one_or_none()
+        if mfa_secret_rec:
+            mfa_record_exists = True
+            if not req.mfa_code:
+                return LoginResponse(
+                    access_token="",
+                    refresh_token="",
+                    expires_in=0,
+                    user_id=user_id_str,
+                    roles=[],
+                    tenant_id=req.tenant_id or "default_tenant",
+                    mfa_required=True,
+                )
+            valid_mfa = keycloak_client.verify_mfa_code(mfa_secret_rec.secret_key, req.mfa_code)
+            if not valid_mfa:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid Multi-Factor Authentication Code",
+                )
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+
     assigned_roles = [PlatformRole.SUPPORT_AGENT.value, PlatformRole.SALES_AGENT.value]
     session_id = str(uuid.uuid4())
 
-    # Create Access & Refresh Tokens
     access_token = create_access_token(
         user_id=user_id_str,
         tenant_id=req.tenant_id or "default_tenant",
@@ -99,19 +170,21 @@ async def login(
         session_id=session_id,
     )
 
-    # Store User Session Record
-    session_record = UserSession(
-        id=uuid.UUID(session_id),
-        user_id=uuid.UUID(user_id_str),
-        tenant_id=uuid.UUID(uuid.uuid5(uuid.NAMESPACE_DNS, req.tenant_id or "default_tenant")),
-        refresh_token_hash=hash_token(refresh_token),
-        ip_address=request.client.host if request.client else "127.0.0.1",
-        user_agent=request.headers.get("user-agent", "Unknown Browser"),
-        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
-        is_active=True,
-    )
-    db.add(session_record)
-    await db.commit()
+    try:
+        session_record = UserSession(
+            id=uuid.UUID(session_id),
+            user_id=uuid.UUID(user_id_str),
+            tenant_id=uuid.UUID(uuid.uuid5(uuid.NAMESPACE_DNS, req.tenant_id or "default_tenant")),
+            refresh_token_hash=hash_token(refresh_token),
+            ip_address=request.client.host if request.client else "127.0.0.1",
+            user_agent=request.headers.get("user-agent", "Unknown Browser"),
+            expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+            is_active=True,
+        )
+        db.add(session_record)
+        await db.commit()
+    except Exception:
+        pass
 
     return LoginResponse(
         access_token=access_token,
@@ -124,178 +197,231 @@ async def login(
     )
 
 
-@router.get("/callback/{provider}", summary="OAuth2 Identity Provider Callback")
-async def oauth_callback(
-    provider: str,
-    code: str,
-    state: Optional[str] = None,
-    redirect_uri: Optional[str] = "http://localhost:4321/auth/callback",
+@router.post("/signup", response_model=SignupResponse, summary="User Registration with Email Verification")
+async def signup(
+    req: SignupRequest,
+    db: Optional[AsyncSession] = Depends(get_optional_db),
 ):
-    """Process OAuth2 authorization code callback for Google, Microsoft, or GitHub."""
-    if state:
+    """Register a new user account with email verification required."""
+    from sqlalchemy import text
+    from enterprise_ai_platform.auth_service.src.models import Organization
+    
+    user_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, req.email)
+    tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, req.company)
+
+    verification_token = uuid.uuid4().hex
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+
+    org_id = None
+    if db and not isinstance(db, Exception):
         try:
-            decoded_state = json.loads(base64.b64decode(state))
-            original_provider = decoded_state.get('provider')
-            if original_provider and original_provider != provider:
-                raise HTTPException(status_code=400, detail="State mismatch - possible CSRF attack")
+            existing = await db.execute(
+                select(User).where(User.email == req.email)
+            )
+            if existing.scalar_one_or_none():
+                raise HTTPException(status_code=409, detail="An account with this email already exists")
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+
+        try:
+            org_result = await db.execute(
+                select(Organization).where(Organization.name == req.company)
+            )
+            organization = org_result.scalar_one_or_none()
+            
+            if not organization:
+                org_id = tenant_uuid
+                org_stmt = text(
+                    "INSERT INTO organizations (id, name, domain, is_active, created_at, updated_at) "
+                    "VALUES (:id, :name, :domain, true, now(), now())"
+                )
+                await db.execute(org_stmt, {"id": org_id, "name": req.company, "domain": req.company.lower().replace(" ", "-")})
+            else:
+                org_id = organization.id
+            
+            org_id_value = org_id if org_id else organization.id
+
+            user = User(
+                id=user_uuid,
+                organization_id=org_id_value,
+                email=req.email,
+                full_name=req.full_name,
+                company=req.company,
+                is_verified=False,
+                is_active=True,
+            )
+            user.set_password(req.password)
+            db.add(user)
+
+            verification_record = UserVerificationToken(
+                user_id=user_uuid,
+                email=req.email,
+                token=verification_token,
+                expires_at=expires_at,
+                is_verified=False,
+            )
+            db.add(verification_record)
+            await db.commit()
+        except HTTPException:
+            raise
+        except Exception:
+            traceback.print_exc()
+            await db.rollback()
+            raise
+
+    email_sent = send_verification_email(req.email, verification_token)
+
+    if email_sent:
+        return SignupResponse(
+            status="pending_verification",
+            message="Account created! Please check your email to verify your account.",
+            requires_verification=True,
+        )
+    else:
+        return SignupResponse(
+            status="error",
+            message="Account created but verification email could not be sent. Please contact support.",
+            requires_verification=False,
+        )
+
+
+@router.post("/forgot-password", response_model=dict, summary="Request Password Reset")
+async def forgot_password(
+    req: ForgotPasswordRequest,
+    db: Optional[AsyncSession] = Depends(get_optional_db),
+):
+    """Request password reset link sent to email."""
+    user_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, req.email)
+    
+    if db and not isinstance(db, Exception):
+        try:
+            user_exists = await db.execute(
+                select(MFASecret).where(MFASecret.user_id == user_uuid)
+            )
+            if not user_exists.scalar_one_or_none():
+                return {"success": True, "message": "If the email exists, a reset link has been sent"}
         except Exception:
             pass
     
-    tokens = await keycloak_client.exchange_oauth_code(provider, code, redirect_uri)
-    user_id_mock = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{provider}_user"))
+    reset_token = uuid.uuid4().hex
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
     
-    access_token = create_access_token(
-        user_id=user_id_mock,
-        tenant_id="oauth_tenant",
-        email=f"user@{provider}.com",
-        roles=[PlatformRole.SUPPORT_AGENT.value],
-    )
-    return {
-        "status": "success",
-        "provider": provider,
-        "access_token": access_token,
-        "token_type": "Bearer",
-    }
+    if db and not isinstance(db, Exception):
+        try:
+            reset_record = PasswordResetToken(
+                user_id=user_uuid,
+                email=req.email,
+                token=reset_token,
+                expires_at=expires_at,
+            )
+            db.add(reset_record)
+            await db.commit()
+        except Exception as e:
+            print(f"Failed to create reset token: {e}")
+    
+    send_password_reset_email(req.email, reset_token)
+    
+    return {"success": True, "message": "If the email exists, a reset link has been sent"}
 
 
-import base64
-
-@router.get("/redirect/{provider}", summary="OAuth2 Redirect to Provider")
-async def oauth_redirect(
-    provider: str,
-    redirect_uri: Optional[str] = None,
-    state: Optional[str] = None,
+@router.post("/reset-password", summary="Reset Password with Token")
+async def reset_password(
+    req: ResetPasswordRequest,
+    db: Optional[AsyncSession] = Depends(get_optional_db),
+    request: Request = None,
 ):
-    """Generate redirect URL to OAuth provider (Google, Microsoft, GitHub)."""
-    if not settings.GOOGLE_CLIENT_ID and provider != 'google':
-        raise HTTPException(status_code=400, detail=f"{provider} not configured")
+    if req.new_password != req.confirm_password:
+        return {"success": False, "message": "Passwords do not match"}
     
-    # Default to frontend callback URL - MUST be registered in Google Cloud Console
-    oauth_callback_uri = redirect_uri or "http://localhost:4321/auth/callback"
+    if len(req.new_password) < 8:
+        return {"success": False, "message": "Password must be at least 8 characters"}
     
-    state_param = ""
-    if state:
-        state_param = f"&state={state}"
+    reset_email = None
     
-    provider_urls = {
-        "google": f"https://accounts.google.com/o/oauth2/v2/auth?client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={oauth_callback_uri}&response_type=code&scope=openid email profile&access_type=offline&prompt=consent{state_param}",
-        "microsoft": f"https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={settings.MICROSOFT_CLIENT_ID}&redirect_uri={oauth_callback_uri}&response_type=code&scope=openid email profile&state={state}",
-        "github": f"https://github.com/login/oauth/authorize?client_id={settings.GITHUB_CLIENT_ID}&redirect_uri={oauth_callback_uri}&scope=user email&state={state}",
-    }
+    if db and not isinstance(db, Exception):
+        try:
+            stmt = select(PasswordResetToken).where(
+                PasswordResetToken.token == req.token,
+                PasswordResetToken.is_used == False,
+            )
+            result = await db.execute(stmt)
+            reset_record = result.scalar_one_or_none()
+            
+            if not reset_record:
+                return {"success": False, "message": "Invalid or expired token"}
+            
+            if reset_record.expires_at < datetime.now(timezone.utc):
+                return {"success": False, "message": "Token has expired"}
+            
+            reset_email = reset_record.email
+            
+            reset_record.is_used = True
+            db.add(reset_record)
+            await db.commit()
+        except Exception as e:
+            return {"success": False, "message": f"Reset failed: {str(e)}"}
     
-    if provider not in provider_urls:
-        raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
+    if reset_email is None:
+        return {"success": False, "message": "Invalid token or database unavailable"}
     
-    return {"redirect_url": provider_urls[provider], "state": state}
+    try:
+        await keycloak_client.update_user_password(reset_email, req.new_password)
+    except Exception:
+        pass
+    
+    device_info = request.headers.get("user-agent", "Unknown") if request else "Unknown"
+    ip_address = request.client.host if request and request.client else "unknown"
+    
+    send_password_updated_email(reset_email, device_info, ip_address)
+    
+    return {"success": True, "message": "Password updated successfully"}
 
 
-@router.post("/refresh", response_model=LoginResponse, summary="Refresh Access Token")
-async def refresh_token(
-    req: RefreshTokenRequest,
+@router.post("/verify-email", summary="Verify Email Address")
+async def verify_email(
+    body: dict,
     db: AsyncSession = Depends(get_async_db),
 ):
-    """Issue a new access token using a valid, non-expired refresh token."""
-    token_hash = hash_token(req.refresh_token)
-    stmt = select(UserSession).where(
-        UserSession.refresh_token_hash == token_hash,
-        UserSession.is_active == True,
-    )
-    result = await db.execute(stmt)
-    session_rec = result.scalar_one_or_none()
-
-    if not session_rec or session_rec.expires_at < datetime.now(timezone.utc):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired refresh token",
+    """Verify user email address using the verification token from signup."""
+    token = body.get("token", "")
+    
+    if not token:
+        return {"success": False, "message": "Verification token is required"}
+    
+    try:
+        stmt = select(UserVerificationToken).where(
+            UserVerificationToken.token == token,
+            UserVerificationToken.is_verified == False,
         )
-
-    new_access_token = create_access_token(
-        user_id=str(session_rec.user_id),
-        tenant_id=str(session_rec.tenant_id),
-        email="user@salesgenie.ai",
-        roles=[PlatformRole.SUPPORT_AGENT.value],
-        session_id=str(session_rec.id),
-    )
-
-    return LoginResponse(
-        access_token=new_access_token,
-        refresh_token=req.refresh_token,
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        user_id=str(session_rec.user_id),
-        roles=[PlatformRole.SUPPORT_AGENT.value],
-        tenant_id=str(session_rec.tenant_id),
-        mfa_required=False,
-    )
+        result = await db.execute(stmt)
+        verification = result.scalar_one_or_none()
+        
+        if not verification:
+            return {"success": False, "message": "Invalid or expired verification token"}
+        
+        if verification.expires_at < datetime.now(timezone.utc):
+            return {"success": False, "message": "Verification token has expired"}
+        
+        verification.is_verified = True
+        await db.commit()
+        
+        return {"success": True, "message": "Email verified successfully! You can now log in."}
+    except Exception as e:
+        return {"success": False, "message": f"Verification failed: {str(e)}"}
 
 
-@router.post("/mfa/setup", response_model=MFASetupResponse, summary="Setup Multi-Factor Authentication")
-async def mfa_setup(
+@router.get("/sessions", response_model=List[SessionDTO], summary="Get User Sessions")
+async def get_sessions(
     current_user: TokenPayload = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
 ):
-    """Generate a TOTP MFA secret and QR code URI for user authenticator app setup."""
-    secret = keycloak_client.generate_mfa_secret()
-    qr_uri = keycloak_client.get_mfa_uri(secret, current_user.email or "user@salesgenie.ai")
-    backup_codes = [uuid.uuid4().hex[:8].upper() for _ in range(5)]
-
+    """Get all active sessions for the current user."""
     user_uuid = uuid.UUID(current_user.sub)
-    stmt = select(MFASecret).where(MFASecret.user_id == user_uuid)
-    res = await db.execute(stmt)
-    rec = res.scalar_one_or_none()
-
-    if not rec:
-        rec = MFASecret(
-            user_id=user_uuid,
-            secret_key=secret,
-            is_enabled=False,
-            backup_codes=backup_codes,
-        )
-        db.add(rec)
-    else:
-        rec.secret_key = secret
-        rec.backup_codes = backup_codes
-
-    await db.commit()
-
-    return MFASetupResponse(
-        secret_key=secret,
-        qr_code_uri=qr_uri,
-        backup_codes=backup_codes,
-    )
-
-
-@router.post("/mfa/verify", summary="Verify & Activate MFA")
-async def mfa_verify(
-    req: MFAVerifyRequest,
-    current_user: TokenPayload = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db),
-):
-    """Verify standard TOTP code to activate MFA on user account."""
-    user_uuid = uuid.UUID(current_user.sub)
-    stmt = select(MFASecret).where(MFASecret.user_id == user_uuid)
-    res = await db.execute(stmt)
-    rec = res.scalar_one_or_none()
-
-    if not rec:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MFA setup has not been initiated")
-
-    if not keycloak_client.verify_mfa_code(rec.secret_key, req.code):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification code")
-
-    rec.is_enabled = True
-    await db.commit()
-
-    return {"status": "mfa_enabled", "message": "Multi-Factor Authentication successfully activated"}
-
-
-@router.get("/sessions", response_model=List[SessionDTO], summary="List User Sessions")
-async def list_sessions(
-    current_user: TokenPayload = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db),
-):
-    """List active devices and login sessions for current user."""
+    
     stmt = select(UserSession).where(
-        UserSession.user_id == uuid.UUID(current_user.sub),
+        UserSession.user_id == user_uuid,
         UserSession.is_active == True,
     )
     result = await db.execute(stmt)
@@ -314,103 +440,215 @@ async def list_sessions(
     ]
 
 
-@router.delete("/sessions/{session_id}", summary="Revoke User Session")
-async def revoke_session(
-    session_id: str,
+@router.post("/mfa/setup", response_model=MFASetupResponse, summary="Setup MFA")
+async def setup_mfa(
     current_user: TokenPayload = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
 ):
-    """Revoke specific user session and invalidate refresh token."""
-    stmt = (
-        update(UserSession)
-        .where(
-            UserSession.id == uuid.UUID(session_id),
-            UserSession.user_id == uuid.UUID(current_user.sub),
+    """Generate MFA secret and QR code for user."""
+    user_uuid = uuid.UUID(current_user.sub)
+    
+    stmt = select(MFASecret).where(MFASecret.user_id == user_uuid)
+    result = await db.execute(stmt)
+    existing_mfa = result.scalars().first()
+    
+    if existing_mfa:
+        qr_code_uri = keycloak_client.get_mfa_uri(existing_mfa.secret_key, current_user.email)
+        return MFASetupResponse(
+            secret_key=existing_mfa.secret_key,
+            qr_code_uri=qr_code_uri,
+            backup_codes=existing_mfa.backup_codes,
         )
-        .values(is_active=False)
+    
+    mfa_secret = MFASecret(
+        user_id=user_uuid,
+        secret_key=keycloak_client.generate_mfa_secret(),
+        is_enabled=False,
+        backup_codes=[uuid.uuid4().hex for _ in range(10)],
     )
-    await db.execute(stmt)
+    db.add(mfa_secret)
     await db.commit()
-    return {"status": "revoked", "session_id": session_id}
+    
+    qr_code_uri = keycloak_client.get_mfa_uri(mfa_secret.secret_key, current_user.email)
+    
+    return MFASetupResponse(
+        secret_key=mfa_secret.secret_key,
+        qr_code_uri=qr_code_uri,
+        backup_codes=mfa_secret.backup_codes,
+    )
 
 
-@router.post(
-    "/invitations",
-    response_model=InvitationDTO,
-    summary="Create Workspace Invitation",
-    dependencies=[Depends(RequirePermissions(Permission.USER_INVITE))],
-)
-async def create_invitation(
-    req: CreateInvitationRequest,
+@router.post("/mfa/verify", summary="Verify MFA Code")
+async def verify_mfa(
+    body: dict,
     current_user: TokenPayload = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
 ):
-    """Send organization invitation token for workspace onboard."""
-    invite_token = uuid.uuid4().hex
-    tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, req.tenant_id)
+    """Verify and enable MFA for user."""
+    code = body.get("code", "")
+    user_uuid = uuid.UUID(current_user.sub)
     
-    invitation = WorkspaceInvitation(
-        email=req.email,
-        role=req.role.value,
-        tenant_id=tenant_uuid,
-        invited_by_user_id=uuid.UUID(current_user.sub),
-        token=invite_token,
-        status="pending",
-        expires_at=datetime.now(timezone.utc) + timedelta(days=7),
-    )
-    db.add(invitation)
-    await db.commit()
-
-    return InvitationDTO(
-        id=invitation.id,
-        email=invitation.email,
-        role=invitation.role,
-        tenant_id=req.tenant_id,
-        status=invitation.status,
-        created_at=invitation.created_at,
-        expires_at=invitation.expires_at,
-    )
+    stmt = select(MFASecret).where(MFASecret.user_id == user_uuid)
+    result = await db.execute(stmt)
+    mfa_secret = result.scalar_one_or_none()
+    
+    if not mfa_secret:
+        return {"success": False, "message": "MFA not set up"}
+    
+    if keycloak_client.verify_mfa_code(mfa_secret.secret_key, code):
+        mfa_secret.is_enabled = True
+        await db.commit()
+        return {"success": True, "message": "MFA enabled successfully"}
+    
+    return {"success": False, "message": "Invalid MFA code"}
 
 
-async def get_optional_db():
-    """Get database session with fallback for when DB is unavailable."""
+def send_verification_email(email: str, token: str, verification_url: str = None) -> bool:
+    """Send verification email via SMTP (Mailpit in development)."""
+    if verification_url is None:
+        frontend_url = settings.FRONTEND_BASE_URL.rstrip('/')
+        verification_url = f"{frontend_url}/verify-email?token={token}"
+        if not verification_url.startswith(('http://', 'https://')):
+            verification_url = f"https://{verification_url}"
+    
+    msg = MIMEMultipart()
+    msg["From"] = settings.SMTP_FROM_ADDRESS or "noreply@salesgenie.local"
+    msg["To"] = email
+    msg["Subject"] = "Verify your SalesGenie Account"
+
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #0f1117; color: white; padding: 20px; text-align: center;">
+            <h1>SalesGenie Enterprise</h1>
+        </div>
+        <div style="padding: 20px;">
+            <h2 style="color: #333;">Verify Your Email</h2>
+            <p>Thank you for signing up! Please click the button below to verify your email address.</p>
+            <a href="{verification_url}" 
+               style="display: inline-block; background: #FF6B00; color: white; padding: 12px 24px; 
+                      text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Verify Email Address
+            </a>
+            <p style="margin-top: 20px; color: #666; font-size: 12px;">
+                Or copy this link: {verification_url}
+            </p>
+            <p style="margin-top: 20px; color: #666; font-size: 12px;">
+                This link will expire in 24 hours.
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+
+    msg.attach(MIMEText(body, "html"))
+
     try:
-        async for session in get_async_db():
-            yield session
-    except Exception:
-        yield None
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            if settings.SMTP_USERNAME and settings.SMTP_PASSWORD:
+                server.starttls()
+                server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"Failed to send verification email: {e}")
+        return False
 
 
-@router.post("/signup", response_model=SignupResponse, summary="User Registration")
-async def signup(
-    req: SignupRequest,
-    db: Optional[AsyncSession] = Depends(get_optional_db),
-):
-    """Register a new user account with email verification required."""
-    user_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, req.email)
-    tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, req.company)
+def send_password_reset_email(email: str, token: str) -> bool:
+    """Send password reset email via SMTP."""
+    frontend_url = settings.FRONTEND_BASE_URL.rstrip('/')
+    reset_path = settings.PASSWORD_RESET_PATH.lstrip('/')
+    reset_url = f"{frontend_url}/{reset_path}?token={token}"
     
-    if db and not isinstance(db, Exception):
-        try:
-            user_exists = await db.execute(
-                select(MFASecret).where(MFASecret.user_id == user_uuid)
-            )
-            if user_exists.scalar_one_or_none():
-                raise HTTPException(status_code=400, detail="Email already registered")
-        except Exception:
-            pass
+    if not reset_url.startswith(('http://', 'https://')):
+        reset_url = f"https://{reset_url}"
     
-    session_id = str(uuid.uuid4())
-    create_access_token(
-        user_id=str(user_uuid),
-        tenant_id=str(tenant_uuid),
-        email=req.email,
-        roles=[PlatformRole.SUPPORT_AGENT.value],
-        session_id=session_id,
-    )
+    msg = MIMEMultipart()
+    msg["From"] = settings.SMTP_FROM_ADDRESS or "noreply@salesgenie.local"
+    msg["To"] = email
+    msg["Subject"] = "Reset Your SalesGenie Password"
+
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #0f1117; color: white; padding: 20px; text-align: center;">
+            <h1>SalesGenie Password Reset</h1>
+        </div>
+        <div style="padding: 20px;">
+            <h2>Reset Your Password</h2>
+            <p>Click the button below to reset your password:</p>
+            <a href="{reset_url}" 
+               style="display: inline-block; background: #FF6B00; color: white; padding: 12px 24px; 
+                      text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Reset Password
+            </a>
+            <p style="margin-top: 20px; color: #666; font-size: 12px;">
+                Or copy this link: {reset_url}
+            </p>
+            <p style="margin-top: 20px; color: #666; font-size: 12px;">
+                This link will expire in 1 hour.
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+
+    msg.attach(MIMEText(body, "html"))
+
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            if settings.SMTP_USERNAME and settings.SMTP_PASSWORD:
+                server.starttls()
+                server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"Failed to send password reset email: {e}")
+        return False
+
+
+def send_password_updated_email(email: str, device_info: str, ip_address: str) -> bool:
+    """Send notification that password was updated."""
     
-    return SignupResponse(
-        status="pending_verification",
-        message="Account created! Please check your email to verify your account.",
-        requires_verification=True,
-    )
+    msg = MIMEMultipart()
+    msg["From"] = settings.SMTP_FROM_ADDRESS or "noreply@salesgenie.local"
+    msg["To"] = email
+    msg["Subject"] = "Password Updated - SalesGenie"
+
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #0f1117; color: white; padding: 20px; text-align: center;">
+            <h1>SalesGenie - Password Updated</h1>
+        </div>
+        <div style="padding: 20px;">
+            <h2>Password Successfully Updated</h2>
+            <p>Your password has been updated successfully.</p>
+            <h3>Security Details:</h3>
+            <ul style="text-align: left;">
+                <li><strong>Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}</li>
+                <li><strong>Location:</strong> Password Reset Flow</li>
+                <li><strong>Device:</strong> {device_info[:100]}</li>
+                <li><strong>IP Address:</strong> {ip_address}</li>
+            </ul>
+            <p style="color: #666; font-size: 12px;">
+                If you didn't request this change, please contact support immediately.
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+
+    msg.attach(MIMEText(body, "html"))
+
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            if settings.SMTP_USERNAME and settings.SMTP_PASSWORD:
+                server.starttls()
+                server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"Failed to send password update email: {e}")
+        return False

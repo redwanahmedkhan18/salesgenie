@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from enterprise_ai_platform.common.config import settings
-from audit_service.src.router_audit import router as audit_router
+from enterprise_ai_platform.audit_service.src.router_audit import router as audit_router
 
 
 app = FastAPI(

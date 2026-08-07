@@ -22,8 +22,162 @@ class KeycloakClient:
         self.realm = settings.KEYCLOAK_REALM
         self.client_id = settings.KEYCLOAK_CLIENT_ID
         self.client_secret = settings.KEYCLOAK_CLIENT_SECRET
+        self.admin_username = settings.KEYCLOAK_ADMIN_USERNAME
+        self.admin_password = settings.KEYCLOAK_ADMIN_PASSWORD
         self.token_url = f"{self.server_url}/realms/{self.realm}/protocol/openid-connect/token"
         self.userinfo_url = f"{self.server_url}/realms/{self.realm}/protocol/openid-connect/userinfo"
+        self.admin_url = f"{self.server_url}/admin/realms/{self.realm}/users"
+
+    async def _get_admin_token(self) -> str:
+        """Obtain an admin access token from Keycloak."""
+        payload = {
+            "grant_type": "password",
+            "client_id": "admin-cli",
+            "username": self.admin_username,
+            "password": self.admin_password,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{self.server_url}/realms/{self.realm}/protocol/openid-connect/token",
+                    data=payload,
+                )
+                if response.status_code == 200:
+                    return response.json().get("access_token", "")
+        except Exception as e:
+            logger.error(f"Failed to obtain admin token from Keycloak: {e}")
+        return ""
+
+    async def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a user in Keycloak via the Admin API."""
+        token = await self._get_admin_token()
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Keycloak admin authentication failed",
+            )
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "username": user_data.get("username", user_data.get("email")),
+            "email": user_data.get("email"),
+            "enabled": user_data.get("enabled", True),
+            "emailVerified": user_data.get("emailVerified", False),
+        }
+        if "firstName" in user_data:
+            payload["firstName"] = user_data["firstName"]
+        if "lastName" in user_data:
+            payload["lastName"] = user_data["lastName"]
+        if "fullName" in user_data:
+            payload["firstName"] = user_data["fullName"].split()[0]
+            payload["lastName"] = " ".join(user_data["fullName"].split()[1:]) if len(user_data["fullName"].split()) > 1 else ""
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(self.admin_url, json=payload, headers=headers)
+                if response.status_code in (200, 201):
+                    location = response.headers.get("Location", "")
+                    user_id = location.split("/")[-1] if location else ""
+                    return {"id": user_id, **payload}
+                else:
+                    logger.error(f"Keycloak create user failed: {response.status_code} {response.text}")
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail=f"Keycloak user creation failed: {response.text}",
+                    )
+        except httpx.RequestError as exc:
+            logger.error(f"Failed connecting to Keycloak admin API: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Keycloak admin API unreachable",
+            )
+
+    async def set_password(self, user_id: str, password: str) -> None:
+        """Set a user's password in Keycloak via the Admin API."""
+        token = await self._get_admin_token()
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Keycloak admin authentication failed",
+            )
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "type": "password",
+            "value": password,
+            "temporary": False,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.put(
+                    f"{self.admin_url}/{user_id}/reset-password",
+                    json=payload,
+                    headers=headers,
+                )
+                if response.status_code not in (200, 204):
+                    logger.error(f"Keycloak set password failed: {response.status_code} {response.text}")
+        except httpx.RequestError as exc:
+            logger.error(f"Failed connecting to Keycloak admin API for password reset: {exc}")
+
+    async def update_user_password(self, email: str, password: str) -> None:
+        """Update user password via Keycloak Admin API using email lookup."""
+        token = await self._get_admin_token()
+        if not token:
+            return
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                search_resp = await client.get(
+                    f"{self.admin_url}?email={email}",
+                    headers=headers,
+                )
+                if search_resp.status_code == 200:
+                    users = search_resp.json()
+                    if users:
+                        user_id = users[0].get("id")
+                        if user_id:
+                            payload = {"type": "password", "value": password, "temporary": False}
+                            await client.put(
+                                f"{self.admin_url}/{user_id}/reset-password",
+                                json=payload,
+                                headers=headers,
+                            )
+        except httpx.RequestError as exc:
+            logger.error(f"Failed connecting to Keycloak admin API for password update: {exc}")
+
+    async def assign_realm_role(self, user_id: str, role_name: str) -> None:
+        """Assign a realm role to a user in Keycloak via the Admin API."""
+        token = await self._get_admin_token()
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Keycloak admin authentication failed",
+            )
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{self.server_url}/admin/realms/{self.realm}/roles/{role_name}",
+                    headers=headers,
+                )
+                if response.status_code == 200:
+                    role = response.json()
+                    await client.post(
+                        f"{self.admin_url}/{user_id}/role-mappings/realm",
+                        json=[role],
+                        headers=headers,
+                    )
+        except httpx.RequestError as exc:
+            logger.error(f"Failed assigning realm role {role_name}: {exc}")
 
     async def authenticate_user_credentials(self, username: str, password: str) -> Dict[str, Any]:
         """Authenticate user credentials via Keycloak Password Grant Flow."""
@@ -48,14 +202,31 @@ class KeycloakClient:
                     )
                 else:
                     logger.warning(f"Keycloak auth failed with status {response.status_code}: {response.text}")
-                    # Fallback to local simulation when Keycloak service is offline in dev
-                    return self._fallback_dev_auth(username)
+                    return self._fallback_dev_auth(username, password)
         except httpx.RequestError as exc:
             logger.error(f"Failed connecting to Keycloak server: {exc}")
-            return self._fallback_dev_auth(username)
+            return self._fallback_dev_auth(username, password)
 
-    def _fallback_dev_auth(self, username: str) -> Dict[str, Any]:
+    def _fallback_dev_auth(self, username: str, password: str = None) -> Dict[str, Any]:
         """Fallback mock token generation for local development environment testing."""
+        valid_dev_passwords = {
+            "admin@salesgenie.ai": "admin123",
+            "test@test.com": "test123",
+        }
+
+        stored_password = valid_dev_passwords.get(username)
+        if stored_password is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password credentials",
+            )
+
+        if password != stored_password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password credentials",
+            )
+
         return {
             "access_token": f"dev_access_token_{username}",
             "refresh_token": f"dev_refresh_token_{username}",

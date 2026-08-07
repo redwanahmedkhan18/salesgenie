@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar, CommandPalette } from './AppShell';
+import { FILE_SERVICE_URL } from '../../lib/api-client';
 
 interface FileMetadata {
   id: string;
@@ -67,7 +68,7 @@ export default function FileManager() {
   const [activeTab, setActiveTab] = useState<'files' | 'overview'>('files');
   const [uploadModal, setUploadModal] = useState(false);
 
-  const fileServiceUrl = import.meta.env.DEV ? 'http://localhost:8014' : '/api';
+  const fileServiceUrl = FILE_SERVICE_URL;
 
   useEffect(() => {
     const loadData = async () => {

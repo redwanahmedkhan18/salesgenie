@@ -24,6 +24,7 @@ from .models import (
     UserProfile,
     UserPreferences,
 )
+from enterprise_ai_platform.auth_service.src.models import User as AuthUser
 
 router = APIRouter(prefix="/api/v1/users", tags=["User Profiles & Settings"])
 
@@ -35,23 +36,28 @@ async def get_my_profile(
 ):
     """Retrieve profile details for current authenticated user."""
     user_uuid = uuid.UUID(current_user.sub)
+    
+    user_stmt = select(AuthUser).where(AuthUser.id == user_uuid)
+    user_result = await db.execute(user_stmt)
+    auth_user = user_result.scalar_one_or_none()
+    
+    if not auth_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
     stmt = select(UserProfile).where(UserProfile.id == user_uuid)
     res = await db.execute(stmt)
     p = res.scalar_one_or_none()
 
     if not p:
-        return UserProfileDTO(
+        org_uuid = uuid.UUID(str(auth_user.organization_id)) if auth_user.organization_id else uuid.uuid5(uuid.NAMESPACE_DNS, "default")
+        p = UserProfile(
             id=user_uuid,
-            email=current_user.email or "user@salesgenie.ai",
-            full_name="Enterprise Administrator",
-            phone_number="+1-555-0199",
-            avatar_url="https://salesgenie.ai/avatars/admin.png",
-            job_title="Lead AI Engineer",
-            department="Engineering",
-            tenant_id=uuid.UUID(uuid.uuid5(uuid.NAMESPACE_DNS, current_user.tenant_id).hex[:32]),
-            is_active=True,
-            created_at=current_user.exp - 86400,
+            email=auth_user.email,
+            full_name=auth_user.full_name,
+            tenant_id=uuid.uuid5(uuid.NAMESPACE_DNS, str(org_uuid)),
         )
+        db.add(p)
+        await db.commit()
 
     return UserProfileDTO(
         id=p.id,
@@ -75,17 +81,25 @@ async def update_my_profile(
 ):
     """Update profile attributes for current user."""
     user_uuid = uuid.UUID(current_user.sub)
+    
+    user_stmt = select(AuthUser).where(AuthUser.id == user_uuid)
+    user_result = await db.execute(user_stmt)
+    auth_user = user_result.scalar_one_or_none()
+    
+    if not auth_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
     stmt = select(UserProfile).where(UserProfile.id == user_uuid)
     res = await db.execute(stmt)
     p = res.scalar_one_or_none()
 
     if not p:
-        tenant_uuid = uuid.UUID(uuid.uuid5(uuid.NAMESPACE_DNS, current_user.tenant_id).hex[:32])
+        org_uuid = uuid.UUID(str(auth_user.organization_id)) if auth_user.organization_id else uuid.uuid5(uuid.NAMESPACE_DNS, "default")
         p = UserProfile(
             id=user_uuid,
-            email=current_user.email or "user@salesgenie.ai",
-            full_name=req.full_name or "SalesGenie User",
-            tenant_id=tenant_uuid,
+            email=auth_user.email,
+            full_name=auth_user.full_name,
+            tenant_id=uuid.uuid5(uuid.NAMESPACE_DNS, str(org_uuid)),
         )
         db.add(p)
 

@@ -111,10 +111,7 @@ export function ProtectedRoute({
     );
   }
 
-  if (!isAuthenticated) {
-    if (typeof window !== 'undefined' && !window.location) {
-      return null;
-    }
+  if (!isAuthenticated && !isLoading) {
     if (typeof window !== 'undefined') {
       window.location.replace(redirectTo);
     }
@@ -134,7 +131,7 @@ export function ProtectedRoute({
   }
 
   if (requiredPermissions.length > 0) {
-    const hasAllPermissions = requiredPermissions.every(permission =>
+    const hasAllPermissions = requiredPermissions.every((permission: string) =>
       permissions.includes(permission)
     );
 

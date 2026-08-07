@@ -51,6 +51,8 @@ class PlatformSettings(BaseSettings):
     KEYCLOAK_REALM: str = Field(default="salesgenie-realm", description="Keycloak realm name")
     KEYCLOAK_CLIENT_ID: str = Field(default="salesgenie-auth-client", description="Keycloak client ID")
     KEYCLOAK_CLIENT_SECRET: str = Field(default="salesgenie-client-secret-keycloak", description="Keycloak client secret")
+    KEYCLOAK_ADMIN_USERNAME: str = Field(default="admin", description="Keycloak admin username")
+    KEYCLOAK_ADMIN_PASSWORD: str = Field(default="admin", description="Keycloak admin password")
 
     # JWT Settings
     JWT_SECRET_KEY: str = Field(default="salesgenie_super_secret_jwt_key_2026_change_in_prod", description="JWT secret key for HS256 fallbacks")
@@ -83,6 +85,7 @@ class PlatformSettings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:4321",
         "http://127.0.0.1:4321",
+        "http://192.168.0.106:4321",
         "https://salesgenie.ai",
     ]
 
@@ -103,11 +106,13 @@ class PlatformSettings(BaseSettings):
     INSTAGRAM_BUSINESS_ACCOUNT_ID: Optional[str] = Field(default=None, description="Instagram Business Account ID")
 
     # Channel Integration Settings - Email
-    SMTP_HOST: Optional[str] = Field(default="smtp.sendgrid.net", description="SMTP Host")
-    SMTP_PORT: int = Field(default=587, description="SMTP Port")
-    SMTP_USERNAME: Optional[str] = Field(default="apikey", description="SMTP Username")
+    SMTP_HOST: str = Field(default="localhost", description="SMTP Host - use localhost for Mailpit in dev")
+    SMTP_PORT: int = Field(default=1025, description="SMTP Port - 1025 for Mailpit, 587 for SendGrid")
+    SMTP_USERNAME: Optional[str] = Field(default=None, description="SMTP Username")
     SMTP_PASSWORD: Optional[str] = Field(default=None, description="SMTP Password/API Key")
-    SMTP_FROM_ADDRESS: Optional[str] = Field(default="noreply@salesgenie.ai", description="SMTP From Address")
+    SMTP_FROM_ADDRESS: str = Field(default="noreply@salesgenie.local", description="SMTP From Address")
+    FRONTEND_BASE_URL: str = Field(default="http://localhost:4321", description="Frontend base URL for password reset links")
+    PASSWORD_RESET_PATH: str = Field(default="/reset-password", description="Password reset page path")
 
     # Channel Integration Settings - SMS (Twilio)
     TWILIO_ACCOUNT_SID: Optional[str] = Field(default=None, description="Twilio Account SID")

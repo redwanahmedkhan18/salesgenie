@@ -33,7 +33,7 @@ export default function LandingPage() {
     }
   }, []);
 
-  const handleNavClick = (link: string) => {
+  const handleNavClick = () => {
     setMobileMenuOpen(false);
   };
 

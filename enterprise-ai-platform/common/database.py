@@ -31,6 +31,7 @@ else:
         pool_timeout=settings.DB_POOL_TIMEOUT,
         pool_recycle=settings.DB_POOL_RECYCLE,
         pool_pre_ping=True,
+        
     )
 
 # Async Session Factory
@@ -51,7 +52,7 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionFactory() as session:
         try:
             yield session
-            await session.commit()
+            #await session.commit()
         except Exception as exc:
             await session.rollback()
             logger.error(f"Database transaction rollback due to error: {exc}", exc_info=True)

@@ -55,51 +55,51 @@ function LeadDetailModal({ lead, onClose, onUpdate }: LeadDetailModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-card rounded-xl max-w-md w-full p-6 border"
-        style={{ borderColor: 'var(--color-border)' }}>
+        style={{ borderColor: '#334155' }}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold" style={{ color: 'var(--color-foreground)' }}>Lead Details</h2>
+          <h2 className="text-lg font-bold" style={{ color: '#f8fafc' }}>Lead Details</h2>
           <button onClick={onClose} className="text-muted"
-            style={{ color: 'var(--color-muted-foreground)' }}>&times;</button>
+            style={{ color: '#cbd5e1' }}>&times;</button>
         </div>
         <div className="space-y-4">
           <div>
-            <label className="text-xs uppercase" style={{ color: 'var(--color-muted-foreground)' }}>Name</label>
+            <label className="text-xs uppercase" style={{ color: '#cbd5e1' }}>Name</label>
             <input value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})}
               className="mt-1 w-full px-3 py-2 rounded border"
-              style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)', color: 'var(--color-foreground)' }} />
+              style={{ background: '#1e293b', borderColor: '#334155', color: '#f8fafc' }} />
           </div>
           <div>
-            <label className="text-xs uppercase" style={{ color: 'var(--color-muted-foreground)' }}>Company</label>
+            <label className="text-xs uppercase" style={{ color: '#cbd5e1' }}>Company</label>
             <input value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})}
               className="mt-1 w-full px-3 py-2 rounded border"
-              style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)', color: 'var(--color-foreground)' }} />
+              style={{ background: '#1e293b', borderColor: '#334155', color: '#f8fafc' }} />
           </div>
           <div>
-            <label className="text-xs uppercase" style={{ color: 'var(--color-muted-foreground)' }}>Email</label>
+            <label className="text-xs uppercase" style={{ color: '#cbd5e1' }}>Email</label>
             <input value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})}
               className="mt-1 w-full px-3 py-2 rounded border"
-              style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)', color: 'var(--color-foreground)' }} />
+              style={{ background: '#1e293b', borderColor: '#334155', color: '#f8fafc' }} />
           </div>
           <div>
-            <label className="text-xs uppercase" style={{ color: 'var(--color-muted-foreground)' }}>BANT Score</label>
+            <label className="text-xs uppercase" style={{ color: '#cbd5e1' }}>BANT Score</label>
             <input type="number" value={formData.score || 0} onChange={e => setFormData({...formData, score: parseInt(e.target.value)})}
               className="mt-1 w-full px-3 py-2 rounded border"
-              style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)', color: 'var(--color-foreground)' }} />
+              style={{ background: '#1e293b', borderColor: '#334155', color: '#f8fafc' }} />
           </div>
           <div>
-            <label className="text-xs uppercase" style={{ color: 'var(--color-muted-foreground)' }}>Stage</label>
+            <label className="text-xs uppercase" style={{ color: '#cbd5e1' }}>Stage</label>
             <select value={formData.stage || ''} onChange={e => setFormData({...formData, stage: e.target.value})}
               className="mt-1 w-full px-3 py-2 rounded border"
-              style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)', color: 'var(--color-foreground)' }}>
+              style={{ background: '#1e293b', borderColor: '#334155', color: '#f8fafc' }}>
               {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>
         <div className="flex gap-2 mt-6">
           <button onClick={onClose} className="flex-1 px-4 py-2 rounded border"
-            style={{ borderColor: 'var(--color-border)', color: 'var(--color-foreground)' }}>Cancel</button>
+            style={{ borderColor: '#334155', color: '#f8fafc', background: '#1e293b' }}>Cancel</button>
           <button onClick={handleSave} className="flex-1 px-4 py-2 rounded font-bold"
-            style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}>Save</button>
+            style={{ background: '#f7a501', color: '#23251d' }}>Save</button>
         </div>
       </div>
     </div>
@@ -257,7 +257,7 @@ export default function SalesCRM() {
           <div className="flex-1 overflow-y-auto p-5">
             <table className="w-full text-sm" style={{ borderCollapse: 'separate', borderSpacing: '0 4px' }}>
               <thead>
-                <tr className="text-xs uppercase tracking-wider" style={{ color: 'var(--color-muted-foreground)' }}>
+                <tr className="text-xs uppercase tracking-wider" style={{ color: '#94a3b8' }}>
                   {['Lead', 'Company', 'BANT Score', 'Stage', 'Value', 'Status', ''].map(h => (
                     <th key={h} className="text-left px-4 py-2">{h}</th>
                   ))}
@@ -265,14 +265,14 @@ export default function SalesCRM() {
               </thead>
               <tbody>
                 {filteredLeads.map(lead => (
-                  <tr key={lead.id} className="transition-colors hover:bg-white/3 cursor-pointer"
-                    style={{ background: 'var(--color-card)', borderRadius: 8 }}
+                  <tr key={lead.id} className="transition-colors cursor-pointer"
+                    style={{ background: '#1e293b', borderRadius: 8 }}
                     onClick={() => setSelectedLead(lead)}>
                     <td className="px-4 py-3 rounded-l-lg">
-                      <div className="font-semibold text-xs" style={{ color: 'var(--color-foreground)' }}>{lead.name}</div>
-                      <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{lead.email}</div>
+                      <div className="font-semibold text-xs" style={{ color: '#f8fafc' }}>{lead.name}</div>
+                      <div className="text-xs" style={{ color: '#94a3b8' }}>{lead.email}</div>
                     </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-foreground)' }}>{lead.company}</td>
+                    <td className="px-4 py-3 text-xs" style={{ color: '#f8fafc' }}>{lead.company}</td>
                     <td className="px-4 py-3">
                       <span className="text-xs font-bold px-2 py-0.5 rounded"
                         style={{ background: `${scoreColor(lead.score)}20`, color: scoreColor(lead.score) }}>

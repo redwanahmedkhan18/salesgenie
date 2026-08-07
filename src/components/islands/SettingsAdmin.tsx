@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar, CommandPalette } from './AppShell';
+import { ORGANIZATION_SERVICE_URL, USER_SERVICE_URL, BILLING_SERVICE_URL } from '../../lib/api-client';
 
 interface Organization {
   id: string;
@@ -56,19 +57,19 @@ export default function SettingsAdmin() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'organization' | 'branding' | 'billing' | 'users'>('organization');
 
-  const orgServiceUrl = import.meta.env.DEV ? 'http://localhost:8003' : '/api';
-  const userServiceUrl = import.meta.env.DEV ? 'http://localhost:8002' : '/api';
-  const billingServiceUrl = import.meta.env.DEV ? 'http://localhost:8004' : '/api';
+  const orgServiceUrl = ORGANIZATION_SERVICE_URL;
+  const userServiceUrl = USER_SERVICE_URL;
+  const billingServiceUrl = BILLING_SERVICE_URL;
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
         const [orgRes, brandingRes, billingRes, usersRes] = await Promise.all([
-          fetch(`${orgServiceUrl}/organizations`, { headers: { 'Content-Type': 'application/json' } }),
-          fetch(`${orgServiceUrl}/organizations/branding`, { headers: { 'Content-Type': 'application/json' } }),
-          fetch(`${billingServiceUrl}/billing/subscriptions`, { headers: { 'Content-Type': 'application/json' } }),
-          fetch(`${userServiceUrl}/users`, { headers: { 'Content-Type': 'application/json' } }),
+          fetch(`${orgServiceUrl}/api/v1/organizations`, { headers: { 'Content-Type': 'application/json' } }),
+          fetch(`${orgServiceUrl}/api/v1/organizations/branding`, { headers: { 'Content-Type': 'application/json' } }),
+          fetch(`${billingServiceUrl}/api/v1/billing/subscriptions`, { headers: { 'Content-Type': 'application/json' } }),
+          fetch(`${userServiceUrl}/api/v1/users`, { headers: { 'Content-Type': 'application/json' } }),
         ]);
 
         if (orgRes.ok) {

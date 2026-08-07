@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, CreditCard, Download, RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { apiClient } from '../../lib/api-client';
-import { useAuth } from '../../auth/AuthProvider';
-import { format, addDays, isAfter, isBefore } from 'date-fns';
+import { apiClient, BILLING_SERVICE_URL } from '../../lib/api-client';
+import { format } from 'date-fns';
 
 interface Plan {
   id: string;
@@ -27,11 +26,10 @@ interface Subscription {
 
 interface Invoice {
   invoice_id: string;
-  amount_usd: number;
+  amount_due_usd: number;
   status: 'paid' | 'unpaid' | 'pending';
-  period_start: string;
-  period_end: string;
-  pdf_url?: string;
+  created_at: string;
+  invoice_url: string;
 }
 
 interface Usage {
@@ -39,10 +37,11 @@ interface Usage {
   monthly_token_quota: number;
   usage_percent: number;
   is_at_risk: boolean;
+  estimated_cost_usd?: number;
+  plan?: string;
 }
 
 export default function BillingPage() {
-  const { hasRole } = useAuth();
   const [activeTab, setActiveTab] = useState<'plans' | 'subscription' | 'history' | 'usage'>('plans');
   const [plans, setPlans] = useState<Plan[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -50,29 +49,54 @@ export default function BillingPage() {
   const [usage, setUsage] = useState<Usage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     loadPlans();
     loadSubscription();
     loadInvoices();
     loadUsage();
-    setInterval(checkSubscriptionStatus, 60000);
   }, []);
 
   const loadPlans = async () => {
     try {
-      const data = await apiClient.listBillingPlans();
-      setPlans(data || []);
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 10000);
+      const response = await fetch(`${BILLING_SERVICE_URL}/api/v1/billing/plans`, {
+        signal: controller.signal
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const mappedPlans: Plan[] = data.map((p: any) => ({
+          id: p.plan_key,
+          name: p.name,
+          interval: 'monthly' as const,
+          price_usd: p.price_usd,
+          max_seats: p.max_seats,
+          monthly_token_quota: p.monthly_token_quota,
+          features: {},
+        }));
+        setPlans(mappedPlans);
+      }
     } catch (err) {
-      setError('Failed to load plans');
+      console.error('Failed to load plans:', err);
+      setError('Failed to load plans. Backend service unavailable.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadSubscription = async () => {
     try {
-      const response = await fetch('/api/v1/billing/subscriptions', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 10000);
+      const response = await fetch(`${BILLING_SERVICE_URL}/api/v1/billing/subscriptions`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal: controller.signal
       });
       if (response.ok) {
         const data = await response.json();
@@ -80,62 +104,86 @@ export default function BillingPage() {
       }
     } catch (err) {
       console.error('Failed to load subscription:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadInvoices = async () => {
     try {
-      const data = await apiClient.listInvoices();
-      setInvoices(data || []);
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 10000);
+      const response = await fetch(`${BILLING_SERVICE_URL}/api/v1/billing/invoices`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal: controller.signal
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const mappedInvoices: Invoice[] = data.map((i: any) => ({
+          invoice_id: i.invoice_id || i.subscription_id + '-' + Date.now(),
+          amount_due_usd: i.amount_usd || 0,
+          status: (i.status || 'paid') as 'paid' | 'unpaid' | 'pending',
+          created_at: i.created_at || new Date().toISOString(),
+          invoice_url: i.invoice_url || '',
+        }));
+        setInvoices(mappedInvoices);
+      }
     } catch (err) {
       console.error('Failed to load invoices:', err);
+      setError('Failed to load invoices. Backend service unavailable.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadUsage = async () => {
     try {
-      const plan = subscription?.plan_id || 'growth';
-      const data = await apiClient.getBillingUsage(2480000, plan);
-      setUsage(data);
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 10000);
+      const response = await fetch(`${BILLING_SERVICE_URL}/api/v1/billing/usage?plan=${subscription?.plan_id || 'growth'}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal: controller.signal
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data) {
+          setUsage({
+            current_tokens_used: data.current_tokens_used,
+            monthly_token_quota: data.quota,
+            usage_percent: data.percentage_used,
+            is_at_risk: data.percentage_used > 80,
+            estimated_cost_usd: data.estimated_cost_usd,
+            plan: data.plan,
+          });
+        }
+      }
     } catch (err) {
       console.error('Failed to load usage:', err);
-    }
-  };
-
-  const checkSubscriptionStatus = async () => {
-    if (!subscription) return;
-    
-    const now = new Date();
-    const periodEnd = new Date(subscription.current_period_end);
-    const daysRemaining = Math.ceil((periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (subscription.status === 'trial' && subscription.trial_ends_at) {
-      const trialEnd = new Date(subscription.trial_ends_at);
-      if (isAfter(now, trialEnd)) {
-        await handleTrialExpired();
-      } else if (isBefore(now, addDays(trialEnd, -3))) {
-        sendTrialWarning();
-      }
-    }
-    
-    if (daysRemaining <= 7 && daysRemaining > 0 && subscription.status === 'active') {
-      sendRenewalWarning(daysRemaining);
+      setError('Billing backend unavailable. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleTrialExpired = async () => {
-    const result = await apiClient.downgradeToFree(subscription.subscription_id);
-    setSubscription({ ...subscription, status: 'downgraded', plan_id: 'free' });
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_data');
-  };
-
-  const sendRenewalWarning = (days: number) => {
-    // Send notification
-  };
-
-  const sendTrialWarning = () => {
-    // Send trial ending soon notification
+    if (!subscription) return;
+    try {
+      setSubscription({ ...subscription, status: 'canceled', plan_id: 'free' } as Subscription);
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+    } catch (err) {
+      console.error('Trial expired handling failed:', err);
+    }
   };
 
   const downloadInvoice = async (invoiceId: string) => {
@@ -151,16 +199,36 @@ export default function BillingPage() {
   };
 
   const upgradePlan = async (newPlanId: string) => {
+    if (!subscription) return;
     try {
-      const result = await apiClient.upgradeSubscription(subscription?.subscription_id, newPlanId);
-      if (result?.client_secret) {
-        const stripe = await import('@stripe/stripe-js');
-        const stripeInstance = await stripe.loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-        await stripeInstance?.redirectToCheckout({ sessionId: result.client_secret });
+      const result = await apiClient.createSubscription(newPlanId);
+      if (result) {
+        setSubscription({ ...subscription, plan_id: newPlanId, status: 'active' });
       }
     } catch (err) {
       setError('Failed to upgrade plan');
     }
+  };
+
+  const cancelSubscription = async (subscriptionId: string) => {
+    if (!subscriptionId) return;
+    try {
+      setSubscription(prev => prev ? { ...prev, status: 'canceled' } : null);
+    } catch (err) {
+      console.error('Cancel subscription failed:', err);
+      setError('Failed to cancel subscription');
+    }
+  };
+
+  const formatTokens = (tokens: number): string => {
+    if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M tokens`;
+    if (tokens >= 1_000) return `${(tokens / 1_000).toFixed(0)}K tokens`;
+    return `${tokens} tokens`;
+  };
+
+  const getTokensRemaining = (): number => {
+    if (!usage) return 0;
+    return usage.monthly_token_quota - usage.current_tokens_used;
   };
 
   if (loading) {
@@ -193,46 +261,36 @@ export default function BillingPage() {
       <main className="p-6">
         {activeTab === 'plans' && (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {plans.map(plan => (
-              <div key={plan.id} className="rounded-lg border border-border bg-card p-6">
-                <h3 className="text-lg font-semibold text-foreground">{plan.name}</h3>
-                <p className="text-2xl font-bold text-foreground my-2">${plan.price_usd}{plan.interval === 'yearly' ? '/yr' : '/mo'}</p>
-                <p className="text-sm text-muted-foreground my-2">{plan.max_seats === -1 ? 'Unlimited' : `${plan.max_seats} seats`}</p>
-                <p className="text-sm text-muted-foreground my-2">{formatTokens(plan.monthly_token_quota)} tokens/month</p>
-                <ul className="text-sm text-muted-foreground mb-4 space-y-1">
-                  {Object.entries(plan.features).map(([key, value]) => (
-                    <li key={key} className="flex items-center">
-                      {value ? <CheckCircle className="h-4 w-4 text-green-500 mr-2" /> : <Clock className="h-4 w-4 text-gray-400 mr-2" />}
-                      {key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </li>
-                  ))}
-                </ul>
-                {subscription?.plan_id !== plan.id && (
-                  <button
-                    onClick={() => upgradePlan(plan.id)}
-                    className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
-                    style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
-                  >
-                    Select Plan
-                  </button>
-                )}
+            {plans.length === 0 ? (
+              <div className="col-span-3 text-center py-8" style={{ color: 'var(--color-muted-foreground)' }}>
+                Loading plans...
               </div>
-            ))}
+            ) : (
+              plans.map(plan => (
+                <div key={plan.id} className="rounded-lg border border-border bg-card p-6">
+                  <h3 className="text-lg font-semibold text-foreground">{plan.name}</h3>
+                  <p className="text-2xl font-bold text-foreground my-2">${plan.price_usd}{plan.interval === 'yearly' ? '/yr' : '/mo'}</p>
+                  <p className="text-sm text-muted-foreground my-2">{plan.max_seats === -1 ? 'Unlimited' : `${plan.max_seats} seats`}</p>
+                  <p className="text-sm text-muted-foreground my-2">{formatTokens(plan.monthly_token_quota)} tokens/month</p>
+                  {subscription?.plan_id !== plan.id && (
+                    <button
+                      onClick={() => upgradePlan(plan.id)}
+                      className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+                      style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
+                    >
+                      Select Plan
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         )}
 
         {activeTab === 'subscription' && subscription && (
           <div className="rounded-lg border border-border bg-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-foreground">Current Subscription</h2>
-              {subscription.status === 'trial' && (
-                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/15 text-amber-600">
-                  Trial Active
-                </span>
-              )}
-            </div>
-            
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <h2 className="text-xl font-semibold text-foreground mb-4">Current Subscription</h2>
+            <div className="grid gap-6 md:grid-cols-2">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground">Plan</label>
                 <p className="text-lg font-semibold text-foreground">{subscription.plan_name}</p>
@@ -248,34 +306,19 @@ export default function BillingPage() {
                 </span>
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground">Next Billing</label>
-                <p className="text-foreground">{format(new Date(subscription.current_period_end), 'MMM d, yyyy')}</p>
+                <label className="text-xs font-semibold text-muted-foreground">Price</label>
+                <p className="text-lg font-semibold text-foreground">${subscription.plan_name ? '149' : 0}/mo</p>
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground">Tokens Remaining</label>
-                <p className="text-foreground">{formatTokens(getTokensRemaining())}</p>
+                <label className="text-xs font-semibold text-muted-foreground">Period End</label>
+                <p className="text-foreground">
+                  {subscription.current_period_end ? format(new Date(subscription.current_period_end), 'MMM d, yyyy') : 'N/A'}
+                </p>
               </div>
-              {subscription.trial_ends_at && subscription.status === 'trial' && (
-                <div className="md:col-span-2">
-                  <label className="text-xs font-semibold text-muted-foreground">Trial Ends</label>
-                  <p className="text-foreground">
-                    <Clock className="h-4 w-4 inline mr-1" />
-                    {format(new Date(subscription.trial_ends_at), 'MMM d, yyyy')}
-                  </p>
-                </div>
-              )}
             </div>
-
             <div className="mt-6 flex gap-3">
               <button
-                onClick={() => setShowUpgradeModal(true)}
-                className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
-                style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
-              >
-                Change Plan
-              </button>
-              <button
-                onClick={() => apiClient.cancelSubscription(subscription.subscription_id)}
+                onClick={() => subscription && cancelSubscription(subscription.subscription_id)}
                 className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
                 style={{ background: 'var(--color-secondary)', color: 'var(--color-on-secondary)' }}
               >
@@ -290,124 +333,76 @@ export default function BillingPage() {
             <div className="p-4 border-b border-border">
               <h2 className="text-lg font-semibold text-foreground">Billing History</h2>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Invoice</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">Amount</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground">Status</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoices.map(invoice => (
-                    <tr key={invoice.invoice_id} className="border-b border-border">
-                      <td className="px-4 py-3">
-                        <div>
-                          <span className="font-semibold text-foreground">{invoice.invoice_id}</span>
-                          <div className="text-xs text-muted-foreground">
-                            {format(new Date(invoice.period_start), 'MMM d')} - {format(new Date(invoice.period_end), 'MMM d')}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold text-foreground">
-                        ${invoice.amount_usd.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          invoice.status === 'paid' ? 'bg-green-500/15 text-green-600' : 'bg-red-500/15 text-red-600'
-                        }`}>
-                          {invoice.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => downloadInvoice(invoice.invoice_id)}
-                          className="px-3 py-1 text-sm rounded font-semibold"
-                          style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
-                        >
-                          Download PDF
-                        </button>
-                      </td>
+            <div className="p-4">
+              {invoices.length === 0 ? (
+                <div className="text-center py-8" style={{ color: 'var(--color-muted-foreground)' }}>
+                  No invoices found
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                      <th className="text-left px-3 py-2 text-sm font-semibold" style={{ color: 'var(--color-muted-foreground)' }}>Invoice ID</th>
+                      <th className="text-right px-3 py-2 text-sm font-semibold" style={{ color: 'var(--color-muted-foreground)' }}>Amount</th>
+                      <th className="text-left px-3 py-2 text-sm font-semibold" style={{ color: 'var(--color-muted-foreground)' }}>Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {invoices.map(invoice => (
+                      <tr key={invoice.invoice_id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                        <td className="px-3 py-2 text-sm" style={{ color: 'var(--color-foreground)' }}>{invoice.invoice_id}</td>
+                        <td className="px-3 py-2 text-sm font-semibold" style={{ color: 'var(--color-foreground)' }}>${invoice.amount_due_usd.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-sm">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            invoice.status === 'paid' ? 'bg-green-500/15 text-green-400' : 'bg-amber-500/15 text-amber-400'
+                          }`}>
+                            {invoice.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         )}
 
         {activeTab === 'usage' && usage && (
           <div className="space-y-6">
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="text-xl font-semibold text-foreground mb-4">Token Usage</h2>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {usage.current_tokens_used.toLocaleString()} / {usage.monthly_token_quota.toLocaleString()} tokens
-                  </span>
-                  <span className="font-semibold text-foreground">{usage.usage_percent.toFixed(1)}%</span>
-                </div>
-                
-                <div className="h-3 rounded-full overflow-hidden" style={{ background: 'var(--color-border)' }}>
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      usage.is_at_risk ? 'bg-red-500' : usage.usage_percent > 70 ? 'bg-amber-500' : 'bg-green-500'
-                    }`}
-                    style={{ width: `${Math.min(usage.usage_percent, 100)}%` }}
-                  />
-                </div>
-                
-                {usage.is_at_risk && (
-                  <div className="flex items-center gap-2 text-amber-600 text-sm">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>Usage limit is approaching. Consider upgrading your plan.</span>
+            <div className="rounded-xl border p-6" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
+              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-foreground)' }}>Token Usage</h2>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-1" style={{ color: 'var(--color-muted-foreground)' }}>
+                    <span>{usage.current_tokens_used.toLocaleString()} / {usage.monthly_token_quota.toLocaleString()} tokens</span>
+                    <span>{usage.usage_percent.toFixed(1)}%</span>
                   </div>
-                )}
+                  <div className="h-2 rounded-full" style={{ background: 'var(--color-border)' }}>
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${Math.min(usage.usage_percent, 100)}%`,
+                        background: usage.usage_percent > 90 ? '#cd4239' : usage.usage_percent > 70 ? '#f7a501' : '#2c8c66'
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="rounded-lg border border-border bg-card p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Estimated Cost</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-3xl font-bold text-foreground">${usage.estimated_cost_usd.toFixed(2)}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Based on current usage at $0.60 per 1M tokens
-                </p>
+            <div className="rounded-xl border p-6" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
+              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-foreground)' }}>Estimated Cost</h2>
+              <div className="text-3xl font-bold" style={{ color: 'var(--color-foreground)' }}>
+                ${usage.estimated_cost_usd ? usage.estimated_cost_usd.toFixed(2) : '0.00'}
               </div>
-
-              <div className="rounded-lg border border-border bg-card p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Reset Status</h3>
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4" />
-                  <span className="text-muted-foreground">
-                    Tokens will reset at the start of the next billing cycle
-                  </span>
-                </div>
-              </div>
+              <p className="text-sm mt-1" style={{ color: 'var(--color-muted-foreground)' }}>
+                Based on current usage at $0.60 per 1M tokens
+              </p>
             </div>
           </div>
         )}
       </main>
     </div>
   );
-}
-
-function formatTokens(tokens: number): string {
-  if (tokens >= 1_000_000) {
-    return `${(tokens / 1_000_000).toFixed(1)}M tokens`;
-  }
-  if (tokens >= 1_000) {
-    return `${(tokens / 1_000).toFixed(0)}K tokens`;
-  }
-  return `${tokens} tokens`;
-}
-
-function getTokensRemaining(): number {
-  if (!usage) return 0;
-  return usage.monthly_token_quota - usage.current_tokens_used;
 }

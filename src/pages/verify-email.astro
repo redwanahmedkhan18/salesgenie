@@ -1,0 +1,63 @@
+---
+export const prerender = false;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Email - SalesGenie</title>
+  <script>
+    function redirect() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+      
+      fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // Store verification status and redirect to dashboard
+          localStorage.setItem('email_verified', 'true');
+          window.location.href = '/app/dashboard';
+        } else {
+          document.getElementById('error').style.display = 'block';
+          document.getElementById('message').textContent = data.message || 'Verification failed';
+        }
+      })
+      .catch(() => {
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('message').textContent = 'Unable to verify email. Please try again.';
+      });
+    }
+  </script>
+</head>
+<body style="background: linear-gradient(135deg, #0f1117 0%, #1a1d29 50%, #0f1117 100%); color: white; font-family: Arial, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+  <div style="background: var(--color-card); padding: 40px; border-radius: 16px; border: 1px solid var(--color-border); max-width: 400px; text-align: center;">
+    <div style="width: 60px; height: 60px; background: var(--color-primary); color: var(--color-on-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="30" height="30">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+    <h2 style="margin: 0 0 16px;">Email Verification</h2>
+    <p style="margin: 0 0 24px; color: var(--color-muted-foreground);">Verifying your email address...</p>
+    <div id="error" style="display: none; margin-top: 20px; padding: 16px; background: rgba(205,66,63,0.15); border: 1px solid rgba(205,66,63,0.3); border-radius: 8px;">
+      <p id="message" style="margin: 0; color: #cd4239;"></p>
+      <button onclick="window.location.href='/login'" style="margin-top: 12px; padding: 8px 16px; background: var(--color-primary); color: var(--color-on-primary); border: none; border-radius: 6px; cursor: pointer;">
+        Back to Login
+      </button>
+    </div>
+  </div>
+  <script>
+    setTimeout(redirect, 1000);
+  </script>
+</body>
+</html>

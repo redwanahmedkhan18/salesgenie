@@ -6,11 +6,11 @@ interface AgentsShellProps {
   onAgentSelect?: (agentId: string) => void;
 }
 
-export default function AgentsShell({ activeAgentId, onAgentSelect }: AgentsShellProps) {
+export default function AgentsShell(_: AgentsShellProps = {}) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
-        <AgentBuilder activeAgentId={activeAgentId} onAgentSelect={onAgentSelect} />
+        <AgentBuilder />
       </div>
     </div>
   );

@@ -3,6 +3,13 @@ import { Sidebar, CommandPalette } from './AppShell';
 import { apiClient } from '../../lib/api-client';
 import type { Customer, CustomerSegment, CustomerTag } from '../../lib/api-client';
 
+const CARD_BG = '#1e293b';
+const CARD_BORDER = '#334155';
+const TEXT_COLOR = '#f8fafc';
+const MUTED_COLOR = '#94a3b8';
+const PRIMARY_COLOR = '#f7a501';
+const ON_PRIMARY_COLOR = '#23251d';
+
 export default function CustomerManagement() {
   const [activeRoute, setActiveRoute] = useState('customers');
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -69,26 +76,22 @@ export default function CustomerManagement() {
   };
 
   const leadStatusColors: Record<string, string> = {
-    cold: 'bg-gray-500/15 text-gray-400',
-    warm: 'bg-blue-500/15 text-blue-400',
-    hot: 'bg-orange-500/15 text-orange-400',
-    qualified: 'bg-purple-500/15 text-purple-400',
-    converted: 'bg-green-500/15 text-green-400',
-    churned: 'bg-red-500/15 text-red-400',
+    cold: '#9b9c92', warm: '#2c84e0', hot: '#f7a501',
+    qualified: '#7c44a6', converted: '#2c8c66', churned: '#cd4239',
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--color-background)' }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: '#0f1117' }}>
       <Sidebar activeRoute={activeRoute} onRouteChange={setActiveRoute} />
 
       <main className="flex-1 overflow-y-auto">
         <header className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 border-b"
-          style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)' }}>
+          style={{ background: CARD_BG, borderColor: CARD_BORDER }}>
           <div>
-            <h1 className="text-xl font-bold" style={{ color: 'var(--color-foreground)' }}>
+            <h1 className="text-xl font-bold" style={{ color: TEXT_COLOR }}>
               Customer Management
             </h1>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted-foreground)' }}>
+            <p className="text-xs mt-0.5" style={{ color: MUTED_COLOR }}>
               {customers.length} customers · Segments: {segments.length} · Tags: {tags.length}
             </p>
           </div>
@@ -96,7 +99,7 @@ export default function CustomerManagement() {
             <button
               onClick={() => setShowModal(true)}
               className="px-4 py-2 text-sm font-semibold rounded-lg transition-all"
-              style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
+              style={{ background: PRIMARY_COLOR, color: ON_PRIMARY_COLOR }}
             >
               + Add Customer
             </button>
@@ -104,7 +107,7 @@ export default function CustomerManagement() {
               id="open-command-palette-btn"
               onClick={() => setPaletteOpen(true)}
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors"
-              style={{ background: 'var(--color-muted)', color: 'var(--color-muted-foreground)', border: '1px solid var(--color-border)' }}
+              style={{ background: '#64748b', color: TEXT_COLOR, border: '1px solid #334155' }}
             >
               <span>🔍</span>
               <span>Search</span>
@@ -122,14 +125,14 @@ export default function CustomerManagement() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="px-3 py-2 rounded-lg text-sm outline-none"
-              style={{ background: 'var(--color-card)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
+              style={{ background: CARD_BG, color: TEXT_COLOR, border: '1px solid ' + CARD_BORDER }}
             />
             
             <select
               value={filterStatus || ''}
               onChange={(e) => setFilterStatus(e.target.value || null)}
               className="px-3 py-2 rounded-lg text-sm outline-none"
-              style={{ background: 'var(--color-card)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
+              style={{ background: CARD_BG, color: TEXT_COLOR, border: '1px solid ' + CARD_BORDER }}
             >
               <option value="">All Statuses</option>
               <option value="cold">Cold</option>
@@ -144,7 +147,7 @@ export default function CustomerManagement() {
               value={filterSegment || ''}
               onChange={(e) => setFilterSegment(e.target.value || null)}
               className="px-3 py-2 rounded-lg text-sm outline-none"
-              style={{ background: 'var(--color-card)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
+              style={{ background: CARD_BG, color: TEXT_COLOR, border: '1px solid ' + CARD_BORDER }}
             >
               <option value="">All Segments</option>
               {segments.map(seg => (
@@ -154,30 +157,30 @@ export default function CustomerManagement() {
           </div>
 
           {/* Customer Table */}
-          <div className="rounded-xl border" style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}>
+          <div className="rounded-xl border" style={{ background: CARD_BG, borderColor: CARD_BORDER }}>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--color-muted-foreground)' }}>Customer</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--color-muted-foreground)' }}>Company</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--color-muted-foreground)' }}>Status</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--color-muted-foreground)' }}>Score</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--color-muted-foreground)' }}>LTV</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--color-muted-foreground)' }}>Segments</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--color-muted-foreground)' }}>Last Interaction</th>
+                  <tr style={{ borderBottom: '1px solid ' + CARD_BORDER }}>
+                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: MUTED_COLOR }}>Customer</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: MUTED_COLOR }}>Company</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: MUTED_COLOR }}>Status</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: MUTED_COLOR }}>Score</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: MUTED_COLOR }}>LTV</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: MUTED_COLOR }}>Segments</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: MUTED_COLOR }}>Last Interaction</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center" style={{ color: 'var(--color-muted-foreground)' }}>
+                      <td colSpan={7} className="px-4 py-8 text-center" style={{ color: MUTED_COLOR }}>
                         Loading customers...
                       </td>
                     </tr>
                   ) : filteredCustomers.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center" style={{ color: 'var(--color-muted-foreground)' }}>
+                      <td colSpan={7} className="px-4 py-8 text-center" style={{ color: MUTED_COLOR }}>
                         No customers found
                       </td>
                     </tr>
@@ -187,54 +190,54 @@ export default function CustomerManagement() {
                         key={customer.id}
                         onClick={() => setSelectedCustomer(customer)}
                         className="cursor-pointer transition-colors"
-                        style={{ borderBottom: '1px solid var(--color-border)' }}
+                        style={{ borderBottom: '1px solid ' + CARD_BORDER }}
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                              style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}>
+                              style={{ background: PRIMARY_COLOR, color: ON_PRIMARY_COLOR }}>
                               {customer.full_name.charAt(0)}
                             </div>
                             <div>
-                              <div className="font-semibold text-sm" style={{ color: 'var(--color-foreground)' }}>
+                              <div className="font-semibold text-sm" style={{ color: TEXT_COLOR }}>
                                 {customer.full_name}
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
+                              <div className="text-xs" style={{ color: MUTED_COLOR }}>
                                 {customer.email || customer.phone_number || 'No contact info'}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm" style={{ color: 'var(--color-foreground)' }}>
+                        <td className="px-4 py-3 text-sm" style={{ color: TEXT_COLOR }}>
                           {customer.company_name || '-'}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`text-xs px-2 py-1 rounded-full ${leadStatusColors[customer.lead_status] || leadStatusColors.cold}`}>
+                          <span className={`text-xs px-2 py-1 rounded-full`}>
                             {customer.lead_status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm" style={{ color: 'var(--color-foreground)' }}>
+                        <td className="px-4 py-3 text-sm" style={{ color: TEXT_COLOR }}>
                           {customer.lead_score}
                         </td>
-                        <td className="px-4 py-3 text-sm" style={{ color: 'var(--color-foreground)' }}>
+                        <td className="px-4 py-3 text-sm" style={{ color: TEXT_COLOR }}>
                           ${customer.lifetime_value.toLocaleString()}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-1">
                             {customer.segments.slice(0, 2).map(seg => (
                               <span key={seg} className="text-xs px-2 py-0.5 rounded"
-                                style={{ background: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }}>
+                                style={{ background: '#64748b', color: TEXT_COLOR }}>
                                 {seg}
                               </span>
                             ))}
                             {customer.segments.length > 2 && (
-                              <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
+                              <span className="text-xs" style={{ color: MUTED_COLOR }}>
                                 +{customer.segments.length - 2}
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
+                        <td className="px-4 py-3 text-xs" style={{ color: MUTED_COLOR }}>
                           {customer.last_interaction_at 
                             ? new Date(customer.last_interaction_at).toLocaleDateString()
                             : 'Never'}
@@ -252,49 +255,49 @@ export default function CustomerManagement() {
       {/* Create Customer Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="rounded-xl p-6 w-full max-w-md" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-            <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--color-foreground)' }}>Add New Customer</h2>
+          <div className="rounded-xl p-6 w-full max-w-md" style={{ background: CARD_BG, border: '1px solid ' + CARD_BORDER }}>
+            <h2 className="text-lg font-bold mb-4" style={{ color: TEXT_COLOR }}>Add New Customer</h2>
             <form onSubmit={handleCreateCustomer} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-muted-foreground)' }}>
+                <label className="text-xs font-semibold block mb-1" style={{ color: MUTED_COLOR }}>
                   Full Name *
                 </label>
                 <input
                   name="full_name"
                   required
                   className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                  style={{ background: 'var(--color-background)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
+                  style={{ background: CARD_BG, color: TEXT_COLOR, border: '1px solid ' + CARD_BORDER }}
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-muted-foreground)' }}>
+                <label className="text-xs font-semibold block mb-1" style={{ color: MUTED_COLOR }}>
                   Email
                 </label>
                 <input
                   name="email"
                   type="email"
                   className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                  style={{ background: 'var(--color-background)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
+                  style={{ background: CARD_BG, color: TEXT_COLOR, border: '1px solid ' + CARD_BORDER }}
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-muted-foreground)' }}>
+                <label className="text-xs font-semibold block mb-1" style={{ color: MUTED_COLOR }}>
                   Phone Number
                 </label>
                 <input
                   name="phone_number"
                   className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                  style={{ background: 'var(--color-background)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
+                  style={{ background: CARD_BG, color: TEXT_COLOR, border: '1px solid ' + CARD_BORDER }}
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-muted-foreground)' }}>
+                <label className="text-xs font-semibold block mb-1" style={{ color: MUTED_COLOR }}>
                   Company Name
                 </label>
                 <input
                   name="company_name"
                   className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                  style={{ background: 'var(--color-background)', color: 'var(--color-foreground)', border: '1px solid var(--color-border)' }}
+                  style={{ background: CARD_BG, color: TEXT_COLOR, border: '1px solid ' + CARD_BORDER }}
                 />
               </div>
               <div className="flex justify-end gap-3 pt-4">
@@ -302,14 +305,14 @@ export default function CustomerManagement() {
                   type="button"
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-sm rounded-lg transition-colors"
-                  style={{ background: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }}
+                  style={{ background: PRIMARY_COLOR, color: ON_PRIMARY_COLOR }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 text-sm font-semibold rounded-lg transition-all"
-                  style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
+                  style={{ background: PRIMARY_COLOR, color: ON_PRIMARY_COLOR }}
                 >
                   Create Customer
                 </button>

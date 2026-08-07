@@ -9,6 +9,10 @@ from fastapi.responses import JSONResponse
 
 from enterprise_ai_platform.common.config import settings
 from enterprise_ai_platform.auth_service.src.router_auth import router as auth_router
+try:
+    from enterprise_ai_platform.platform_service.src.router_platform import router as platform_router
+except ImportError:
+    platform_router = None
 
 app = FastAPI(
     title=f"{settings.PROJECT_NAME} - Auth Service",
@@ -46,8 +50,11 @@ async def readiness_probe():
     }
 
 
-# Include Authentication API Router
+# Include Authentication & Platform API Routers
 app.include_router(auth_router)
+if platform_router:
+    app.include_router(platform_router)
+
 
 
 @app.exception_handler(Exception)
