@@ -141,7 +141,7 @@ function decodeJWT(token: string): { sub: string; email?: string; roles?: Platfo
       }
     }
 
-    const expectedIssuer = process.env.JWT_ISSUER || 'salesgenie';
+    const expectedIssuer = import.meta.env.PUBLIC_JWT_ISSUER || process.env.JWT_ISSUER || 'salesgenie';
     if (payload.iss && payload.iss !== expectedIssuer) {
       return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
     }
