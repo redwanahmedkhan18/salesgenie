@@ -4,7 +4,6 @@ Endpoints for user profiles, preferences, avatar management, and user queries.
 """
 
 import uuid
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -13,9 +12,9 @@ from enterprise_ai_platform.common.database import get_async_db
 from enterprise_ai_platform.common.security_rbac import (
     get_current_user,
     TokenPayload,
-    RequirePermissions,
-    Permission,
 )
+from enterprise_ai_platform.common.logging import get_structured_logger
+from enterprise_ai_platform.common.data_governance import data_governance
 from .models import (
     UserProfileDTO,
     UpdateProfileRequest,
@@ -25,6 +24,8 @@ from .models import (
     UserPreferences,
 )
 from enterprise_ai_platform.auth_service.src.models import User as AuthUser
+
+logger = get_structured_logger("salesgenie.user", "user-service")
 
 router = APIRouter(prefix="/api/v1/users", tags=["User Profiles & Settings"])
 
@@ -198,3 +199,119 @@ async def update_preferences(
         slack_notifications=pref.slack_notifications,
         keyboard_shortcuts=pref.keyboard_shortcuts,
     )
+
+
+@router.post("/me/export", summary="Export Personal Data (GDPR Article 20)")
+async def export_my_data(
+    current_user: TokenPayload = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    """Export all personal data for the current user in machine-readable format."""
+    user_uuid = uuid.UUID(current_user.sub)
+    tenant_id = current_user.tenant_id
+
+    logger.info(
+        "GDPR data portability request",
+        extra={"user_id": str(user_uuid), "tenant_id": tenant_id}
+    )
+
+    export = data_governance.export_user_data(tenant_id, str(user_uuid))
+    export["personal_data"]["user_profile"] = {
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "tenant_id": tenant_id,
+        "roles": getattr(current_user, "roles", []),
+    }
+    return export
+
+
+@router.delete("/me", status_code=status.HTTP_200_OK, summary="Delete Account (GDPR Article 17)")
+async def delete_my_account(
+    current_user: TokenPayload = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
+):
+    """Delete the current user account and all associated personal data (right to erasure)."""
+
+    user_uuid = uuid.UUID(current_user.sub)
+    tenant_id = current_user.tenant_id
+
+    logger.warning(
+        "GDPR right-to-erasure request (account deletion)",
+        extra={"user_id": str(user_uuid), "tenant_id": tenant_id}
+    )
+
+    profile_stmt = select(UserProfile).where(UserProfile.id == user_uuid)
+    profile_res = await db.execute(profile_stmt)
+    profile = profile_res.scalar_one_or_none()
+    if profile:
+        profile.is_active = False
+        profile.email = f"deleted_{user_uuid.hex[:8]}@deleted.salesgenie.ai"
+        profile.full_name = "[DELETED]"
+        profile.phone_number = None
+        profile.avatar_url = None
+
+    auth_stmt = select(AuthUser).where(AuthUser.id == user_uuid)
+    auth_res = await db.execute(auth_stmt)
+    auth_user = auth_res.scalar_one_or_none()
+    if auth_user:
+        auth_user.is_active = False
+
+    await db.commit()
+
+    logger.info(
+        "Account deleted successfully",
+        extra={"user_id": str(user_uuid), "tenant_id": tenant_id}
+    )
+
+    return {
+        "status": "deleted",
+        "message": "Your account and PII have been deleted. "
+                   "Billing, audit, and analytics records retained per legal requirements.",
+        "retained_categories": [
+            "billing_records",
+            "audit_logs",
+            "usage_analytics",
+            "support_tickets",
+        ],
+    }
+
+
+@router.get("/me/consent", summary="Get Consent Preferences")
+async def get_consent(
+    current_user: TokenPayload = Depends(get_current_user),
+):
+    """Get user consent status for marketing, analytics, and AI training."""
+    tenant_id = current_user.tenant_id
+    user_id = current_user.sub
+    return {
+        "marketing": data_governance.check_consent(tenant_id, user_id, "marketing"),
+        "analytics": data_governance.check_consent(tenant_id, user_id, "analytics"),
+        "ai_training": data_governance.check_consent(tenant_id, user_id, "ai_training"),
+        "data_sharing": data_governance.check_consent(tenant_id, user_id, "data_sharing"),
+    }
+
+
+@router.post("/me/consent", summary="Update Consent Preferences")
+async def update_consent(
+    consent_type: str,
+    granted: bool,
+    current_user: TokenPayload = Depends(get_current_user),
+):
+    """Set or revoke consent for a specific data processing purpose."""
+    if consent_type not in ("marketing", "analytics", "ai_training", "data_sharing"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid consent type. Must be one of: marketing, analytics, ai_training, data_sharing",
+        )
+    record = data_governance.record_consent(
+        tenant_id=current_user.tenant_id,
+        user_id=current_user.sub,
+        consent_type=consent_type,
+        granted=granted,
+    )
+    return {
+        "consent_type": consent_type,
+        "granted": record.granted,
+        "granted_at": record.granted_at,
+        "revoked_at": record.revoked_at,
+    }

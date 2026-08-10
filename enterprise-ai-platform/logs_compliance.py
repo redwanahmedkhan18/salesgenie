@@ -14,7 +14,6 @@ from enum import Enum
 import os
 import csv
 import io
-from datetime import timezone
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("salesgenie.logs-compliance")
@@ -77,7 +76,7 @@ class LiveLogsViewer:
                         if self._matches_filters(entry, filters):
                             await queue.put(entry)
                     except Exception as e:
-                        logger.error(f"Failed to parse log line: {e}")
+                        logger.error("Failed to parse log line: %s", e)
                 else:
                     await asyncio.sleep(0.1)
     
@@ -237,11 +236,16 @@ class ComplianceCenter:
 class GDPRCompliance:
     def __init__(self):
         self.requirements = [
-            {"id": "gdpr_1", "description": "Data consent management", "status": "implemented"},
-            {"id": "gdpr_2", "description": "Right to erasure", "status": "implemented"},
-            {"id": "gdpr_3", "description": "Data portability", "status": "implemented"},
-            {"id": "gdpr_4", "description": "Privacy by design", "status": "implemented"},
-            {"id": "gdpr_5", "description": "Data processing records", "status": "implemented"},
+            {"id": "gdpr_1", "description": "Data consent management", "status": "partially_implemented",
+             "notes": "ConsentRecord model and API endpoints added; consent not enforced at processing time for AI training"},
+            {"id": "gdpr_2", "description": "Right to erasure (Article 17)", "status": "partially_implemented",
+             "notes": "DELETE /me endpoint anonymizes PII for current user only; no cross-service cascade deletion"},
+            {"id": "gdpr_3", "description": "Data portability (Article 20)", "status": "partially_implemented",
+             "notes": "POST /me/export endpoint returns user profile data; full structured DB export not implemented"},
+            {"id": "gdpr_4", "description": "Privacy by design", "status": "in_progress",
+             "notes": "PII redaction in logs exists; field-level encryption, cookie consent banner, and audit trail for PII access pending"},
+            {"id": "gdpr_5", "description": "Data processing records", "status": "in_progress",
+             "notes": "Subprocessor registry added in data_governance.py; formal DPA documentation pending legal review"},
         ]
     
     def check(self) -> Dict[str, Any]:

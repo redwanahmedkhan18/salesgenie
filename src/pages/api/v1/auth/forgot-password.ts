@@ -1,16 +1,38 @@
 import type { APIRoute } from 'astro';
+import { checkRateLimit, logAuditEvent, getClientIp } from '../../../../lib/auth-middleware';
 
-export const POST: APIRoute = async ({ request }) => {
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export const POST: APIRoute = async (context) => {
+  if (checkRateLimit(context, 'auth:forgot', 60 * 1000, 3)) {
+    return new Response(JSON.stringify({
+      success: false,
+      message: 'Too many requests. Please try again later.',
+    }), {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': '60',
+      },
+    });
+  }
+
   try {
-    const { email } = await request.json();
+    const { email } = await context.request.json();
+    const clientIp = await getClientIp(context) || 'unknown';
 
-    if (!email) {
+    if (!email || typeof email !== 'string' || !emailRegex.test(email)) {
       return new Response(JSON.stringify({
         success: false,
-        message: 'Email is required'
+        message: 'Invalid request',
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
+          'Referrer-Policy': 'no-referrer',
+        },
       });
     }
 
@@ -24,22 +46,46 @@ export const POST: APIRoute = async ({ request }) => {
       body: JSON.stringify({ email }),
     });
 
-    const data = await response.json().catch(() => ({
-      success: true,
-      message: 'If an account with that email exists, a reset link has been sent'
-    }));
+    await response.json().catch(() => ({}));
 
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
+    logAuditEvent({
+      action: 'password_reset_requested',
+      resource_type: 'auth',
+      ip_address: clientIp,
+      severity: 'low',
+      details: { email_provided: true },
     });
-  } catch (error) {
+
     return new Response(JSON.stringify({
       success: true,
-      message: 'If an account with that email exists, a reset link has been sent'
+      message: 'If an account with that email exists, a reset link has been sent',
     }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'Referrer-Policy': 'no-referrer',
+      },
+    });
+  } catch (error) {
+    logAuditEvent({
+      action: 'forgot_password_error',
+      resource_type: 'auth',
+      severity: 'medium',
+      details: { error: 'request_failed' },
+    });
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'If an account with that email exists, a reset link has been sent',
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'Referrer-Policy': 'no-referrer',
+      },
     });
   }
 };
@@ -47,9 +93,14 @@ export const POST: APIRoute = async ({ request }) => {
 export const GET: APIRoute = async () => {
   return new Response(JSON.stringify({
     success: false,
-    message: 'Method not allowed'
+    message: 'Method not allowed',
   }), {
     status: 405,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'no-referrer',
+    },
   });
 };

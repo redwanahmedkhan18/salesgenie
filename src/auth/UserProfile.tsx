@@ -423,18 +423,23 @@ export function UserProfile() {
             <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>
               Add an extra layer of security to your account with MFA.
             </p>
-            <button
-              onClick={async () => {
-                try {
-                  const mfa = await apiClient.setupMFA();
-                  alert(`MFA Secret: ${mfa.secret_key}\nBackup Codes: ${mfa.backup_codes.join(', ')}`);
-                } catch (error) {
-                  console.error('MFA setup failed:', error);
-                }
-              }}
-              className="mt-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
-            >
+              <button
+                onClick={async () => {
+                  try {
+                    const mfa = await apiClient.setupMFA();
+                    const qrSvg = `data:image/svg+xml;base64,${btoa(mfa.qr_code)}`;
+                    const link = document.createElement('a');
+                    link.href = qrSvg;
+                    link.download = 'mfa-qrcode.svg';
+                    link.click();
+                    alert('A QR code file has been downloaded. Scan it with your authenticator app.\n\nYour backup codes are:\n' + mfa.backup_codes.slice(0, 2).join(', ') + ' (and more)');
+                  } catch (error) {
+                    console.error('MFA setup failed:', error);
+                  }
+                }}
+                className="mt-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
+              >
               Set Up MFA
             </button>
           </div>
@@ -448,7 +453,7 @@ export function UserProfile() {
               onClick={async () => {
                 try {
                   const sessions = await apiClient.getSessions();
-                  console.log('Sessions:', sessions);
+                  console.log('Sessions loaded');
                 } catch (error) {
                   console.error('Failed to fetch sessions:', error);
                 }

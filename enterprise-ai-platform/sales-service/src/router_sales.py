@@ -5,8 +5,8 @@ Endpoints for lead qualification, deal pipeline management, product recommendati
 
 import uuid
 from typing import List, Optional
-from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import timedelta
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -25,12 +25,22 @@ from .models import (
     Lead,
     Deal,
     ProductCatalog,
-    Coupon,
     CalendarBooking,
 )
 from .sales_engine import calculate_lead_qualification_score, generate_product_recommendations
+from .lead_state_machine import validate_lead_state_transition
 
 router = APIRouter(prefix="/api/v1/sales", tags=["AI Sales & Lead Management"])
+
+VALID_DEAL_STAGES = {"discovery", "demo", "proposal", "negotiation", "won", "lost"}
+DEAL_STAGE_TRANSITIONS = {
+    "discovery": {"demo", "lost"},
+    "demo": {"proposal", "negotiation", "lost"},
+    "proposal": {"negotiation", "won", "lost"},
+    "negotiation": {"won", "lost"},
+    "won": set(),
+    "lost": set(),
+}
 
 
 @router.post(
@@ -105,6 +115,109 @@ async def list_leads(db: AsyncSession = Depends(get_async_db)):
         )
         for l in leads
     ]
+
+
+@router.patch(
+    "/leads/{lead_id}",
+    response_model=LeadDTO,
+    summary="Update Lead Status (state machine enforced)",
+    dependencies=[Depends(RequirePermissions(Permission.LEADS_WRITE))],
+)
+async def update_lead(
+    lead_id: str,
+    status: Optional[str] = Query(None),
+    lead_score: Optional[int] = Query(None, ge=0, le=100),
+    db: AsyncSession = Depends(get_async_db),
+    current_user: TokenPayload = Depends(get_current_user),
+):
+    """Transition a lead to a new status with state machine validation."""
+    tenant_uuid = uuid.UUID(uuid.uuid5(uuid.NAMESPACE_DNS, current_user.tenant_id).hex[:32])
+    stmt = select(Lead).where(Lead.id == uuid.UUID(lead_id), Lead.tenant_id == tenant_uuid)
+    res = await db.execute(stmt)
+    lead = res.scalar_one_or_none()
+
+    if not lead:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Lead {lead_id} not found",
+        )
+
+    if status is not None:
+        validate_lead_state_transition(lead.status, status)
+        lead.status = status
+
+    if lead_score is not None:
+        lead.lead_score = lead_score
+
+    await db.commit()
+    await db.refresh(lead)
+
+    return LeadDTO(
+        id=lead.id,
+        email=lead.email,
+        full_name=lead.full_name,
+        company=lead.company,
+        lead_score=lead.lead_score,
+        status=lead.status,
+        budget_usd=lead.budget_usd,
+        created_at=lead.created_at,
+    )
+
+
+@router.patch(
+    "/deals/{deal_id}/stage",
+    summary="Update Deal Pipeline Stage",
+    dependencies=[Depends(RequirePermissions(Permission.LEADS_WRITE))],
+)
+async def update_deal_stage(
+    deal_id: str,
+    new_stage: str,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: TokenPayload = Depends(get_current_user),
+):
+    """Transition a deal to a new pipeline stage with validation."""
+    tenant_uuid = uuid.UUID(uuid.uuid5(uuid.NAMESPACE_DNS, current_user.tenant_id).hex[:32])
+    stmt = select(Deal).where(Deal.id == uuid.UUID(deal_id), Deal.tenant_id == tenant_uuid)
+    res = await db.execute(stmt)
+    deal = res.scalar_one_or_none()
+
+    if not deal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Deal {deal_id} not found",
+        )
+
+    if new_stage not in VALID_DEAL_STAGES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid deal stage '{new_stage}'. Must be one of: {', '.join(sorted(VALID_DEAL_STAGES))}",
+        )
+
+    allowed = DEAL_STAGE_TRANSITIONS.get(deal.pipeline_stage, set())
+    if new_stage not in allowed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid deal stage transition from '{deal.pipeline_stage}' to '{new_stage}'.",
+        )
+
+    old_stage = deal.pipeline_stage
+    deal.pipeline_stage = new_stage
+
+    # Auto-calculate probability based on stage
+    stage_probabilities = {
+        "discovery": 0.2, "demo": 0.25, "proposal": 0.5,
+        "negotiation": 0.75, "won": 1.0, "lost": 0.0,
+    }
+    deal.probability = stage_probabilities.get(new_stage, deal.probability)
+
+    await db.commit()
+
+    return {
+        "deal_id": deal_id,
+        "old_stage": old_stage,
+        "new_stage": new_stage,
+        "probability": deal.probability,
+    }
 
 
 @router.get(

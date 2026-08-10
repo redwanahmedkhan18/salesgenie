@@ -37,6 +37,10 @@ export interface Lead {
   score: number;
   status: 'new' | 'qualified' | 'contacted' | 'won' | 'lost';
   value: number;
+  stage?: string;
+  phone?: string;
+  industry?: string;
+  notes?: string;
 }
 
 export interface Ticket {
@@ -105,6 +109,7 @@ export interface LoginResponse {
 export interface MFASetupResponse {
   secret_key: string;
   qr_code_uri: string;
+  qr_code: string;
   backup_codes: string[];
 }
 

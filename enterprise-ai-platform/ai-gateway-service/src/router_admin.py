@@ -3,19 +3,17 @@ Platform Admin API Router
 Super Admin endpoints for platform-wide administration.
 """
 
-import uuid
 from datetime import datetime, timezone
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Any, Dict, List, Optional
 
-from enterprise_ai_platform.common.database import get_async_db
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+
+from enterprise_ai_platform.common.cost_management import cost_calculator
 from enterprise_ai_platform.common.security_rbac import (
-    get_current_user,
-    TokenPayload,
-    RequirePermissions,
-    Permission,
     PlatformRole,
+    TokenPayload,
+    get_current_user,
 )
 
 router = APIRouter(prefix="/api/v1/admin", tags=["Platform Administration"])
@@ -181,32 +179,41 @@ async def get_ai_provider_status(
     _: TokenPayload = Depends(require_super_admin),
 ):
     """Get AI provider status and usage (Super Admin only)."""
-    return [
-        AIProviderStatus(
+    # Live provider status derived from configured API keys
+    from enterprise_ai_platform.ai_gateway_service.src.llm_provider import (
+        _GOOGLE_API_KEY,
+        _GROQ_API_KEY,
+        _MISTRAL_API_KEY,
+    )
+    providers = []
+    if _GROQ_API_KEY:
+        providers.append(AIProviderStatus(
             name="Groq",
-            status="healthy",
-            models=["llama-3.1-70b", "llama-3.1-8b", "gemma-2-9b"],
+            status="configured",
+            models=["llama3-70b-8192", "llama3-8b-8192"],
             daily_limit=100000,
-            daily_used=23456,
-            rate_limit_remaining=85000,
-        ),
-        AIProviderStatus(
+            daily_used=0,
+            rate_limit_remaining=100000,
+        ))
+    if _GOOGLE_API_KEY:
+        providers.append(AIProviderStatus(
             name="Google AI",
-            status="healthy",
-            models=["gemini-1.5-pro", "gemini-1.5-flash"],
+            status="configured",
+            models=["gemini-1.5-flash", "gemini-1.5-pro"],
             daily_limit=50000,
-            daily_used=18901,
-            rate_limit_remaining=31099,
-        ),
-        AIProviderStatus(
+            daily_used=0,
+            rate_limit_remaining=50000,
+        ))
+    if _MISTRAL_API_KEY:
+        providers.append(AIProviderStatus(
             name="Mistral",
-            status="healthy",
-            models=["mistral-large-latest", "codestral-latest"],
+            status="configured",
+            models=["mistral-large-latest"],
             daily_limit=25000,
-            daily_used=8765,
-            rate_limit_remaining=16235,
-        ),
-    ]
+            daily_used=0,
+            rate_limit_remaining=25000,
+        ))
+    return providers
 
 
 @router.get("/settings", response_model=PlatformSettings)
@@ -315,13 +322,14 @@ async def get_platform_metrics(
     _: TokenPayload = Depends(require_super_admin),
 ):
     """Get platform-wide metrics (Super Admin only)."""
+    usage = cost_calculator.get_platform_usage()
     return PlatformMetrics(
-        total_organizations=42,
-        active_organizations=38,
-        suspended_organizations=4,
-        total_users=12847,
-        total_tokens_used=24800000,
-        ai_cost_usd=412.50,
+        total_organizations=len(usage.get("tenant_count", 0)),
+        active_organizations=len(usage.get("tenant_count", 0)),
+        suspended_organizations=0,
+        total_users=0,
+        total_tokens_used=0,
+        ai_cost_usd=round(usage.get("platform_spent_usd", 0), 4),
         platform_uptime_percent=99.95,
     )
 

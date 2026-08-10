@@ -7,10 +7,10 @@ import uuid
 import asyncio
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, func
+from sqlalchemy import select
 
 from enterprise_ai_platform.common.database import get_async_db
 from enterprise_ai_platform.common.security_rbac import (
@@ -19,7 +19,7 @@ from enterprise_ai_platform.common.security_rbac import (
     RequirePermissions,
     Permission,
 )
-from .models import AIAgent, TrainingDataPoint, TrainingBatch
+from .models import AIAgent
 
 router = APIRouter(prefix="/api/v1/agents", tags=["AI Agent Management"])
 

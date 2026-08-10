@@ -8,8 +8,10 @@ import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
+from enterprise_ai_platform.common.config import settings
+from enterprise_ai_platform.common.request_logging import add_request_logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("salesgenie.slack-service")
@@ -24,11 +26,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+add_request_logging(app, service_name="slack-service")
 
 SLACK_BASE_URL = "https://slack.com/api"
 SLACK_WEBHOOK_BASE_URL = "https://hooks.slack.com"
@@ -55,6 +59,19 @@ class SlackChannelIntegration:
             "max_messages_per_hour": self.max_messages_per_hour,
             "webhooks": self.webhooks,
         }
+
+
+@app.get("/metrics", tags=["Monitoring"])
+async def metrics_endpoint():
+    """Prometheus-compatible metrics endpoint."""
+    from enterprise_ai_platform.common.metrics import get_all_metrics
+    all_metrics = get_all_metrics()
+    lines = []
+    for svc_name, mc in all_metrics.items():
+        lines.append(f"# Service: {svc_name}")
+        lines.append(mc.to_prometheus())
+        lines.append("")
+    return PlainTextResponse(content="\n".join(lines), media_type="text/plain")
 
 
 @app.get("/health/live", tags=["Health Checks"])

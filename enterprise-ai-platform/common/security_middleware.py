@@ -89,18 +89,33 @@ class SecurityMiddleware:
 
     def _sanitize_response(self, response: Response) -> Response:
         if hasattr(response, 'body') and response.body:
-            body_str = str(response.body)
-            patterns_to_remove = [
-                'password',
-                'secret_key',
-                'api_key',
-                'token',
-                'credential',
-            ]
-            for pattern in patterns_to_remove:
-                if pattern in body_str.lower():
-                    pass
-        
+            try:
+                import json
+                from enterprise_ai_platform.common.logging import redact_sensitive_dict
+
+                body_str = response.body.decode('utf-8')
+                body_json = json.loads(body_str)
+                sanitized = redact_sensitive_dict(body_json)
+                response.body = json.dumps(sanitized).encode('utf-8')
+            except (json.JSONDecodeError, UnicodeDecodeError, ImportError):
+                import re
+                sensitive_patterns = [
+                    re.compile(r'"password"\s*:\s*"[^"]*"'),
+                    re.compile(r'"secret_key"\s*:\s*"[^"]*"'),
+                    re.compile(r'"api_key"\s*:\s*"[^"]*"'),
+                    re.compile(r'"apikey"\s*:\s*"[^"]*"'),
+                    re.compile(r'"access_token"\s*:\s*"[^"]*"'),
+                    re.compile(r'"auth_token"\s*:\s*"[^"]*"'),
+                    re.compile(r'"refresh_token"\s*:\s*"[^"]*"'),
+                    re.compile(r'"token"\s*:\s*"[^"]*"'),
+                    re.compile(r'"credential"\s*:\s*"[^"]*"'),
+                ]
+                for pattern in sensitive_patterns:
+                    response.body = pattern.sub(
+                        lambda m: m.group(0).split(':')[0] + ': "[REDACTED]"',
+                        response.body
+                    )
+
         return response
 
 

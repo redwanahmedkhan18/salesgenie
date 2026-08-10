@@ -8,6 +8,8 @@ from typing import Dict, Any, Optional, List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from enterprise_ai_platform.common.config import settings
+
 from abac import ABACEngine, Policy, create_default_policies
 
 app = FastAPI(
@@ -18,7 +20,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -4,10 +4,11 @@ Fine-grained permissions based on user attributes, resource attributes, and envi
 """
 
 import logging
+import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Set, Any, Callable
+from typing import Dict, List, Optional, Any, Callable
 from functools import wraps
 
 logging.basicConfig(level=logging.INFO)
@@ -63,7 +64,7 @@ class ABACEngine:
     def add_policy(self, policy: Policy):
         """Add a policy to the engine"""
         self.policies[policy.id] = policy
-        logger.info(f"Added policy: {policy.name}")
+        logger.info("Added policy: %s", policy.name)
     
     def set_user_attributes(self, user_id: str, attributes: Dict[str, Any]):
         """Set attributes for a user"""

@@ -3,11 +3,22 @@ RBAC & Security Engine
 Enforces 10-role granular permission validation middleware and JWT parsing across all platform services.
 """
 
+import re
+import html
+import logging
 from enum import Enum
 from typing import List, Set, Optional, Dict, Any
 from datetime import datetime, timezone
 import jwt
 from fastapi import Depends, HTTPException, Security, status
+
+logger = logging.getLogger("salesgenie.security.rbac")
+
+# Allowed JWT algorithms — never allow "none"
+ALLOWED_JWT_ALGORITHMS = ["HS256", "RS256"]
+
+# Fields safe from HTML injection (no user-visible rendering)
+_HTML_ESCAPE_FIELDS = {"email", "full_name", "first_name", "last_name", "message", "content", "query"}
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 
@@ -158,10 +169,11 @@ class TokenPayload(BaseModel):
 def verify_jwt_token(token: str) -> TokenPayload:
     """Verifies JWT signature and extracts user payload with roles and tenant isolation info."""
     try:
+        # Always restrict to known-safe algorithms — prevents "none" algorithm bypass
         if settings.JWT_PUBLIC_KEY:
             payload = jwt.decode(token, settings.JWT_PUBLIC_KEY, algorithms=["RS256"])
         else:
-            payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=["HS256"])
 
         # Validate Expiration
         exp = payload.get("exp")
@@ -169,6 +181,16 @@ def verify_jwt_token(token: str) -> TokenPayload:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has expired",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Validate required fields — reject tokens without tenant_id
+        tenant_id = payload.get("tenant_id")
+        if not tenant_id:
+            logger.warning("JWT token missing required tenant_id claim")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token: missing tenant_id",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
@@ -181,7 +203,7 @@ def verify_jwt_token(token: str) -> TokenPayload:
 
         return TokenPayload(
             sub=payload.get("sub"),
-            tenant_id=payload.get("tenant_id", "default_tenant"),
+            tenant_id=tenant_id,
             email=payload.get("email"),
             roles=roles,
             permissions=list(effective_permissions),

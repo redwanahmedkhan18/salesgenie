@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, CreditCard, Download, RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { apiClient, BILLING_SERVICE_URL } from '../../lib/api-client';
+import { getToken, secureTokenStorage } from '../../lib/secure-storage';
 import { format } from 'date-fns';
 
 interface Plan {
@@ -87,7 +88,7 @@ export default function BillingPage() {
 
   const loadSubscription = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getToken();
       if (!token) {
         setLoading(false);
         return;
@@ -111,7 +112,7 @@ export default function BillingPage() {
 
   const loadInvoices = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getToken();
       if (!token) {
         setLoading(false);
         return;
@@ -143,7 +144,7 @@ export default function BillingPage() {
 
   const loadUsage = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getToken();
       if (!token) {
         setLoading(false);
         return;
@@ -179,8 +180,8 @@ export default function BillingPage() {
     if (!subscription) return;
     try {
       setSubscription({ ...subscription, status: 'canceled', plan_id: 'free' } as Subscription);
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
+      secureTokenStorage.removeItem('auth_token');
+      secureTokenStorage.removeItem('user_data');
     } catch (err) {
       console.error('Trial expired handling failed:', err);
     }

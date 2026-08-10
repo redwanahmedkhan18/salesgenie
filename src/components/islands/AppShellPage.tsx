@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { AuthProvider } from "../../auth/AuthProvider";
 import { ProtectedRoute } from "../../auth/ProtectedRoute";
 import { Sidebar, CommandPalette } from './AppShell';
+import { CookieConsentBanner } from '../ui/CookieConsentBanner';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 interface AppShellPageProps {
   activeRoute: string;
@@ -63,6 +65,10 @@ export default function AppShellPage({
 
           <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onNavigate={handleNavigate} />
         </div>
+        <CookieConsentBanner />
+        <ErrorBoundary componentName="AppShellPage">
+          <></>
+        </ErrorBoundary>
       </ProtectedRoute>
     </AuthProvider>
   );

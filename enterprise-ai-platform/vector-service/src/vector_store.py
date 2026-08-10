@@ -4,7 +4,7 @@ Manages PostgreSQL pgvector HNSW index queries and cosine similarity document re
 Implements full hybrid search pipeline including Step 5: Merge Results.
 """
 
-import uuid
+import logging
 import math
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
@@ -13,7 +13,9 @@ from pydantic import BaseModel
 from .embedding_engine import embedding_engine
 from .reranker_engine import reranker_engine, RerankResultDTO
 from .keyword_engine import keyword_engine, KeywordSearchResult
-from .result_merger import ResultMerger, VectorSearchResult, MergedResult
+from .result_merger import ResultMerger, VectorSearchResult
+
+logger = logging.getLogger("salesgenie.vector.store")
 
 
 class VectorSearchRequest(BaseModel):
@@ -233,12 +235,19 @@ class VectorStoreManager:
             top_k=req.top_k
         )
         
-        top_passages = reranker_engine.rerank_passages(
-            req.query,
-            [{"chunk_id": r.chunk_id, "content": r.content} for r in merged_results],
-            top_k=req.top_k
-        )
-        
+        try:
+            top_passages = reranker_engine.rerank_passages(
+                req.query,
+                [{"chunk_id": r.chunk_id, "content": r.content} for r in merged_results],
+                top_k=req.top_k
+            )
+        except Exception as e:
+            logger.warning("Reranker failed, falling back to vector results: %s", e)
+            top_passages = [
+                {"chunk_id": r.chunk_id, "content": r.content, "score": r.combined_score}
+                for r in merged_results[:req.top_k]
+            ]
+
         return top_passages
 
     def index_document(

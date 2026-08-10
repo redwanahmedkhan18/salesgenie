@@ -1,6 +1,11 @@
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
 import { apiClient } from '../lib/api-client';
+import { secureTokenStorage, clearAuth } from '../lib/secure-storage';
 import type { User, Session, PlatformRole, LoginResponse } from '../lib/types';
+
+const JWT_ALGORITHMS = ['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512'];
+const MAX_TOKEN_AGE = 24 * 60 * 60;
+const MAX_TOKEN_LENGTH = 4096;
 
 interface AuthState {
   user: User | null;
@@ -18,7 +23,7 @@ interface AuthContextType extends AuthState {
   hasPermission: (permission: string) => boolean;
   hasRole: (role: PlatformRole) => boolean;
   hasAnyRole: (roles: PlatformRole[]) => boolean;
-  switchOrganization: (orgId: string) => void;
+  switchOrganization: (orgId: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<{ success: boolean; message: string; token?: string }>;
   resetPassword: (token: string, newPassword: string, confirmPassword: string) => Promise<{ success: boolean; message: string }>;
   validateResetToken: (token: string) => Promise<{ valid: boolean; email?: string; error?: string }>;
@@ -73,16 +78,77 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-function decodeJWT(token: string): { sub: string; email?: string; roles?: PlatformRole[]; tenant_id?: string; exp?: number } {
+interface JwtPayload {
+  sub: string;
+  email?: string;
+  roles?: PlatformRole[];
+  tenant_id?: string;
+  exp?: number;
+  iat?: number;
+  aud?: string | string[];
+  iss?: string;
+}
+
+function decodeJWT(token: string): { sub: string; email?: string; roles?: PlatformRole[]; tenant_id?: string; exp?: number; valid: boolean } {
   try {
+    if (token.length > MAX_TOKEN_LENGTH) {
+      return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+    }
     const parts = token.split('.');
     if (parts.length !== 3) {
-      return { sub: '', roles: [], tenant_id: 'default_tenant' };
+      return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
     }
-    const payload = JSON.parse(atob(parts[1]));
-    return payload;
+
+    try {
+      const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+      if (!JWT_ALGORITHMS.includes(header.alg) || header.alg === 'none' || header.alg === 'None') {
+        return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+      }
+    } catch {
+      return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+    }
+
+    const payload: JwtPayload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+
+    if (typeof payload.sub !== 'string') {
+      return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+    }
+
+    if (payload.exp && (typeof payload.exp !== 'number' || isNaN(payload.exp))) {
+      return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+    }
+
+    const audCheck = (aud: string | string[] | undefined): boolean => {
+      if (!aud) return true;
+      if (Array.isArray(aud)) return aud.includes(window.location.origin);
+      return aud === window.location.origin;
+    };
+    if (!audCheck(payload.aud)) {
+      return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+    }
+
+    if (payload.iat && payload.exp) {
+      const age = payload.exp - payload.iat;
+      if (age > MAX_TOKEN_AGE) {
+        return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+      }
+    }
+
+    const expectedIssuer = process.env.JWT_ISSUER || 'salesgenie';
+    if (payload.iss && payload.iss !== expectedIssuer) {
+      return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+    }
+
+    return {
+      sub: payload.sub,
+      email: payload.email,
+      roles: Array.isArray(payload.roles) ? payload.roles as PlatformRole[] : [],
+      tenant_id: typeof payload.tenant_id === 'string' ? payload.tenant_id : 'default_tenant',
+      exp: payload.exp,
+      valid: true,
+    };
   } catch {
-    return { sub: '', roles: [], tenant_id: 'default_tenant' };
+    return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
   }
 }
 
@@ -103,27 +169,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initializeAuth = async () => {
     dispatch({ type: 'SET_LOADING' });
     try {
-      const token = localStorage.getItem('auth_token');
-      const refreshToken = localStorage.getItem('refresh_token');
+      const token = secureTokenStorage.getItem('auth_token');
+      const refreshToken = secureTokenStorage.getItem('refresh_token');
 
-      if (token) {
+       if (token) {
         const decoded = decodeJWT(token);
         const now = Math.floor(Date.now() / 1000);
         const isTokenValid = decoded.exp ? decoded.exp > now : true;
         const isRefreshTokenValid = !!refreshToken;
 
+        if (!decoded.valid || (!isTokenValid && !isRefreshTokenValid)) {
+          clearAuth();
+          dispatch({ type: 'LOGOUT' });
+          return;
+        }
+
         if (isTokenValid || isRefreshTokenValid) {
-          const userData = localStorage.getItem('user_data');
+          const userData = secureTokenStorage.getItem('user_data');
           let user: User | null = null;
           if (userData) {
-            user = JSON.parse(userData);
+            try {
+              user = JSON.parse(userData);
+            } catch {
+              user = null;
+            }
           }
 
-          if (!user) {
-            try {
-              user = await apiClient.getUserProfile();
-              localStorage.setItem('user_data', JSON.stringify(user));
-            } catch {
+           if (!user) {
+             try {
+               user = await apiClient.getUserProfile();
+               secureTokenStorage.setItem('user_data', JSON.stringify(user));
+             } catch {
               user = {
                 id: decoded.sub,
                 email: decoded.email || '',
@@ -137,24 +213,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           let roles: PlatformRole[] = (decoded.roles || []) as PlatformRole[];
           if (roles.length === 0) {
-            const storedRoles = localStorage.getItem('roles');
+            const storedRoles = secureTokenStorage.getItem('roles');
             if (storedRoles) {
               try {
                 roles = JSON.parse(storedRoles) as PlatformRole[];
               } catch {}
             }
           }
-          
+
           if (roles.length === 0) {
             roles = ['end_user'];
           }
-          
+
           const permissions = derivePermissions(roles);
-          localStorage.setItem('roles', JSON.stringify(roles));
-          localStorage.setItem('permissions', JSON.stringify(permissions));
-          
+          secureTokenStorage.setItem('roles', JSON.stringify(roles));
+          secureTokenStorage.setItem('permissions', JSON.stringify(permissions));
+
           if (decoded.roles) {
-            localStorage.setItem('jwt_roles', JSON.stringify(decoded.roles));
+            secureTokenStorage.setItem('jwt_roles', JSON.stringify(decoded.roles));
           }
 
           dispatch({
@@ -194,45 +270,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await apiClient.login({ email, password, mfa_code: mfaCode });
 
-      if (response.mfa_required) {
-        return response;
-      }
+       if (response.mfa_required) {
+         return response;
+       }
 
-      const decoded = decodeJWT(response.access_token);
-      const roles = response.roles as PlatformRole[];
-      const permissions = derivePermissions(roles);
+       const decoded = decodeJWT(response.access_token);
+       if (!decoded.valid) {
+         dispatch({ type: 'AUTH_ERROR' });
+         throw new Error('Invalid authentication token received');
+       }
+       const roles = response.roles as PlatformRole[];
+       const permissions = derivePermissions(roles);
 
-      const user: User = {
-        id: response.user_id,
-        email,
-        full_name: null,
-        avatar_url: null,
-        tenant_id: response.tenant_id,
-        created_at: new Date().toISOString(),
-      };
+       const user: User = {
+         id: response.user_id,
+         email,
+         full_name: null,
+         avatar_url: null,
+         tenant_id: response.tenant_id,
+         created_at: new Date().toISOString(),
+       };
 
-      localStorage.setItem('auth_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
-      localStorage.setItem('user_data', JSON.stringify(user));
+       const isProduction = process.env.NODE_ENV === 'production';
+       if (!isProduction) {
+         secureTokenStorage.setItem('auth_token', response.access_token);
+         secureTokenStorage.setItem('refresh_token', response.refresh_token);
+       }
+       secureTokenStorage.setItem('user_data', JSON.stringify(user));
+       secureTokenStorage.setItem('roles', JSON.stringify(roles));
+       secureTokenStorage.setItem('permissions', JSON.stringify(permissions));
 
-      dispatch({
-        type: 'SET_AUTH',
-        payload: {
-          user,
-          session: {
-            token: response.access_token,
-            refreshToken: response.refresh_token,
-            expiresAt: Date.now() + response.expires_in * 1000,
-            user,
-            roles,
-            permissions,
-          },
-          roles,
-          permissions,
-        },
-      });
+       dispatch({
+         type: 'SET_AUTH',
+         payload: {
+           user,
+           session: {
+             token: response.access_token,
+             refreshToken: response.refresh_token,
+             expiresAt: Date.now() + response.expires_in * 1000,
+             user,
+             roles,
+             permissions,
+           },
+           roles,
+           permissions,
+         },
+       });
 
-      return response;
+       return response;
     } catch (error) {
       dispatch({ type: 'AUTH_ERROR' });
       throw error;
@@ -241,7 +326,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshSession = async (): Promise<void> => {
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = secureTokenStorage.getItem('refresh_token');
       if (!refreshToken) {
         dispatch({ type: 'LOGOUT' });
         return;
@@ -250,10 +335,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await apiClient.refresh(refreshToken);
 
       const decoded = decodeJWT(response.access_token);
+      if (!decoded.valid) {
+        clearAuth();
+        dispatch({ type: 'LOGOUT' });
+        return;
+      }
       const roles = response.roles as PlatformRole[];
       const permissions = derivePermissions(roles);
 
-      const userData = localStorage.getItem('user_data');
+      const userData = secureTokenStorage.getItem('user_data');
       let user: User | null = null;
       if (userData) {
         user = JSON.parse(userData);
@@ -270,7 +360,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
       }
 
-      localStorage.setItem('auth_token', response.access_token);
+      secureTokenStorage.setItem('auth_token', response.access_token);
+      secureTokenStorage.setItem('roles', JSON.stringify(roles));
+      secureTokenStorage.setItem('permissions', JSON.stringify(permissions));
+
+      const isProduction = process.env.NODE_ENV === 'production';
+      if (!isProduction) {
+        secureTokenStorage.setItem('refresh_token', response.refresh_token);
+      }
 
       dispatch({
         type: 'SET_AUTH',
@@ -294,13 +391,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user_data');
-    localStorage.removeItem('roles');
-    localStorage.removeItem('permissions');
-    localStorage.removeItem('oauth_provider');
+  const logout = async () => {
+    try {
+      await fetch('/api/v1/auth/logout', { method: 'POST' });
+    } catch {
+    }
+    clearAuth();
     dispatch({ type: 'LOGOUT' });
   };
 
@@ -316,21 +412,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return state.roles.some(r => roles.includes(r));
   };
 
-  const switchOrganization = (orgId: string) => {
-    if (state.session) {
-      const updatedSession: Session = {
-        ...state.session,
-        user: { ...state.session.user, tenant_id: orgId },
-      };
-      dispatch({
-        type: 'SET_AUTH',
-        payload: {
-          user: updatedSession.user,
-          session: updatedSession,
-          roles: state.roles,
-          permissions: state.permissions,
-        },
+  const switchOrganization = async (orgId: string) => {
+    if (!orgId || typeof orgId !== 'string' || orgId.length > 128 || !/^[a-zA-Z0-9_-]+$/.test(orgId)) {
+      throw new Error('Invalid organization ID format');
+    }
+    try {
+      const response = await fetch('/api/v1/auth/switch-organization', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ org_id: orgId }),
       });
+
+      if (!response.ok) {
+        const error = await response.text().catch(() => 'Unknown error');
+        throw new Error(error);
+      }
+
+      const data = await response.json();
+      const decoded = decodeJWT(data.access_token);
+
+      if (!decoded.valid || decoded.tenant_id !== orgId) {
+        throw new Error('Server rejected organization switch');
+      }
+
+      const roles = decoded.roles as PlatformRole[] || state.roles;
+      const permissions = derivePermissions(roles);
+
+      const isProduction = process.env.NODE_ENV === 'production';
+      if (!isProduction) {
+        secureTokenStorage.setItem('auth_token', data.access_token);
+        secureTokenStorage.setItem('refresh_token', data.refresh_token);
+      }
+      secureTokenStorage.setItem('roles', JSON.stringify(roles));
+      secureTokenStorage.setItem('permissions', JSON.stringify(permissions));
+
+      if (state.session) {
+        const updatedSession: Session = {
+          ...state.session,
+          token: data.access_token,
+          refreshToken: data.refresh_token,
+          user: { ...state.session.user, tenant_id: orgId },
+        };
+        dispatch({
+          type: 'SET_AUTH',
+          payload: {
+            user: updatedSession.user,
+            session: updatedSession,
+            roles,
+            permissions,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Organization switch failed:', error);
+      throw error;
     }
   };
 

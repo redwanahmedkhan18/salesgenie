@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AUTH_SERVICE_URL } from '../lib/api-client';
+import { secureTokenStorage } from '../lib/secure-storage';
 
 export function SignupPage() {
   const [formData, setFormData] = useState({
@@ -61,15 +62,29 @@ export function SignupPage() {
 
   const handleOAuthLogin = async () => {
     try {
-      const state = btoa(JSON.stringify({ provider: 'google', timestamp: Date.now(), signup: true }));
-      const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/redirect/google?state=${state}`);
+      const nonce = crypto.randomUUID();
+      const stateData = { provider: 'google', timestamp: Date.now(), signup: true, nonce };
+      const state = btoa(JSON.stringify(stateData));
+      secureTokenStorage.setItem('oauth_csrf_state' as any, state);
+      const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/redirect/google?state=${encodeURIComponent(state)}`);
       const data = await response.json();
       if (data.redirect_url) {
-        window.location.href = data.redirect_url;
+        try {
+          const redirectUrl = new URL(data.redirect_url, window.location.origin);
+          if (redirectUrl.origin === window.location.origin) {
+            window.location.href = redirectUrl.href;
+          } else {
+            setError('Invalid redirect URL. Possible phishing attempt detected.');
+          }
+        } catch {
+          setError('Invalid redirect URL received from authentication service.');
+        }
+      } else if (data.mock) {
+        setError(data.message || 'OAuth not configured. Please use the regular login form.');
       }
     } catch (err) {
       console.error('OAuth redirect failed:', err);
-      alert('Unable to connect to authentication service. Please try again.');
+      setError('Unable to connect to authentication service. Please try again.');
     }
   };
 

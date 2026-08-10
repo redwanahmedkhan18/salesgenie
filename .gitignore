@@ -313,3 +313,9 @@ $RECYCLE.BIN/
 *.appxbundle
 *.msix
 *.msixbundle
+# Additional env files (secrets must not be tracked)
+.env.redis
+.env.services
+.env.production
+.env.staging
+.env.test

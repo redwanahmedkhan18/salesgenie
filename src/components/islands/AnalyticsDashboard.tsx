@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar, CommandPalette } from './AppShell';
 import { CONVERSATION_SERVICE_URL, TICKETS_SERVICE_URL, ANALYTICS_SERVICE_URL } from '../../lib/api-client';
+import { getToken } from '../../lib/secure-storage';
 import {
   AreaChart,
   Area,
@@ -82,7 +83,7 @@ export default function AnalyticsDashboard() {
     const loadData = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('auth_token');
+        const token = getToken();
         const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
         
         const [overviewRes, ticketsRes] = await Promise.all([

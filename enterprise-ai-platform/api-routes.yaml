@@ -1,218 +1,388 @@
 # SalesGenie API Routes Configuration
 # Maps all backend service endpoints to the API Gateway
+#
+# Service Port Reference (as defined in common/config.py):
+#   Auth: 8001     User: 8002     Org: 8003     Billing: 8004
+#   Notification: 8014  Knowledge: 8006  Sales: 8007  Ticket: 8008
+#   Vector: 8009   Workflow: 8011  Analytics: 8012  Search: 8013
+#   File: 8015  Customer: 8016  Support: 8017  Conversation: 8018
+#   Telegram: 8019  Messenger: 8020  Email: 8021  LeadIntel: 8022
+#   Audit: 8023  Slack: 8024  Discord: 8026
 
+# ==============================================================================
 # Authentication Service (Port 8001)
+# ==============================================================================
 auth:
-  POST: /api/v1/auth/login
-  POST: /api/v1/auth/refresh
-  POST: /api/v1/auth/logout
-  POST: /api/v1/auth/mfa/setup
-  POST: /api/v1/auth/mfa/verify
-  GET: /api/v1/auth/sessions
-  DELETE: /api/v1/auth/sessions/{session_id}
+  POST: /api/v1/auth/signup                # User registration with email verification
+  POST: /api/v1/auth/login                  # User authentication login
+  POST: /api/v1/auth/refresh                # Refresh access token
+  POST: /api/v1/auth/logout                 # Logout / invalidate session
+  POST: /api/v1/auth/forgot-password        # Request password reset email
+  POST: /api/v1/auth/reset-password         # Reset password with token
+  POST: /api/v1/auth/verify-email           # Verify email address
+  GET:  /api/v1/auth/sessions              # List user sessions
+  POST: /api/v1/auth/mfa/setup             # Setup MFA
+  POST: /api/v1/auth/mfa/verify            # Verify MFA code
 
+# ==============================================================================
 # User Service (Port 8002)
+# ==============================================================================
 users:
-  GET: /api/v1/users/me
-  PUT: /api/v1/users/me
-  GET: /api/v1/users/me/preferences
-  PUT: /api/v1/users/me/preferences
+  GET:  /api/v1/users/me                    # Get current user profile
+  PUT:  /api/v1/users/me                    # Update current user profile
+  PUT:  /api/v1/users/me/avatar             # Update user avatar
+  PATCH: /api/v1/users/me/preferences       # Update user preferences
+  PATCH: /api/v1/users/me/language          # Update user language
+  POST: /api/v1/users/me/export              # GDPR Article 20 data export
+  DELETE: /api/v1/users/me                  # GDPR Article 17 right to erasure
+  GET:  /api/v1/users/me/consent             # Get consent preferences
+  POST: /api/v1/users/me/consent             # Update consent preferences
 
+# ==============================================================================
 # Organization Service (Port 8003)
+# ==============================================================================
 organizations:
-  GET: /api/v1/organizations/{org_id}
-  GET: /api/v1/organizations/{org_id}/metrics
-  PUT: /api/v1/organizations/{org_id}/branding
-  GET: /api/v1/organizations/{org_id}/members
-  POST: /api/v1/organizations/{org_id}/members
-  PATCH: /api/v1/organizations/{org_id}/members/{member_id}/role
-  DELETE: /api/v1/organizations/{org_id}/members/{member_id}
+  POST: /api/v1/organizations                # Create organization
+  GET:  /api/v1/organizations/{org_id}       # Get organization
+  PUT:  /api/v1/organizations/{org_id}       # Update organization
+  DELETE: /api/v1/organizations/{org_id}     # Delete organization
+  GET:  /api/v1/organizations/{org_id}/metrics # Get org metrics
+  PUT:  /api/v1/organizations/{org_id}/branding # Update org branding
+  GET:  /api/v1/organizations/{org_id}/members  # List members
+  POST: /api/v1/organizations/{org_id}/members  # Invite member
+  PATCH: /api/v1/organizations/{org_id}/members/{member_id}/role # Update role
+  DELETE: /api/v1/organizations/{org_id}/members/{member_id}    # Remove member
 
+# ==============================================================================
 # Billing Service (Port 8004)
+# ==============================================================================
 billing:
-  GET: /api/v1/billing/plans
-  POST: /api/v1/billing/subscriptions
-  GET: /api/v1/billing/usage
-  GET: /api/v1/billing/invoices
+  GET:  /api/v1/billing/plans                # List subscription plans
+  POST: /api/v1/billing/subscriptions        # Create subscription
+  GET:  /api/v1/billing/subscriptions/usage  # Get token usage & billing meter
+  GET:  /api/v1/billing/subscriptions/check  # Check subscription status
+  GET:  /api/v1/billing/invoices             # List invoices
+  POST: /api/v1/billing/invoices/generate    # Generate PDF invoice + email
+  GET:  /api/v1/billing/invoices/{invoice_id}/pdf  # Download invoice PDF
+  POST: /api/v1/billing/payments/receipt     # Generate payment receipt
+  GET:  /api/v1/billing/usage/live           # Live token usage per tenant
+  GET:  /api/v1/billing/alerts               # Cost/budget alerts
+  GET:  /api/v1/billing/platform-usage       # Platform-wide usage (admin)
+  POST: /api/v1/billing/webhooks/stripe      # Stripe webhook endpoint
 
-# Notification Service (Port 8005)
+# ==============================================================================
+# Notification Service (Port 8014)
+# ==============================================================================
 notifications:
-  GET: /api/v1/notifications
-  POST: /api/v1/notifications
-  PUT: /api/v1/notifications/{id}/read
+  GET:  /api/v1/notifications                # List notifications
+  POST: /api/v1/notifications                # Send notification
+  PUT:  /api/v1/notifications/{id}/read      # Mark as read
+  POST: /api/v1/notifications/bulk           # Bulk send notifications
 
+# ==============================================================================
 # Knowledge Service (Port 8006)
+# ==============================================================================
 knowledge:
-  GET: /api/v1/knowledge/categories
-  GET: /api/v1/knowledge/documents
-  POST: /api/v1/knowledge/documents
-  GET: /api/v1/knowledge/documents/{id}
-  PUT: /api/v1/knowledge/documents/{id}
-  DELETE: /api/v1/knowledge/documents/{id}
-  POST: /api/v1/knowledge/upload
-  POST: /api/v1/knowledge/ocr
+  GET:  /api/v1/knowledge/categories         # List categories
+  GET:  /api/v1/knowledge/documents          # List documents
+  POST: /api/v1/knowledge/documents          # Create document
+  GET:  /api/v1/knowledge/documents/{id}     # Get document
+  PUT:  /api/v1/knowledge/documents/{id}     # Update document
+  DELETE: /api/v1/knowledge/documents/{id}   # Delete document
+  POST: /api/v1/knowledge/upload             # Upload document
+  POST: /api/v1/knowledge/ocr                # OCR processing
+  POST: /api/v1/knowledge/search             # Search knowledge base
 
+# ==============================================================================
 # Sales Service (Port 8007)
+# ==============================================================================
 sales:
-  GET: /api/v1/sales/leads
-  POST: /api/v1/sales/leads
-  GET: /api/v1/sales/leads/{id}
-  PUT: /api/v1/sales/leads/{id}
-  DELETE: /api/v1/sales/leads/{id}
-  GET: /api/v1/sales/recommendations
-  GET: /api/v1/sales/bookings
+  GET:  /api/v1/sales/leads                  # List all leads
+  POST: /api/v1/sales/leads                  # Create lead
+  GET:  /api/v1/sales/leads/{id}             # Get lead
+  PUT:  /api/v1/sales/leads/{id}             # Update lead
+  PATCH: /api/v1/sales/leads/{id}            # Partial update lead
+  DELETE: /api/v1/sales/leads/{id}          # Delete lead
+  GET:  /api/v1/sales/leads/{id}/history     # Lead activity history
+  GET:  /api/v1/sales/recommendations        # Sales recommendations
+  GET:  /api/v1/sales/bookings               # List bookings
+  POST: /api/v1/sales/bookings               # Create booking
+  DELETE: /api/v1/sales/bookings/{id}       # Cancel booking
+  GET:  /api/v1/sales/deals                  # List deals
+  POST: /api/v1/sales/deals                  # Create deal
+  PATCH: /api/v1/sales/deals/{id}/stage     # Update deal stage
+  GET:  /api/v1/sales/metrics                # Sales metrics
 
+# ==============================================================================
 # Ticket Service (Port 8008)
+# ==============================================================================
 tickets:
-  GET: /api/v1/tickets
-  POST: /api/v1/tickets
-  GET: /api/v1/tickets/{id}
-  PUT: /api/v1/tickets/{id}
-  PATCH: /api/v1/tickets/{id}
-  DELETE: /api/v1/tickets/{id}
-  GET: /api/v1/tickets/analytics/overview
+  GET:  /api/v1/tickets                      # List tickets
+  POST: /api/v1/tickets                      # Create ticket
+  GET:  /api/v1/tickets/{id}                 # Get ticket
+  PUT:  /api/v1/tickets/{id}                 # Update ticket
+  PATCH: /api/v1/tickets/{id}                # Partial update ticket
+  DELETE: /api/v1/tickets/{id}               # Delete ticket
+  GET:  /api/v1/tickets/analytics/overview   # Ticket analytics
+  POST: /api/v1/tickets/{id}/assign          # Assign ticket
+  POST: /api/v1/tickets/{id}/close           # Close ticket
 
+# ==============================================================================
 # Vector Service (Port 8009)
+# ==============================================================================
 vector:
-  POST: /api/v1/vector/embeddings
-  POST: /api/v1/vector/search
-  GET: /api/v1/vector/collections
+  POST: /api/v1/vector/embeddings            # Generate embeddings
+  POST: /api/v1/vector/search              # Vector search
+  GET:  /api/v1/vector/collections          # List collections
+  POST: /api/v1/vector/collections          # Create collection
+  POST: /api/v1/vector/index                # Index documents
+  GET:  /api/v1/vector/stats                # Get vector stats
 
-# Chat Service (Port 8010)
-chat:
-  POST: /api/v1/chat/messages
-  GET: /api/v1/chat/conversations
-  GET: /api/v1/chat/conversations/{id}
-  POST: /api/v1/chat/conversations
-  PUT: /api/v1/chat/conversations/{id}
-
-# Workflow Service (Port 8011)
-workflows:
-  GET: /api/v1/workflows
-  POST: /api/v1/workflows
-  GET: /api/v1/workflows/{id}
-  PUT: /api/v1/workflows/{id}
-  DELETE: /api/v1/workflows/{id}
-  POST: /api/v1/workflows/{id}/execute
-  GET: /api/v1/workflows/{id}/history
-
-# Analytics Service (Port 8012)
-analytics:
-  GET: /api/v1/analytics/kpis
-  GET: /api/v1/analytics/conversations
-  GET: /api/v1/analytics/revenue
-  GET: /api/v1/analytics/channels
-  GET: /api/v1/analytics/time-series
-
-# Search Service (Port 8013)
-search:
-  GET: /api/v1/search/search
-  POST: /api/v1/search/index
-  DELETE: /api/v1/search/index/{document_id}
-  GET: /api/v1/search/index/stats
-  GET: /api/v1/search/suggest
-
-# Audit Service (Port 8014)
-audit:
-  GET: /api/v1/audit/events
-  GET: /api/v1/audit/events/{id}
-  GET: /api/v1/audit/users/{user_id}/events
-  GET: /api/v1/audit/resources
-
-# File Service (Port 8015)
-files:
-  GET: /api/v1/files
-  POST: /api/v1/files
-  GET: /api/v1/files/{id}
-  DELETE: /api/v1/files/{id}
-  POST: /api/v1/files/upload
-  GET: /api/v1/files/{id}/download
-  GET: /api/v1/files/{id}/presigned-url
-
-# Customer Service (Port 8016)
-customers:
-  GET: /api/v1/customers
-  POST: /api/v1/customers
-  GET: /api/v1/customers/{id}
-  PUT: /api/v1/customers/{id}
-  DELETE: /api/v1/customers/{id}
-  GET: /api/v1/customers/segments
-  GET: /api/v1/customers/tags
-  POST: /api/v1/customers/tags
-
-# Support Service (Port 8017)
-support:
-  GET: /api/v1/support/tickets
-  POST: /api/v1/support/tickets
-  GET: /api/v1/support/tickets/{id}
-  PUT: /api/v1/support/tickets/{id}
-  GET: /api/v1/support/tickets/analytics
-  GET: /api/v1/support/knowledge-base
-
+# ==============================================================================
 # Conversation Service (Port 8018)
+# ==============================================================================
 conversations:
-  GET: /api/v1/conversations
-  POST: /api/v1/conversations
-  GET: /api/v1/conversations/{id}
-  PUT: /api/v1/conversations/{id}
-  DELETE: /api/v1/conversations/{id}
-  POST: /api/v1/conversations/{id}/messages
-  GET: /api/v1/conversations/{id}/handoff
+  GET:  /api/v1/conversations                # List conversations
+  POST: /api/v1/conversations                # Create conversation
+  GET:  /api/v1/conversations/{id}           # Get conversation
+  PUT:  /api/v1/conversations/{id}           # Update conversation
+  PATCH: /api/v1/conversations/{id}          # Partial update
+  DELETE: /api/v1/conversations/{id}        # Delete conversation
+  GET:  /api/v1/conversations/overview      # Conversation overview
+  GET:  /api/v1/conversations/stats/by-status # Status statistics
+  GET:  /api/v1/conversations/stats/by-channel # Channel statistics
+  POST: /api/v1/conversations/{id}/messages # Send message
+  GET:  /api/v1/conversations/{id}/messages # Get messages
+  POST: /api/v1/conversations/{id}/handoff  # Handoff to human agent
 
+# ==============================================================================
 # AI Gateway Service (Port 8000)
+# ==============================================================================
 ai-gateway:
-  POST: /api/v1/agents/chat
-  POST: /api/v1/agents/execute
-  GET: /api/v1/agents/{id}
-  POST: /api/v1/agents
-  PUT: /api/v1/agents/{id}
-  DELETE: /api/v1/agents/{id}
-  GET: /api/v1/agents/{id}/memory
-  POST: /api/v1/tools
-  GET: /api/v1/tools
-  POST: /api/v1/workflows/execute
+  POST: /api/v1/ai/chat                     # Multi-agent chat completion
+  GET:  /api/v1/ai/agents                   # List AI agents
+  # Admin endpoints (super admin only)
+  GET:  /api/v1/admin/users                 # List all users
+  GET:  /api/v1/admin/audit-events          # List audit events
+  GET:  /api/v1/admin/health                # System health status
+  GET:  /api/v1/admin/ai-providers          # AI provider status
+  GET:  /api/v1/admin/settings              # Platform settings
+  PATCH: /api/v1/admin/settings             # Update platform settings
+  GET:  /api/v1/admin/system-info           # System information
+  POST: /api/v1/admin/users/{user_id}/suspend  # Suspend user
+  POST: /api/v1/admin/users/{user_id}/resume   # Resume user
+  GET:  /api/v1/admin/metrics               # Platform metrics
+  GET:  /api/v1/admin/organizations         # List organizations
+  PATCH: /api/v1/admin/organizations/{org_id}/suspend # Suspend org
+  PATCH: /api/v1/admin/organizations/{org_id}/resume  # Resume org
+  DELETE: /api/v1/admin/organizations/{org_id}          # Delete org
 
-# WhatsApp Service (Port 8018)
+# ==============================================================================
+# Workflow Service (Port 8011)
+# ==============================================================================
+workflows:
+  GET:  /api/v1/workflows                   # List workflows
+  POST: /api/v1/workflows                   # Create workflow
+  GET:  /api/v1/workflows/{id}              # Get workflow
+  PUT:  /api/v1/workflows/{id}              # Update workflow
+  DELETE: /api/v1/workflows/{id}           # Delete workflow
+  POST: /api/v1/workflows/{id}/execute      # Execute workflow
+  GET:  /api/v1/workflows/{id}/history      # Execution history
+
+# ==============================================================================
+# Analytics Service (Port 8012)
+# ==============================================================================
+analytics:
+  GET:  /api/v1/analytics/kpis              # Platform KPIs
+  GET:  /api/v1/analytics/conversations     # Conversation analytics
+  GET:  /api/v1/analytics/revenue           # Revenue analytics
+  GET:  /api/v1/analytics/channels          # Channel analytics
+  GET:  /api/v1/analytics/time-series       # Time series analytics
+  POST: /api/v1/ai/evaluate                 # AI evaluation
+
+# ==============================================================================
+# Search Service (Port 8013)
+# ==============================================================================
+search:
+  POST: /api/v1/search/search               # Full-text search
+  GET:  /api/v1/search/search               # Search (GET)
+  POST: /api/v1/search/index                # Index document
+  POST: /api/v1/search/index/bulk           # Bulk index
+  DELETE: /api/v1/search/index/{document_id} # Delete from index
+  GET:  /api/v1/search/index/stats          # Index statistics
+  GET:  /api/v1/search/index/settings        # Index settings
+  POST: /api/v1/search/index/rebuild        # Rebuild index
+  GET:  /api/v1/search/suggest              # Search suggestions
+
+# ==============================================================================
+# Audit Service (Port 8023)
+# ==============================================================================
+audit:
+  GET:  /api/v1/audit/events                # List audit events
+  GET:  /api/v1/audit/events/{id}           # Get audit event
+  GET:  /api/v1/audit/users/{user_id}/events # User events
+  GET:  /api/v1/audit/resources             # Resource audit
+
+# ==============================================================================
+# File Service (Port 8015)
+# ==============================================================================
+files:
+  GET:  /api/v1/files                       # List files
+  POST: /api/v1/files                       # Create file record
+  GET:  /api/v1/files/{id}                  # Get file
+  PUT:  /api/v1/files/{id}                  # Update file
+  DELETE: /api/v1/files/{id}                # Delete file
+  POST: /api/v1/files/upload                # Upload file
+  GET:  /api/v1/files/{id}/download         # Download file
+  GET:  /api/v1/files/{id}/presigned-url    # Get presigned URL
+
+# ==============================================================================
+# Customer Service (Port 8016)
+# ==============================================================================
+customers:
+  GET:  /api/v1/customers                   # List customers
+  POST: /api/v1/customers                   # Create customer
+  GET:  /api/v1/customers/{id}              # Get customer
+  PUT:  /api/v1/customers/{id}              # Update customer
+  DELETE: /api/v1/customers/{id}            # Delete customer
+  GET:  /api/v1/customers/{id}/history      # Customer interaction history
+  GET:  /api/v1/customers/segments          # List segments
+  POST: /api/v1/customers/segments          # Create segment
+  GET:  /api/v1/customers/tags              # List tags
+  POST: /api/v1/customers/tags              # Create tag
+
+# ==============================================================================
+# Support Service (Port 8017)
+# ==============================================================================
+support:
+  GET:  /api/v1/support/tickets             # List support tickets
+  POST: /api/v1/support/tickets             # Create ticket
+  GET:  /api/v1/support/tickets/{id}        # Get ticket
+  PUT:  /api/v1/support/tickets/{id}        # Update ticket
+  GET:  /api/v1/support/tickets/analytics   # Ticket analytics
+  GET:  /api/v1/support/knowledge-base      # Knowledge base articles
+
+# ==============================================================================
+# WhatsApp Service (Port 8005 — NOTE: Not in docker-compose, uses 8017 in .env.example)
+# ==============================================================================
 whatsapp:
-  GET: /api/v1/whatsapp/accounts
-  POST: /api/v1/whatsapp/accounts
-  GET: /api/v1/whatsapp/accounts/{id}
-  PUT: /api/v1/whatsapp/accounts/{id}
-  DELETE: /api/v1/whatsapp/accounts/{id}
-  POST: /api/v1/whatsapp/messages
-  GET: /api/v1/whatsapp/messages/{id}
-  POST: /api/v1/whatsapp/templates
-  GET: /api/v1/whatsapp/webhook
-  POST: /api/v1/whatsapp/webhook
+  GET:  /api/v1/whatsapp/accounts           # List WhatsApp accounts
+  POST: /api/v1/whatsapp/accounts           # Create WhatsApp account
+  GET:  /api/v1/whatsapp/accounts/{id}      # Get account
+  PUT:  /api/v1/whatsapp/accounts/{id}      # Update account
+  DELETE: /api/v1/whatsapp/accounts/{id}    # Delete account
+  POST: /api/v1/whatsapp/messages           # Send message
+  GET:  /api/v1/whatsapp/messages/{id}     # Get message status
+  POST: /api/v1/whatsapp/templates         # Create message template
+  GET:  /api/v1/whatsapp/templates         # List templates
+  GET:  /api/v1/whatsapp/webhook           # Webhook verification
+  POST: /api/v1/whatsapp/webhook           # Webhook handler
 
+# ==============================================================================
 # Telegram Service (Port 8019)
+# ==============================================================================
 telegram:
-  GET: /api/v1/telegram/bot-info
-  POST: /api/v1/telegram/messages
-  GET: /api/v1/telegram/updates
-  GET: /api/v1/telegram/webhook
-  POST: /api/v1/telegram/webhook
+  GET:  /api/v1/telegram/bot-info          # Get bot info
+  POST: /api/v1/telegram/messages          # Send message
+  GET:  /api/v1/telegram/updates           # Get updates
+  GET:  /api/v1/telegram/webhook           # Webhook verification
+  POST: /api/v1/telegram/webhook           # Webhook handler
 
+# ==============================================================================
 # Messenger Service (Port 8020)
+# ==============================================================================
 messenger:
-  GET: /api/v1/messenger/webhook
-  POST: /api/v1/messenger/webhook
-  POST: /api/v1/messenger/messages
-  GET: /api/v1/messenger/conversations
+  GET:  /api/v1/messenger/webhook          # Webhook verification
+  POST: /api/v1/messenger/webhook          # Webhook handler
+  POST: /api/v1/messenger/messages         # Send message
+  GET:  /api/v1/messenger/conversations    # List conversations
 
+# ==============================================================================
 # Email Service (Port 8021)
+# ==============================================================================
 email:
-  POST: /api/v1/email/send
-  POST: /api/v1/email/template
-  GET: /api/v1/email/templates
-  POST: /api/v1/email/webhook
+  POST: /api/v1/email/send                  # Send email
+  POST: /api/v1/email/template              # Create email template
+  GET:  /api/v1/email/templates             # List templates
+  POST: /api/v1/email/webhook               # Email webhook (bounces, opens)
 
+# ==============================================================================
 # Lead Intelligence Service (Port 8022)
+# ==============================================================================
 lead-intelligence:
-  POST: /api/v1/lead-intelligence/companies/search
-  GET: /api/v1/lead-intelligence/companies/{company_id}
-  POST: /api/v1/lead-intelligence/companies/{company_id}/qualify
-  POST: /api/v1/lead-intelligence/companies/{company_id}/research
-  POST: /api/v1/lead-intelligence/companies/{company_id}/outreach
-  GET: /api/v1/lead-intelligence/profiles
-  POST: /api/v1/lead-intelligence/profiles
+  POST: /api/v1/lead-intelligence/companies/search # Search companies
+  GET:  /api/v1/lead-intelligence/companies/{company_id} # Get company
+  POST: /api/v1/lead-intelligence/companies/{company_id}/qualify # Qualify lead
+  POST: /api/v1/lead-intelligence/companies/{company_id}/research # Research company
+  POST: /api/v1/lead-intelligence/companies/{company_id}/outreach # Outreach lead
+  GET:  /api/v1/lead-intelligence/profiles  # List profiles
+  POST: /api/v1/lead-intelligence/profiles  # Create profile
+
+# ==============================================================================
+# MCP Gateway Service (Port 8028)
+# ==============================================================================
+mcp:
+  POST: /api/v1/mcp/tools                   # Register MCP tool
+  GET:  /api/v1/mcp/tools                   # List MCP tools
+  GET:  /api/v1/mcp/tools/{tool_id}         # Get MCP tool
+  PATCH: /api/v1/mcp/tools/{tool_id}        # Update MCP tool
+  DELETE: /api/v1/mcp/tools/{tool_id}       # Delete MCP tool
+  POST: /api/v1/mcp/tools/{tool_id}/execute # Execute MCP tool
+  POST: /api/v1/mcp/execute                 # Execute tool by name
+  GET:  /api/v1/mcp/logs                    # Get execution logs
+  GET:  /api/v1/mcp/stats                   # Get tool statistics
+
+# ==============================================================================
+# Product Intelligence Service (Port 8027)
+# ==============================================================================
+product-intelligence:
+  POST: /api/v1/product-intelligence/projects  # Create research project
+  GET:  /api/v1/product-intelligence/projects  # List projects
+  GET:  /api/v1/product-intelligence/projects/{project_id} # Get project
+  PATCH: /api/v1/product-intelligence/projects/{project_id} # Update project
+  DELETE: /api/v1/product-intelligence/projects/{project_id} # Delete project
+  POST: /api/v1/product-intelligence/evidence  # Create evidence item
+  GET:  /api/v1/product-intelligence/projects/{project_id}/evidence # List evidence
+  POST: /api/v1/product-intelligence/competitors # Create competitor
+  GET:  /api/v1/product-intelligence/projects/{project_id}/competitors # List competitors
+  GET:  /api/v1/product-intelligence/projects/{project_id}/opportunities # List opportunities
+  GET:  /api/v1/product-intelligence/projects/{project_id}/strategy # Get strategy
+  POST: /api/v1/product-intelligence/scenarios  # Create scenario
+  GET:  /api/v1/product-intelligence/projects/{project_id}/scenarios # List scenarios
+  GET:  /api/v1/product-intelligence/projects/{project_id}/launch-plan # Get launch plan
+  GET:  /api/v1/product-intelligence/projects/{project_id}/report # Get report
+  POST: /api/v1/product-intelligence/projects/{project_id}/analyze # Run analysis
+  POST: /api/v1/product-intelligence/analyze     # Quick analysis
+
+# ==============================================================================
+# Slack Service (Port 8024)
+# ==============================================================================
+slack:
+  POST: /api/v1/slack/webhook               # Slack webhook handler
+  POST: /api/v1/slack/workspace/{workspace_id}/channels # Create channel
+  POST: /api/v1/slack/channels/{channel_id}/messages # Send message
+  POST: /api/v1/slack/integrations          # Create integration
+  GET:  /api/v1/slack/integrations          # List integrations
+  GET:  /api/v1/slack/channels/{channel_id} # Get channel info
+  DELETE: /api/v1/slack/integrations/{channel_id} # Delete integration
+
+# ==============================================================================
+# Discord Service (Port 8026)
+# ==============================================================================
+discord:
+  POST: /api/v1/discord/webhook             # Discord webhook handler
+  POST: /api/v1/discord/workspaces/{guild_id}/channels # Create channel
+  POST: /api/v1/discord/channels/{channel_id}/messages # Send message
+  POST: /api/v1/discord/bots/{guild_id}/invite  # Get bot invite link
+  POST: /api/v1/discord/integrations        # Create integration
+  GET:  /api/v1/discord/integrations        # List integrations
+  GET:  /api/v1/discord/channels/{channel_id} # Get channel info
+  DELETE: /api/v1/discord/integrations/{channel_id} # Delete integration
+
+# ==============================================================================
+# Health Check Endpoints (Available on all services)
+# ==============================================================================
+health-checks:
+  GET:  /api/v1/health/live                # Liveness probe
+  GET:  /api/v1/health/ready               # Readiness probe (DB-dependent)
+  GET:  /api/v1/metrics                    # Prometheus metrics

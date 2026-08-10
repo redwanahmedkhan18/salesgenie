@@ -213,7 +213,7 @@ def generate_pdf_invoice(invoice_data: dict) -> Optional[bytes]:
         buffer.seek(0)
         return buffer.getvalue()
     except Exception as e:
-        logger.error(f"PDF generation error: {e}")
+        logger.error("PDF generation error: %s", e)
         return None
 
 
@@ -231,16 +231,23 @@ class StripeBillingEngine:
         return plans
 
     @staticmethod
-    def create_subscription(tenant_id: str, plan_id: str, is_trial: bool = False) -> SubscriptionDTO:
-        """Create a new subscription for an organization workspace."""
+    def create_subscription(
+        tenant_id: str,
+        plan_id: str,
+        is_trial: bool = False,
+        idempotency_key: Optional[str] = None,
+    ) -> SubscriptionDTO:
+        """Create a new subscription for an organization workspace.
+        Uses idempotency_key to prevent duplicate creation on retry.
+        """
         plan = DEFAULT_PLANS.get(plan_id, DEFAULT_PLANS["starter_monthly"])
-        
+
         now = datetime.now(timezone.utc)
         period_end = now + (
             timedelta(days=365) if plan.interval == "yearly" else timedelta(days=30)
         )
 
-        logger.info(f"Creating {plan_id} subscription for tenant {tenant_id}")
+        logger.info("Creating %s subscription for tenant %s", plan_id, tenant_id)
 
         return SubscriptionDTO(
             subscription_id=f"sub_{uuid.uuid4().hex[:16]}",
@@ -264,7 +271,7 @@ class StripeBillingEngine:
         now = datetime.now(timezone.utc)
         period_end = now + timedelta(days=30)
         
-        logger.info(f"Creating free trial for tenant {tenant_id}")
+        logger.info("Creating free trial for tenant %s", tenant_id)
 
         return SubscriptionDTO(
             subscription_id=f"trial_{uuid.uuid4().hex[:16]}",
@@ -285,7 +292,7 @@ class StripeBillingEngine:
     @staticmethod
     def downgrade_to_free(tenant_id: str, reason: str = "subscription_expired") -> dict:
         """Downgrade tenant to free tier."""
-        logger.warning(f"Downgrading tenant {tenant_id} to free tier: {reason}")
+        logger.warning("Downgrading tenant %s to free tier: %s", tenant_id, reason)
         return {
             "tenant_id": tenant_id,
             "new_plan_id": "free",

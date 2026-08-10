@@ -1,16 +1,12 @@
 """SalesGenie AI Evaluation Framework - Model quality, drift detection, and performance monitoring"""
 
-import hashlib
 import logging
 import re
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import Enum
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, List, Optional, Any
 from collections import defaultdict
 import statistics
-import asyncio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ai-evaluation")
@@ -225,7 +221,7 @@ class QualityGate:
         
         failed = [name for name, passed in checks if not passed]
         if failed:
-            logger.warning(f"Quality gate failed: {failed}")
+            logger.warning("Quality gate failed: %s", failed)
             return False
         
         return True
@@ -233,7 +229,6 @@ class QualityGate:
 # FastAPI Application
 def create_app():
     from fastapi import FastAPI, HTTPException
-    import os
     
     app = FastAPI(title="AI Evaluation Framework", version="1.0.0")
     monitor = ModelMonitor()

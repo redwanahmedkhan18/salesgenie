@@ -1,5 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { useAuth } from '../../auth/AuthProvider';
+import { apiClient } from '../../lib/api-client';
+import { get_structured_logger } from '../../lib/logger';
+
+const logger = get_structured_logger('salesgenie.ai', 'AIAssistant');
 
 interface Message {
   id: string;
@@ -32,11 +37,12 @@ interface PlanningResult {
   summary: string;
 }
 
-export default function AIAssistant() {
+export function AIAssistantInner() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pendingApproval, setPendingApproval] = useState<PlanningResult | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -60,72 +66,38 @@ export default function AIAssistant() {
 
     setMessages(prev => [...prev, userMessage]);
     setInput('');
+
     setLoading(true);
+    setError(null);
 
     try {
-      const response = await processAIRequest(input);
-      setMessages(prev => [...prev, response]);
+      const response = await apiClient.chat({
+        messages: messages.map(m => ({ role: m.role, content: m.content })),
+        model: 'gpt-4o-mini',
+      });
+      const assistantMessage: Message = {
+        id: Date.now().toString() + '-assistant',
+        role: 'assistant',
+        content: response.choices[0]?.message?.content ?? 'No response received.',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('AI processing error:', error);
+      logger.error('AI processing error', { error: String(error) });
+      setError(error instanceof Error ? error.message : 'Failed to process AI request. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const processAIRequest = async (request: string): Promise<Message> => {
-    const isHighRisk = /suspend|delete|export|billing|remove|delete.*organization/i.test(request);
-    const isMediumRisk = /create|invite|connect|modify|import|change/i.test(request);
-    
-    if (isHighRisk) {
-      return {
-        id: Date.now().toString() + '-high',
-        role: 'assistant',
-        content: `I've analyzed your request: "${request}"\n\nThis is a **high-risk action** that requires human approval.\n\nLet me explain what would happen:\n\n1. **Action**: ${extractAction(request)}\n2. **Impact**: Potential customer disruption / data loss\n3. **Reason**: Sensitive operation affecting organization integrity\n\n**Do you approve this action?** It cannot be undone.`,
-        timestamp: new Date(),
-        action_required: true,
-        action_type: 'suspend_org',
-        requires_approval: true,
-      };
-    }
-
-    if (isMediumRisk) {
-      return {
-        id: Date.now().toString() + '-medium',
-        role: 'assistant',
-        content: `I'm planning to execute: "${request}"\n\nThis requires your approval before proceeding.\n\n**Proposed steps:**\n1. Validate request against permissions\n2. Check for conflicts\n3. Execute the action\n\nShall I proceed?`,
-        timestamp: new Date(),
-        action_required: true,
-        action_type: 'create_org',
-        requires_approval: true,
-      };
-    }
-
-    return {
-      id: Date.now().toString() + '-low',
-      role: 'assistant',
-      content: `I'll handle that for you. \n\n**Execution plan:**\n1. Analyze request\n2. Execute action\n3. Report results\n\n✅ Action completed successfully.`,
-      timestamp: new Date(),
-    };
-  };
-
-  const extractAction = (request: string): string => {
-    if (request.toLowerCase().includes('suspend')) return 'Suspend organization(s)';
-    if (request.toLowerCase().includes('delete')) return 'Delete organization(s)';
-    if (request.toLowerCase().includes('export')) return 'Export all data';
-    if (request.toLowerCase().includes('billing')) return 'Modify billing settings';
-    if (request.toLowerCase().includes('connect')) return 'Connect integration';
-    if (request.toLowerCase().includes('create')) return 'Create new resource';
-    return 'Execute requested action';
-  };
-
   const handleApproval = (approved: boolean) => {
     if (!pendingApproval) return;
-    
+
     if (approved) {
       setMessages(prev => [...prev, {
         id: Date.now().toString() + '-approved',
         role: 'assistant',
-        content: '✅ Action approved. Executing...\n\n1. Validating permissions... ✅\n2. Checking conflicts... ✅\n3. Executing action... ✅\n\n**Result**: Action completed successfully.',
+        content: 'Action approved. Executing via backend orchestration engine...',
         timestamp: new Date(),
       }]);
     } else {
@@ -227,6 +199,11 @@ export default function AIAssistant() {
             </div>
           ))
         )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
         {loading && (
           <div className="flex gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/10">
@@ -270,5 +247,13 @@ export default function AIAssistant() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AIAssistant() {
+  return (
+    <ErrorBoundary componentName="AIAssistant" fallback={<div className="p-4 text-center" style={{ color: 'var(--color-muted-foreground)' }}>AI Assistant unavailable</div>}>
+      <AIAssistantInner />
+    </ErrorBoundary>
   );
 }

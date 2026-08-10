@@ -1,31 +1,39 @@
 import type { APIRoute } from 'astro';
+import { isAuthRateLimited, hashPassword, validatePasswordStrength, logAuditEvent, getClientIp } from '../../../../lib/auth-middleware';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const mockUsers: Record<string, { id: string; email: string; full_name: string; company: string; passwordHash: string; created_at: string; verified: boolean }> = {};
+const mockUsers: Map<string, { id: string; email: string; full_name: string; company: string; passwordHash: string; created_at: string; verified: boolean; tenant_id: string }> = new Map();
 
-function hashPassword(password: string): string {
-  let hash = 0;
-  const salt = 'salesgenie_salt_2026';
-  const combined = salt + password + salt;
-  for (let i = 0; i < combined.length; i++) {
-    const char = combined.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+const BASE_URL = import.meta.env.DEV
+  ? `http://localhost:${import.meta.env.PUBLIC_AUTH_SERVICE_PORT || 8001}`
+  : "/api";
+
+export const POST: APIRoute = async (context) => {
+  if (isAuthRateLimited(context)) {
+    return new Response(JSON.stringify({
+      success: false,
+      message: 'Too many signup attempts. Please try again later.',
+      code: 'RATE_LIMITED',
+    }), {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': '900',
+      },
+    });
   }
-  return `sb_${hash.toString(36)}_${salt}`;
-}
 
-export const POST: APIRoute = async ({ request }) => {
   try {
-    const body = await request.json();
-
+    const body = await context.request.json();
     const { full_name, email, password, company, agree_terms } = body;
+
+    const clientIp = await getClientIp(context) || 'unknown';
 
     if (!full_name || typeof full_name !== 'string' || full_name.length < 2) {
       return new Response(JSON.stringify({
         success: false,
-        message: 'Full name must be at least 2 characters',
+        message: 'Invalid input provided',
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -35,17 +43,29 @@ export const POST: APIRoute = async ({ request }) => {
     if (!email || typeof email !== 'string' || !emailRegex.test(email)) {
       return new Response(JSON.stringify({
         success: false,
-        message: 'Invalid email address',
+        message: 'Invalid input provided',
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    if (!password || typeof password !== 'string' || password.length < 8) {
+    if (!password || typeof password !== 'string') {
       return new Response(JSON.stringify({
         success: false,
-        message: 'Password must be at least 8 characters',
+        message: 'Invalid input provided',
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const pwdValidation = validatePasswordStrength(password);
+    if (!pwdValidation.valid) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Password does not meet security requirements',
+        errors: pwdValidation.errors,
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -55,7 +75,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!company || typeof company !== 'string' || company.length < 2) {
       return new Response(JSON.stringify({
         success: false,
-        message: 'Company name is required',
+        message: 'Invalid input provided',
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -65,7 +85,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (agree_terms !== true) {
       return new Response(JSON.stringify({
         success: false,
-        message: 'You must agree to the Terms of Service and Privacy Policy',
+        message: 'Terms agreement is required',
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -74,33 +94,38 @@ export const POST: APIRoute = async ({ request }) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    for (const key of Object.keys(mockUsers)) {
-      if (mockUsers[key].email.toLowerCase() === normalizedEmail) {
-        return new Response(JSON.stringify({
-          success: false,
-          message: 'An account with this email already exists. Please login or use a different email.',
-          code: 'EMAIL_EXISTS',
-        }), {
-          status: 409,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
+    if (mockUsers.has(normalizedEmail)) {
+      logAuditEvent({
+        action: 'signup_failed',
+        resource_type: 'auth',
+        ip_address: clientIp,
+        severity: 'low',
+        details: { reason: 'email_exists' },
+      });
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'An account with this email already exists. Please login or use a different email.',
+        code: 'EMAIL_EXISTS',
+      }), {
+        status: 409,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const userId = `user_${Date.now()}`;
-    mockUsers[normalizedEmail] = {
+    const tenant_id = `tenant_${userId}`;
+    const passwordHash = await hashPassword(password);
+
+    mockUsers.set(normalizedEmail, {
       id: userId,
       email: normalizedEmail,
       full_name,
       company,
-      passwordHash: hashPassword(password),
+      passwordHash,
       created_at: new Date().toISOString(),
       verified: false,
-    };
-
-    const BASE_URL = import.meta.env.DEV
-      ? `http://localhost:${import.meta.env.PUBLIC_AUTH_SERVICE_PORT || 8001}`
-      : '/api';
+      tenant_id,
+    });
 
     try {
       const response = await fetch(`${BASE_URL}/api/v1/auth/signup`, {
@@ -115,27 +140,75 @@ export const POST: APIRoute = async ({ request }) => {
         }),
       });
 
-      if (response.ok) {
-        return response;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        logAuditEvent({
+          action: 'signup_failed',
+          resource_type: 'auth',
+          user_email: normalizedEmail,
+          ip_address: clientIp,
+          severity: 'medium',
+          details: { reason: errorData.detail || 'backend_rejected' },
+        });
+        return new Response(JSON.stringify({
+          success: false,
+          message: errorData.detail || 'Signup failed',
+        }), {
+          status: response.status,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'Referrer-Policy': 'no-referrer',
+          },
+        });
       }
     } catch {
-      // Continue to success response if auth service is unavailable
     }
+
+    logAuditEvent({
+      action: 'signup_success',
+      resource_type: 'auth',
+      ip_address: clientIp,
+      tenant_id,
+      severity: 'low',
+      details: { method: 'email' },
+    });
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Account created! Please check your email to verify your account. You can now login.',
+      message: 'Account created successfully. Please check your email to verify your account. You can now login.',
+      user_id: userId,
+      tenant_id,
     }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'Referrer-Policy': 'no-referrer',
+      },
     });
   } catch (error) {
+    const clientIp = await getClientIp(context) || 'unknown';
+    logAuditEvent({
+      action: 'signup_error',
+      resource_type: 'auth',
+      ip_address: clientIp,
+      severity: 'medium',
+      details: { error: error instanceof Error ? error.name : 'unknown' },
+    });
     return new Response(JSON.stringify({
       success: false,
-      message: 'Server error during signup',
+      message: 'An error occurred during signup',
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'Referrer-Policy': 'no-referrer',
+      },
     });
   }
 };
@@ -143,9 +216,14 @@ export const POST: APIRoute = async ({ request }) => {
 export const GET: APIRoute = async () => {
   return new Response(JSON.stringify({
     success: false,
-    message: 'Method not allowed'
+    message: 'Method not allowed',
   }), {
     status: 405,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'no-referrer',
+    },
   });
 };

@@ -14,6 +14,7 @@ from enterprise_ai_platform.common.security_rbac import (
     RequirePermissions,
     Permission,
 )
+from enterprise_ai_platform.common.subscription_guard import require_active_subscription
 from .agent_orchestrator import agent_orchestrator, AgentState
 from .prompts import SYSTEM_PROMPTS
 
@@ -41,13 +42,16 @@ class ChatCompletionResponse(BaseModel):
     tokens_used: int
     ai_confidence: float
     suggested_actions: List[str]
+    estimated_cost_usd: float = 0.0
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 @router.post(
     "/chat",
     response_model=ChatCompletionResponse,
     summary="Multi-Agent Chat Completion Loop",
-    dependencies=[Depends(RequirePermissions(Permission.AGENT_EXECUTE))],
+    dependencies=[Depends(RequirePermissions(Permission.AGENT_EXECUTE)), Depends(require_active_subscription)],
 )
 async def ai_chat_completion(
     req: ChatCompletionRequest,
@@ -72,6 +76,9 @@ async def ai_chat_completion(
         tokens_used=result["tokens_used"],
         ai_confidence=result["ai_confidence"],
         suggested_actions=result["suggested_actions"],
+        estimated_cost_usd=result.get("estimated_cost_usd", 0.0),
+        input_tokens=result.get("input_tokens", 0),
+        output_tokens=result.get("output_tokens", 0),
     )
 
 

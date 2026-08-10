@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthProvider';
 import { AUTH_SERVICE_URL } from '../lib/api-client';
+import { secureTokenStorage } from '../lib/secure-storage';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -8,7 +9,6 @@ export function LoginPage() {
   const [tenantId, setTenantId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [showMfa, setShowMfa] = useState(false);
 
@@ -27,10 +27,9 @@ export function LoginPage() {
     try {
       const response = await login(email, password, tenantId || undefined);
 
-      if (response.mfa_required) {
-        setMfaRequired(true);
-        setShowMfa(true);
-      } else {
+       if (response.mfa_required) {
+         setShowMfa(true);
+       } else {
         window.location.href = '/app/dashboard';
       }
     } catch (err: any) {
@@ -57,17 +56,25 @@ export function LoginPage() {
 
   const handleOAuthLogin = async () => {
     try {
-      const state = btoa(JSON.stringify({ provider: 'google', timestamp: Date.now() }));
-      const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/redirect/google?state=${state}`);
+      const nonce = crypto.randomUUID();
+      const stateData = { provider: 'google', timestamp: Date.now(), signup: false, nonce };
+      const state = btoa(JSON.stringify(stateData));
+      secureTokenStorage.setItem('oauth_csrf_state' as any, state);
+      const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/redirect/google?state=${encodeURIComponent(state)}`);
       const data = await response.json();
       if (data.redirect_url) {
-        window.location.href = data.redirect_url;
+        const redirectUrl = new URL(data.redirect_url, window.location.origin);
+        if (redirectUrl.origin === window.location.origin) {
+          window.location.href = redirectUrl.href;
+        } else {
+          setError('Invalid redirect URL. Possible phishing attempt detected.');
+        }
       } else if (data.mock) {
-        alert(data.message || 'OAuth not configured. Please use the regular login form.');
+        setError(data.message || 'OAuth not configured. Please use the regular login form.');
       }
     } catch (err) {
       console.error('OAuth redirect failed:', err);
-      alert('Unable to connect to authentication service. Please try again.');
+      setError('Unable to connect to authentication service. Please try again.');
     }
   };
 

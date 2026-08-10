@@ -43,7 +43,7 @@ export const prerender = false;
         .then(r => r.json())
         .then(function(data) {
           if (data.success) {
-            localStorage.setItem('email_verified', 'true');
+            try { sessionStorage.setItem('email_verified', 'true'); } catch(e) {}
             window.location.href = '/app/dashboard';
           } else {
             const errorEl = document.getElementById('error');

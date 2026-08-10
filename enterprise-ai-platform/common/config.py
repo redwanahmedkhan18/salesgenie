@@ -4,7 +4,7 @@ Provides centralized management of environment variables and application setting
 """
 
 from typing import List, Optional
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,11 +18,16 @@ class PlatformSettings(BaseSettings):
 
     ENVIRONMENT: str = Field(default="development", description="Environment mode: development, staging, production")
     DEBUG: bool = Field(default=True, description="Debug flag")
+    LOG_LEVEL: str = Field(default="INFO", description="Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL")
     PROJECT_NAME: str = "SalesGenie Enterprise AI Platform"
     API_V1_STR: str = "/api/v1"
 
+    # Stripe (Billing) - REQUIRED if billing service is enabled
+    STRIPE_SECRET_KEY: Optional[str] = Field(default=None, description="Stripe secret API key - REQUIRED in production", exclude=True)
+    STRIPE_WEBHOOK_SECRET: Optional[str] = Field(default=None, description="Stripe webhook signing secret", exclude=True)
+
     POSTGRES_USER: str = Field(default="salesgenie_admin", description="PostgreSQL Username")
-    POSTGRES_PASSWORD: str = Field(default="salesgenie_secret_pass_2026", description="PostgreSQL Password")
+    POSTGRES_PASSWORD: Optional[str] = Field(default=None, description="PostgreSQL Password - REQUIRED in production", exclude=True)
     POSTGRES_HOST: str = Field(default="localhost", description="PostgreSQL Host")
     POSTGRES_PORT: int = Field(default=5432, description="PostgreSQL Port")
     POSTGRES_DB: str = Field(default="salesgenie_db", description="PostgreSQL Database Name")
@@ -50,16 +55,19 @@ class PlatformSettings(BaseSettings):
     KEYCLOAK_SERVER_URL: str = Field(default="http://localhost:8080", description="Keycloak server URL")
     KEYCLOAK_REALM: str = Field(default="salesgenie-realm", description="Keycloak realm name")
     KEYCLOAK_CLIENT_ID: str = Field(default="salesgenie-auth-client", description="Keycloak client ID")
-    KEYCLOAK_CLIENT_SECRET: str = Field(default="salesgenie-client-secret-keycloak", description="Keycloak client secret")
-    KEYCLOAK_ADMIN_USERNAME: str = Field(default="admin", description="Keycloak admin username")
-    KEYCLOAK_ADMIN_PASSWORD: str = Field(default="admin", description="Keycloak admin password")
+    KEYCLOAK_CLIENT_SECRET: Optional[str] = Field(default=None, description="Keycloak client secret - REQUIRED in production", exclude=True)
+    KEYCLOAK_ADMIN_USERNAME: Optional[str] = Field(default=None, description="Keycloak admin username", exclude=True)
+    KEYCLOAK_ADMIN_PASSWORD: Optional[str] = Field(default=None, description="Keycloak admin password - REQUIRED in production", exclude=True)
 
     # JWT Settings
-    JWT_SECRET_KEY: str = Field(default="salesgenie_super_secret_jwt_key_2026_change_in_prod", description="JWT secret key for HS256 fallbacks")
+    JWT_SECRET_KEY: Optional[str] = Field(default=None, description="JWT secret key - REQUIRED in production", exclude=True)
     JWT_ALGORITHM: str = Field(default="HS256", description="JWT Signing Algorithm")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60, description="Access token expiration in minutes")
     REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=14, description="Refresh token expiration in days")
     JWT_PUBLIC_KEY: Optional[str] = Field(default=None, description="RS256 Public Key for verification")
+
+    # PII Encryption
+    PII_ENCRYPTION_KEY: Optional[str] = Field(default=None, description="PII field encryption key - REQUIRED in production", exclude=True)
 
     # Redis Settings
     REDIS_HOST: str = Field(default="localhost", description="Redis Host")
@@ -79,6 +87,9 @@ class PlatformSettings(BaseSettings):
     MICROSOFT_CLIENT_SECRET: Optional[str] = Field(default=None)
     GITHUB_CLIENT_ID: Optional[str] = Field(default=None)
     GITHUB_CLIENT_SECRET: Optional[str] = Field(default=None)
+
+    # Sentry (Error Tracking) - Optional but recommended for production
+    SENTRY_DSN: Optional[str] = Field(default=None, description="Sentry DSN for error tracking")
 
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
@@ -139,9 +150,10 @@ class PlatformSettings(BaseSettings):
         default="Super Admin",
         description="Default name for super admin users"
     )
-    SALESGENIE_SUPER_ADMIN_PASSWORD: str = Field(
-        default="YourSecurePassword123!",
-        description="Default password for super admin users (change in production!)"
+    SALESGENIE_SUPER_ADMIN_PASSWORD: Optional[str] = Field(
+        default=None,
+        description="Default password for super admin users - REQUIRED in production",
+        exclude=True,
     )
 
     # Language Settings
@@ -177,6 +189,31 @@ class PlatformSettings(BaseSettings):
     AUDIT_SERVICE_PORT: int = Field(default=8023, description="Audit Service Port")
     SLACK_SERVICE_PORT: int = Field(default=8024, description="Slack Service Port")
     DISCORD_SERVICE_PORT: int = Field(default=8026, description="Discord Service Port")
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self):
+        """Enforce that required secrets are set in production environment."""
+        if self.ENVIRONMENT == "production":
+            required_secrets = {
+                "POSTGRES_PASSWORD": self.POSTGRES_PASSWORD,
+                "JWT_SECRET_KEY": self.JWT_SECRET_KEY,
+            }
+
+            # Add optional production-only secrets if services are enabled
+            if getattr(self, 'STRIPE_SECRET_KEY', None):
+                required_secrets["STRIPE_SECRET_KEY"] = self.STRIPE_SECRET_KEY
+            if getattr(self, 'STRIPE_WEBHOOK_SECRET', None):
+                required_secrets["STRIPE_WEBHOOK_SECRET"] = self.STRIPE_WEBHOOK_SECRET
+
+            required_secrets["PII_ENCRYPTION_KEY"] = self.PII_ENCRYPTION_KEY
+
+            missing = [k for k, v in required_secrets.items() if not v]
+            if missing:
+                raise ValueError(
+                    f"Production environment requires these secrets to be set: {missing}. "
+                    f"Please set them via environment variables or secret manager."
+                )
+        return self
 
 
 settings = PlatformSettings()

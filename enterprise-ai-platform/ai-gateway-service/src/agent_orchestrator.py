@@ -3,12 +3,17 @@ LangGraph Multi-Agent Orchestration Engine
 Reroutes conversation state across Sales, Support, Memory, Search, and Analytics agents.
 """
 
-import uuid
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
-from .prompts import build_agent_system_prompt
+from enterprise_ai_platform.common.cost_management import TaskComplexity
+from enterprise_ai_platform.common.logging import get_structured_logger
+
 from .llm_provider import llm_provider
+from .prompts import build_agent_system_prompt
+
+logger = get_structured_logger("salesgenie.ai.agent", "ai-gateway-service")
 
 
 class AgentState(BaseModel):
@@ -47,9 +52,22 @@ class MultiAgentOrchestrator:
         3. Invokes LLM execution engine.
         4. Calculates AI response confidence score.
         """
+        import time as _time
+        turn_start = _time.time()
         last_user_msg = state.messages[-1]["content"] if state.messages else ""
         target_agent = self.classify_intent(last_user_msg)
         state.active_agent = target_agent
+
+        logger.info(
+            "Agent turn starting",
+            extra={
+                "session_id": state.session_id,
+                "tenant_id": state.tenant_id,
+                "user_id": state.user_id,
+                "target_agent": target_agent,
+                "message_count": len(state.messages),
+            }
+        )
 
         # Build System Prompt
         system_prompt = build_agent_system_prompt(
@@ -57,11 +75,25 @@ class MultiAgentOrchestrator:
             extra_context=state.retrieved_knowledge or "Standard SalesGenie Enterprise KB Grounding",
         )
 
+        # Determine task complexity based on agent type and message length
+        msg_len = len(last_user_msg)
+        if target_agent == "search_agent" and msg_len < 100:
+            complexity = TaskComplexity.LOW
+        elif target_agent == "analytics_agent" and msg_len > 500:
+            complexity = TaskComplexity.HIGH
+        else:
+            complexity = TaskComplexity.MEDIUM
+
         # Generate Completion
         res = await llm_provider.generate_response(
             messages=state.messages,
             system_prompt=system_prompt,
+            task_complexity=complexity.value,
+            tenant_id=state.tenant_id,
         )
+
+        # Calculate AI confidence based on provider quality
+        ai_confidence = 0.5 if res.get("provider") == "fallback" else 0.95
 
         # Actions & Next Steps
         actions = []
@@ -70,15 +102,34 @@ class MultiAgentOrchestrator:
         elif target_agent == "support_agent":
             actions = ["Track Order Shipment", "Request Refund", "Talk to Human Agent"]
 
+        duration_ms = round((_time.time() - turn_start) * 1000, 2)
+        logger.info(
+            "Agent turn completed",
+            extra={
+                "session_id": state.session_id,
+                "tenant_id": state.tenant_id,
+                "user_id": state.user_id,
+                "target_agent": target_agent,
+                "provider": res["provider"],
+                "model": res["model"],
+                "tokens_used": res["tokens_used"],
+                "ai_confidence": ai_confidence,
+                "duration_ms": duration_ms,
+            }
+        )
+
         return {
             "session_id": state.session_id,
             "active_agent": target_agent,
             "response": res["content"],
             "provider": res["provider"],
-            "model": res["model"],
-            "tokens_used": res["tokens_used"],
-            "ai_confidence": 0.96,
+            "model": res.get("model", ""),
+            "tokens_used": res.get("tokens_used", 0),
+            "ai_confidence": ai_confidence,
             "suggested_actions": actions,
+            "estimated_cost_usd": res.get("estimated_cost_usd", 0.0),
+            "input_tokens": res.get("input_tokens", 0),
+            "output_tokens": res.get("output_tokens", 0),
         }
 
 

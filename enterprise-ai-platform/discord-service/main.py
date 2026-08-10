@@ -8,8 +8,10 @@ import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
+from enterprise_ai_platform.common.config import settings
+from enterprise_ai_platform.common.request_logging import add_request_logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("salesgenie.discord-service")
@@ -24,11 +26,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+add_request_logging(app, service_name="discord-service")
 
 DISCORD_BASE_URL = "https://discord.com/api"
 DISCORD_WEBHOOK_BASE_URL = "https://discord.com/api/webhooks"
@@ -64,6 +68,19 @@ class DiscordChannelIntegration:
         }
 
 
+@app.get("/metrics", tags=["Monitoring"])
+async def metrics_endpoint():
+    """Prometheus-compatible metrics endpoint."""
+    from enterprise_ai_platform.common.metrics import get_all_metrics
+    all_metrics = get_all_metrics()
+    lines = []
+    for svc_name, mc in all_metrics.items():
+        lines.append(f"# Service: {svc_name}")
+        lines.append(mc.to_prometheus())
+        lines.append("")
+    return PlainTextResponse(content="\n".join(lines), media_type="text/plain")
+
+
 @app.get("/health/live", tags=["Health Checks"])
 async def liveness_probe():
     return {"status": "UP", "service": "discord-service"}
@@ -89,11 +106,9 @@ async def discord_webhook(request: Request):
             author_id = str(data.get("author", {}).get("id", ""))
             content = data.get("content", "")
             
-            logger.info(f"Processing Discord message from {author_id} in {channel_id}")
+            logger.info("Processing Discord message from %s in %s", author_id, channel_id)
             
             if channel_id in channel_integrations:
-                integration = channel_integrations[channel_id]
-                
                 return JSONResponse({
                     "status": "processed",
                     "channel_id": channel_id,
@@ -110,14 +125,14 @@ async def discord_webhook(request: Request):
         
         return JSONResponse({"status": "processed", "type": event_type})
     except Exception as e:
-        logger.error(f"Discord webhook error: {e}")
+        logger.error("Discord webhook error: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/api/v1/discord/workspaces/{guild_id}/channels", tags=["Discord Integration"])
 async def create_discord_channel(guild_id: str, channel_name: str, channel_type: str = "text"):
     channel_id = f"{hash(guild_id + channel_name) % 10**17}"
-    logger.info(f"Created channel {channel_name} in guild {guild_id}")
+    logger.info("Created channel %s in guild %s", channel_name, guild_id)
     return {
         "status": "created",
         "guild_id": guild_id,
@@ -129,7 +144,7 @@ async def create_discord_channel(guild_id: str, channel_name: str, channel_type:
 
 @app.post("/api/v1/discord/channels/{channel_id}/messages", tags=["Discord Integration"])
 async def send_discord_message(channel_id: str, content: str, username: Optional[str] = None):
-    logger.info(f"Sending message to Discord channel {channel_id}")
+    logger.info("Sending message to Discord channel %s", channel_id)
     return {
         "status": "sent",
         "channel_id": channel_id,
@@ -142,7 +157,7 @@ async def send_discord_message(channel_id: str, content: str, username: Optional
 
 @app.post("/api/v1/discord/bots/{guild_id}/invite", tags=["Discord Integration"])
 async def generate_bot_invite(guild_id: str, permissions: str = "274877936128"):
-    logger.info(f"Generated bot invite for guild {guild_id}")
+    logger.info("Generated bot invite for guild %s", guild_id)
     bot_id = "123456789012345678"
     invite_url = f"https://discord.com/oauth2/authorize?client_id={bot_id}&scope=bot%2Capplications.commands&permissions={permissions}&guild_id={guild_id}"
     return {
@@ -161,7 +176,7 @@ async def register_discord_integration(
 ):
     integration = DiscordChannelIntegration(guild_id, channel_id, bot_token)
     channel_integrations[channel_id] = integration.to_dict()
-    logger.info(f"Registered Discord integration for channel {channel_id}")
+    logger.info("Registered Discord integration for channel %s", channel_id)
     return {"status": "registered", "channel_id": channel_id}
 
 

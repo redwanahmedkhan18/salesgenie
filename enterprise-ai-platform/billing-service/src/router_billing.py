@@ -3,40 +3,52 @@ Billing Service API Router
 Endpoints for Stripe subscriptions, usage metering, invoices, and plan management with PDF receipts.
 """
 
-from typing import List, Optional
-from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, Query, BackgroundTasks
-from fastapi.responses import StreamingResponse
-from starlette.responses import JSONResponse
-import json
-import io
 import base64
+import io
+from datetime import datetime
+from typing import List
 
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from starlette.responses import JSONResponse
+
+from enterprise_ai_platform.common.cost_management import cost_calculator, BUDGET_ALERT_THRESHOLD, BUDGET_HARD_LIMIT
 from enterprise_ai_platform.common.security_rbac import (
-    get_current_user,
-    TokenPayload,
-    RequirePermissions,
     Permission,
+    RequirePermissions,
+    TokenPayload,
+    get_current_user,
 )
+
 from .stripe_billing import (
-    stripe_billing,
+    DEFAULT_PLANS,
     SubscriptionDTO,
-    InvoiceDTO,
     UsageDTO,
     generate_pdf_invoice,
-    DEFAULT_PLANS,
+    stripe_billing,
 )
 
 router = APIRouter(prefix="/api/v1/billing", tags=["Billing & Stripe Subscriptions"])
 
 
+class CostAlertDTO(BaseModel):
+    tenant_id: str
+    threshold_percent: float
+    current_spent_usd: float
+    monthly_budget_usd: float
+    usage_percent: float
+    alert_type: str  # "warning" | "critical" | "blocked"
+    message: str
+
+
 def send_email_async(tenant_id: str, subject: str, body_html: str, attachment_bytes: bytes):
     """Background email sender (placeholder for actual email service)."""
     import smtplib
+    from email import encoders
+    from email.mime.base import MIMEBase
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
-    from email.mime.base import MIMEBase
-    from email import encoders
     
     smtp_host = "localhost"
     smtp_port = 1025
@@ -227,3 +239,76 @@ async def generate_payment_receipt(
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="receipt_{receipt_data["invoice_id"]}.pdf"'}
     )
+
+
+@router.get(
+    "/usage/live",
+    summary="Get Live Token Usage & Cost for Current Tenant",
+    dependencies=[Depends(RequirePermissions(Permission.BILLING_READ))],
+)
+async def get_live_usage(
+    current_user: TokenPayload = Depends(get_current_user),
+):
+    """Get real-time token usage and estimated cost from in-memory tracking."""
+    plan_id = "growth_monthly"
+    plan = DEFAULT_PLANS.get(plan_id, DEFAULT_PLANS["free"])
+    quota = plan.monthly_token_quota
+    usage = cost_calculator.get_tenant_usage(current_user.tenant_id)
+    if usage:
+        return UsageDTO(
+            tenant_id=usage.tenant_id,
+            plan_id=plan_id,
+            current_tokens_used=int(usage.current_spent_usd / 0.0000006 * 1_000_000),
+            monthly_token_quota=quota,
+            usage_percent=round(usage.usage_percent, 2),
+            estimated_cost_usd=round(usage.current_spent_usd, 4),
+            is_at_risk=usage.is_at_risk,
+        )
+    return UsageDTO(
+        tenant_id=current_user.tenant_id,
+        plan_id=plan_id,
+        current_tokens_used=0,
+        monthly_token_quota=quota,
+        usage_percent=0.0,
+        estimated_cost_usd=0.0,
+        is_at_risk=False,
+    )
+
+
+@router.get(
+    "/alerts",
+    response_model=List[CostAlertDTO],
+    summary="Get Cost Alerts for Current Tenant",
+    dependencies=[Depends(RequirePermissions(Permission.BILLING_READ))],
+)
+async def get_cost_alerts(
+    current_user: TokenPayload = Depends(get_current_user),
+):
+    """Get cost/budget alerts for the current tenant."""
+    usage = cost_calculator.get_tenant_usage(current_user.tenant_id)
+    if not usage:
+        return []
+
+    alerts = []
+    if usage.is_at_risk:
+        alert_type = "critical" if usage.usage_percent >= BUDGET_HARD_LIMIT * 100 else "warning"
+        alerts.append(CostAlertDTO(
+            tenant_id=usage.tenant_id,
+            threshold_percent=BUDGET_ALERT_THRESHOLD * 100,
+            current_spent_usd=round(usage.current_spent_usd, 4),
+            monthly_budget_usd=usage.monthly_budget_usd,
+            usage_percent=round(usage.usage_percent, 2),
+            alert_type=alert_type,
+            message=f"You have used {usage.usage_percent:.1f}% of your ${usage.monthly_budget_usd} monthly AI budget.",
+        ))
+    return alerts
+
+
+@router.get(
+    "/platform-usage",
+    summary="Get Platform-Wide Usage Summary (Super Admin)",
+    dependencies=[Depends(RequirePermissions(Permission.BILLING_READ))],
+)
+async def get_platform_usage():
+    """Get platform-wide token usage and cost summary."""
+    return cost_calculator.get_platform_usage()

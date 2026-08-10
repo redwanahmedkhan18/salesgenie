@@ -3,6 +3,7 @@
  * Fetches real-time metrics from backend services
  */
 
+import { getToken, clearAuth } from './secure-storage';
 import type {
   LoginRequest,
   LoginResponse,
@@ -212,11 +213,76 @@ class APIClient {
   };
 
   private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('auth_token');
+    const token = getToken();
     if (token) {
-      return { ...this.baseHeaders, Authorization: `Bearer ${token}` };
+      return { ...this.getSecureHeaders(), Authorization: `Bearer ${token}` };
     }
-    return this.baseHeaders;
+    return this.getSecureHeaders();
+  }
+
+  private getSecureHeaders(): HeadersInit {
+    const token = getToken();
+    const headers: HeadersInit = { ...this.getSecureHeaders() };
+    if (token) {
+      (headers as Record<string, string>).Authorization = `Bearer ${token}`;
+    }
+    return headers;
+  }
+
+  private sanitizePathSegment(segment: string): string {
+    if (!segment || typeof segment !== 'string') {
+      throw new Error('Invalid path parameter: must be a non-empty string');
+    }
+    if (segment.length > 256) {
+      throw new Error('Invalid path parameter: exceeds maximum length');
+    }
+    if (/^[a-zA-Z0-9_-]+$/.test(segment)) {
+      return segment;
+    }
+    const sanitized = segment.replace(/[^a-zA-Z0-9_-]/g, '');
+    if (!sanitized || sanitized.length !== segment.length) {
+      throw new Error('Invalid path parameter: contains unauthorized characters');
+    }
+    return sanitized;
+  }
+
+  private addAuth = true;
+
+  private async fetchWithRetry(
+    input: RequestInfo,
+    init?: RequestInit,
+    maxRetries = 3,
+    baseDelay = 1000,
+  ): Promise<Response> {
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(input, init);
+
+        if (response.ok) {
+          return response;
+        }
+
+        if (response.status === 502 || response.status === 503 || response.status === 504) {
+          if (attempt < maxRetries) {
+            const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 100;
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            continue;
+          }
+        }
+
+        return response;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        if (attempt < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 100;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw lastError ?? new Error('Request failed after retries');
   }
 
   // Authentication API Methods
@@ -224,7 +290,7 @@ class APIClient {
   async login(req: LoginRequest): Promise<LoginResponse> {
     const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/login`, {
       method: 'POST',
-      headers: this.baseHeaders,
+      headers: this.getSecureHeaders(),
       body: JSON.stringify(req),
     });
 
@@ -239,7 +305,7 @@ class APIClient {
   async refresh(refreshToken: string): Promise<LoginResponse> {
     const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/refresh`, {
       method: 'POST',
-      headers: this.baseHeaders,
+      headers: this.getSecureHeaders(),
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
 
@@ -254,7 +320,7 @@ class APIClient {
   async forgotPassword(email: string): Promise<{ success: boolean; message: string; token?: string }> {
     const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/forgot-password`, {
       method: 'POST',
-      headers: this.baseHeaders,
+      headers: this.getSecureHeaders(),
       body: JSON.stringify({ email }),
     });
 
@@ -269,7 +335,7 @@ class APIClient {
   async resetPassword(resetRequest: { token: string; new_password: string; confirm_password: string }): Promise<{ success: boolean; message: string }> {
     const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/reset-password`, {
       method: 'POST',
-      headers: this.baseHeaders,
+      headers: this.getSecureHeaders(),
       body: JSON.stringify(resetRequest),
     });
 
@@ -284,7 +350,7 @@ class APIClient {
   async getResetToken(token: string): Promise<{ token: string; email: string; expires_at: string }> {
     const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/reset-token/${token}`, {
       method: 'GET',
-      headers: this.baseHeaders,
+      headers: this.getSecureHeaders(),
     });
 
     if (!response.ok) {
@@ -296,9 +362,7 @@ class APIClient {
   }
 
   async logout(): Promise<void> {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user_data');
+    clearAuth();
   }
 
   async setupMFA(): Promise<MFASetupResponse> {
@@ -343,7 +407,7 @@ class APIClient {
   }
 
   async revokeSession(sessionId: string): Promise<{ status: string; session_id: string }> {
-    const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/sessions/${sessionId}`, {
+    const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/sessions/${this.sanitizePathSegment(sessionId)}`, {
       method: 'DELETE',
       headers: this.getAuthHeaders(),
     });
@@ -408,10 +472,35 @@ class APIClient {
   }
 
   async uploadFile(file: File): Promise<{ file_url: string; file_id: string; filename: string }> {
+    if (!file) {
+      throw new Error('No file provided');
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error('File size exceeds 10MB maximum');
+    }
+    const allowedExtensions = ['.txt', '.csv', '.json', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'];
+    const allowedTypes = [
+      'text/plain', 'text/csv', 'application/json', 'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    ];
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!allowedExtensions.includes(ext)) {
+      throw new Error(`File type ${ext} is not allowed`);
+    }
+    if (!allowedTypes.includes(file.type) && file.type !== 'application/octet-stream') {
+      throw new Error(`MIME type ${file.type} is not allowed`);
+    }
+    if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
+      throw new Error('Invalid filename: path traversal detected');
+    }
+
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = localStorage.getItem('auth_token');
+    const token = getToken();
     const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
     const response = await fetch(`${FILE_SERVICE_URL}/api/v1/files/upload`, {
@@ -431,7 +520,7 @@ class APIClient {
   // Organization API Methods
 
   async getOrganization(orgId: string): Promise<Organization> {
-    const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${orgId}`, {
+       const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${this.sanitizePathSegment(orgId)}`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -442,8 +531,24 @@ class APIClient {
     return response.json();
   }
 
+  async chat(req: { messages: Array<{ role: string; content: string }>; model?: string; temperature?: number; max_tokens?: number }): Promise<any> {
+    const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/chat`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(req),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      const errorMessage = error.detail || `Chat request failed with status ${response.status}`;
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
   async getTenantMetrics(tenantId: string): Promise<TenantMetrics> {
-    const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${tenantId}/metrics`, {
+      const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${this.sanitizePathSegment(tenantId)}/metrics`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -455,7 +560,7 @@ class APIClient {
   }
 
   async updateBranding(tenantId: string, updates: Partial<Branding>): Promise<Branding> {
-    const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${tenantId}/branding`, {
+      const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${this.sanitizePathSegment(tenantId)}/branding`, {
       method: 'PUT',
       headers: this.getAuthHeaders(),
       body: JSON.stringify(updates),
@@ -481,8 +586,8 @@ class APIClient {
   }
 
   async addWorkspaceMember(tenantId: string, userId: string, role: string): Promise<WorkspaceMember> {
-    const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${tenantId}/members`, {
-      method: 'POST',
+      const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${this.sanitizePathSegment(tenantId)}/members`, {
+        method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ user_id: userId, role }),
     });
@@ -495,8 +600,8 @@ class APIClient {
   }
 
   async updateMemberRole(tenantId: string, memberId: string, role: string): Promise<WorkspaceMember> {
-    const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${tenantId}/members/${memberId}/role`, {
-      method: 'PATCH',
+      const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${this.sanitizePathSegment(tenantId)}/members/${this.sanitizePathSegment(memberId)}/role`, {
+        method: 'PATCH',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ role }),
     });
@@ -509,8 +614,8 @@ class APIClient {
   }
 
   async removeWorkspaceMember(tenantId: string, memberId: string): Promise<{ status: string; member_id: string }> {
-    const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${tenantId}/members/${memberId}`, {
-      method: 'DELETE',
+      const response = await fetch(`${ORGANIZATION_SERVICE_URL}/api/v1/organizations/${this.sanitizePathSegment(tenantId)}/members/${this.sanitizePathSegment(memberId)}`, {
+        method: 'DELETE',
       headers: this.getAuthHeaders(),
     });
 
@@ -526,7 +631,7 @@ class APIClient {
   async fetchKPIs(): Promise<AnalyticsKPIs> {
     try {
       const response = await fetch(`${ANALYTICS_SERVICE_URL}/api/v1/analytics/kpis`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -619,7 +724,7 @@ class APIClient {
     try {
       const query = params ? '?' + new URLSearchParams(params).toString() : '';
       const response = await fetch(`${CUSTOMER_SERVICE_URL}/api/v1/customers${query}`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -637,7 +742,7 @@ class APIClient {
     try {
       const response = await fetch(`${CUSTOMER_SERVICE_URL}/api/v1/customers`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
         body: JSON.stringify(customer),
       });
 
@@ -655,7 +760,7 @@ class APIClient {
   async fetchSegments(): Promise<CustomerSegment[]> {
     try {
       const response = await fetch(`${CUSTOMER_SERVICE_URL}/api/v1/customers/segments`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -672,7 +777,7 @@ class APIClient {
   async fetchTags(): Promise<CustomerTag[]> {
     try {
       const response = await fetch(`${CUSTOMER_SERVICE_URL}/api/v1/customers/tags`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -726,7 +831,7 @@ class APIClient {
 
   async updateTicket(ticketId: string, updates: Partial<SupportTicket>): Promise<SupportTicket | null> {
     try {
-      const response = await fetch(`${TICKETS_SERVICE_URL}/api/v1/tickets/${ticketId}`, {
+      const response = await fetch(`${TICKETS_SERVICE_URL}/api/v1/tickets/${this.sanitizePathSegment(ticketId)}`, {
         method: 'PATCH',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(updates),
@@ -781,7 +886,7 @@ class APIClient {
       if (params.from !== undefined) queryParams.set('from', String(params.from));
 
       const response = await fetch(`${SEARCH_SERVICE_URL}/api/v1/search/search?${queryParams.toString()}`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -799,7 +904,7 @@ class APIClient {
     try {
       const response = await fetch(`${SEARCH_SERVICE_URL}/api/v1/search/index`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
         body: JSON.stringify(document),
       });
 
@@ -819,9 +924,9 @@ class APIClient {
       const params = new URLSearchParams();
       if (indexType) params.set('index_type', indexType);
 
-      const response = await fetch(`${SEARCH_SERVICE_URL}/api/v1/search/index/${documentId}?${params.toString()}`, {
+      const response = await fetch(`${SEARCH_SERVICE_URL}/api/v1/search/index/${this.sanitizePathSegment(documentId)}?${params.toString()}`, {
         method: 'DELETE',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       return response.ok;
@@ -834,7 +939,7 @@ class APIClient {
   async fetchIndexStats(): Promise<IndexStatsDTO[]> {
     try {
       const response = await fetch(`${SEARCH_SERVICE_URL}/api/v1/search/index/stats`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -851,7 +956,7 @@ class APIClient {
   async fetchKnowledgeCategories(): Promise<KnowledgeCategory[]> {
     try {
       const response = await fetch(`${KNOWLEDGE_SERVICE_URL}/api/v1/knowledge/categories`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -870,7 +975,7 @@ class APIClient {
   async getWhatsAppAccounts(): Promise<WhatsAppAccount | null> {
     try {
       const response = await fetch(`${WHATSAPP_SERVICE_URL}/api/v1/whatsapp/accounts`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -893,7 +998,7 @@ class APIClient {
     try {
       const response = await fetch(`${WHATSAPP_SERVICE_URL}/api/v1/whatsapp/accounts`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
         body: JSON.stringify(req),
       });
 
@@ -918,7 +1023,7 @@ class APIClient {
     try {
       const response = await fetch(`${WHATSAPP_SERVICE_URL}/api/v1/whatsapp/messages`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
         body: JSON.stringify(req),
       });
 
@@ -936,7 +1041,7 @@ class APIClient {
   async listChannelIntegrations(): Promise<ChannelIntegration[]> {
     try {
       const response = await fetch(`${CHANNEL_SERVICE_URL}/api/v1/channels/integrations`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -976,7 +1081,7 @@ class APIClient {
       if (params.language) queryParams.set('language', params.language);
 
       const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/companies/search?${queryParams.toString()}`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -995,8 +1100,8 @@ class APIClient {
       const params = new URLSearchParams();
       if (language) params.set('language', language);
       
-      const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/companies/${companyId}?${params.toString()}`, {
-        headers: this.baseHeaders,
+      const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/companies/${this.sanitizePathSegment(companyId)}?${params.toString()}`, {
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -1015,9 +1120,9 @@ class APIClient {
       const params = new URLSearchParams();
       if (language) params.set('language', language);
       
-      const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/companies/${companyId}/qualify?${params.toString()}`, {
+      const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/companies/${this.sanitizePathSegment(companyId)}/qualify?${params.toString()}`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -1036,9 +1141,9 @@ class APIClient {
       const params = new URLSearchParams();
       if (language) params.set('language', language);
       
-      const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/companies/${companyId}/research?${params.toString()}`, {
+      const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/companies/${this.sanitizePathSegment(companyId)}/research?${params.toString()}`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -1058,9 +1163,9 @@ class APIClient {
       params.set('channel', channel);
       if (language) params.set('language', language);
       
-      const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/companies/${companyId}/outreach?${params.toString()}`, {
+      const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/companies/${this.sanitizePathSegment(companyId)}/outreach?${params.toString()}`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -1077,7 +1182,7 @@ class APIClient {
   async listSearchProfiles(): Promise<SearchProfile[]> {
     try {
       const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/profiles`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -1108,7 +1213,7 @@ class APIClient {
     try {
       const response = await fetch(`${LEAD_INTELLIGENCE_SERVICE_URL}/api/v1/lead-intelligence/profiles`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
         body: JSON.stringify(req),
       });
 
@@ -1128,7 +1233,7 @@ class APIClient {
   async listBillingPlans(): Promise<{ plan_key: string; name: string; price_usd: number; max_seats: number; monthly_token_quota: number }[]> {
     try {
       const response = await fetch(`${BILLING_SERVICE_URL}/api/v1/billing/plans`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -1146,7 +1251,7 @@ class APIClient {
     try {
       const response = await fetch(`${BILLING_SERVICE_URL}/api/v1/billing/subscriptions?plan=${plan}`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -1163,7 +1268,7 @@ class APIClient {
   async getBillingUsage(tokensUsed: number, plan: string): Promise<{ current_tokens_used: number; quota: number; percentage_used: number; estimated_cost_usd: number; plan: string } | null> {
     try {
       const response = await fetch(`${BILLING_SERVICE_URL}/api/v1/billing/usage?tokens_used=${tokensUsed}&plan=${plan}`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -1180,7 +1285,7 @@ class APIClient {
   async listInvoices(): Promise<{ subscription_id: string; tenant_id: string; plan: string; amount_usd: number; status: string; period_start: string; period_end: string }[]> {
     try {
       const response = await fetch(`${BILLING_SERVICE_URL}/api/v1/billing/invoices`, {
-        headers: { ...this.baseHeaders, Authorization: `Bearer ${localStorage.getItem('auth_token')}` } });
+        headers: this.getSecureHeaders() });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1195,7 +1300,7 @@ class APIClient {
 
   async downloadInvoicePdf(invoiceId: string): Promise<Blob | null> {
     try {
-      const response = await fetch(`${BILLING_SERVICE_URL}/api/v1/billing/invoices/${invoiceId}/pdf`, {
+      const response = await fetch(`${BILLING_SERVICE_URL}/api/v1/billing/invoices/${this.sanitizePathSegment(invoiceId)}/pdf`, {
         headers: { 'Accept': 'application/pdf' }
       });
 
@@ -1249,7 +1354,7 @@ class APIClient {
 
   async suspendOrganization(orgId: string): Promise<OrganizationDetail | null> {
     try {
-      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/organizations/${orgId}/suspend`, {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/organizations/${this.sanitizePathSegment(orgId)}/suspend`, {
         method: 'PATCH',
         headers: this.getAuthHeaders(),
       });
@@ -1267,7 +1372,7 @@ class APIClient {
 
   async resumeOrganization(orgId: string): Promise<OrganizationDetail | null> {
     try {
-      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/organizations/${orgId}/resume`, {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/organizations/${this.sanitizePathSegment(orgId)}/resume`, {
         method: 'PATCH',
         headers: this.getAuthHeaders(),
       });
@@ -1285,7 +1390,7 @@ class APIClient {
 
   async deleteOrganization(orgId: string): Promise<{ status: string; message: string; org_id: string } | null> {
     try {
-      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/organizations/${orgId}`, {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/organizations/${this.sanitizePathSegment(orgId)}`, {
         method: 'DELETE',
         headers: this.getAuthHeaders(),
       });
@@ -1305,7 +1410,7 @@ class APIClient {
 
   async fetchDocuments(tenantId?: string): Promise<KnowledgeDocument[]> {
     try {
-      const params = tenantId ? `?tenant_id=${tenantId}` : '';
+      const params = tenantId ? `?tenant_id=${encodeURIComponent(tenantId)}` : '';
       const response = await fetch(`${KNOWLEDGE_SERVICE_URL}/api/v1/knowledge/documents${params}`, {
         headers: this.getAuthHeaders(),
       });
@@ -1323,6 +1428,9 @@ class APIClient {
 
   async createDocument(doc: { title: string; content: string; category?: string; tags?: string[]; tenant_id: string }): Promise<KnowledgeDocument | null> {
     try {
+      if (!doc.tenant_id || typeof doc.tenant_id !== 'string' || doc.tenant_id.length > 128) {
+        throw new Error('Invalid tenant_id');
+      }
       const response = await fetch(`${KNOWLEDGE_SERVICE_URL}/api/v1/knowledge/documents`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
@@ -1342,9 +1450,10 @@ class APIClient {
 
   // AI Agent Methods
 
-  async fetchAIAgents(tenantId: string): Promise<AIAgent[]> {
+  async fetchAIAgents(tenantId?: string): Promise<AIAgent[]> {
     try {
-      const response = await fetch(`${KNOWLEDGE_SERVICE_URL}/api/v1/agents?tenant_id=${tenantId}`, {
+      const params = tenantId ? `?tenant_id=${encodeURIComponent(tenantId)}` : '';
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/agents${params}`, {
         headers: this.getAuthHeaders(),
       });
 
@@ -1361,7 +1470,21 @@ class APIClient {
 
   async createAIAgent(agent: { name: string; type: string; model: string; temperature?: number; tenant_id: string }): Promise<AIAgent | null> {
     try {
-      const response = await fetch(`${KNOWLEDGE_SERVICE_URL}/api/v1/agents`, {
+      if (!agent.name || agent.name.length > 256 || agent.name.length < 1) {
+        throw new Error('Invalid agent name');
+      }
+      const validTypes = ['sales', 'support', 'refund', 'booking', 'hr'];
+      if (!validTypes.includes(agent.type)) {
+        throw new Error('Invalid agent type');
+      }
+      const validModels = ['groq', 'google', 'mistral'];
+      if (!validModels.includes(agent.model)) {
+        throw new Error('Invalid AI model');
+      }
+      if (agent.temperature !== undefined && (agent.temperature < 0 || agent.temperature > 1)) {
+        throw new Error('Invalid temperature');
+      }
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/agents`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(agent),
@@ -1384,7 +1507,7 @@ class APIClient {
     try {
       const response = await fetch(`${SLACK_SERVICE_URL}/api/v1/slack/integrations`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
         body: JSON.stringify({ channel_id: channelId, bot_token: botToken, signing_secret: signingSecret }),
       });
 
@@ -1402,7 +1525,7 @@ class APIClient {
   async listSlackIntegrations(): Promise<{ status: string; integrations: string[]; count: number } | null> {
     try {
       const response = await fetch(`${SLACK_SERVICE_URL}/api/v1/slack/integrations`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -1418,9 +1541,9 @@ class APIClient {
 
   async sendSlackMessage(channelId: string, text: string, threadTs?: string): Promise<{ status: string; channel_id: string; text: string } | null> {
     try {
-      const response = await fetch(`${SLACK_SERVICE_URL}/api/v1/slack/channels/${channelId}/messages`, {
+      const response = await fetch(`${SLACK_SERVICE_URL}/api/v1/slack/channels/${this.sanitizePathSegment(channelId)}/messages`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
         body: JSON.stringify({ text, thread_ts: threadTs }),
       });
 
@@ -1441,7 +1564,7 @@ class APIClient {
     try {
       const response = await fetch(`${DISCORD_SERVICE_URL}/api/v1/discord/integrations`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
         body: JSON.stringify({ guild_id: guildId, channel_id: channelId, bot_token: botToken }),
       });
 
@@ -1459,7 +1582,7 @@ class APIClient {
   async listDiscordIntegrations(): Promise<{ status: string; integrations: string[]; count: number } | null> {
     try {
       const response = await fetch(`${DISCORD_SERVICE_URL}/api/v1/discord/integrations`, {
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
       });
 
       if (!response.ok) {
@@ -1475,9 +1598,9 @@ class APIClient {
 
   async sendDiscordMessage(channelId: string, content: string, username?: string): Promise<{ status: string; channel_id: string; content: string } | null> {
     try {
-      const response = await fetch(`${DISCORD_SERVICE_URL}/api/v1/discord/channels/${channelId}/messages`, {
+      const response = await fetch(`${DISCORD_SERVICE_URL}/api/v1/discord/channels/${this.sanitizePathSegment(channelId)}/messages`, {
         method: 'POST',
-        headers: this.baseHeaders,
+        headers: this.getSecureHeaders(),
         body: JSON.stringify({ content, username }),
       });
 
@@ -1619,7 +1742,7 @@ class APIClient {
 
   async suspendUser(userId: string): Promise<{ status: string; message: string }> {
     try {
-      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/users/${userId}/suspend`, {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/users/${this.sanitizePathSegment(userId)}/suspend`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
       });
@@ -1637,7 +1760,7 @@ class APIClient {
 
   async resumeUser(userId: string): Promise<{ status: string; message: string }> {
     try {
-      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/users/${userId}/resume`, {
+      const response = await fetch(`${AI_GATEWAY_SERVICE_URL}/api/v1/admin/users/${this.sanitizePathSegment(userId)}/resume`, {
         method: 'POST',
         headers: this.getAuthHeaders(),
       });

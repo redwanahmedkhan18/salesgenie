@@ -5,11 +5,11 @@ Endpoints for conversation management, messaging, and analytics.
 
 import uuid
 import time
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, desc, asc, or_
-from datetime import datetime, timedelta
+from sqlalchemy import select, func, desc, asc, or_
+from datetime import datetime, timedelta, timezone
 
 from enterprise_ai_platform.common.database import get_async_db
 from enterprise_ai_platform.common.security_rbac import (
@@ -25,17 +25,15 @@ from .models import (
     ConversationCreateResponse,
     MessageCreateRequest,
     MessageCreateResponse,
-    ConversationSearchRequest,
     ConversationSearchResponse,
     MessageSearchResponse,
     ConversationStatsDTO,
     ConversationOverviewDTO,
     ConversationUpdateRequest,
     ConversationHandoffRequest,
-    ConversationStatus,
-    MessageRole,
     MessageStatus,
 )
+from .conversation_state_machine import validate_conversation_state_transition
 
 router = APIRouter(prefix="/api/v1/conversations", tags=["Conversations & Messaging"])
 
@@ -182,13 +180,15 @@ async def update_conversation(
         )
 
     update_data = req.model_dump(exclude_unset=True)
+    if "status" in update_data and update_data["status"] is not None:
+        validate_conversation_state_transition(conv.status, update_data["status"])
     for key, value in update_data.items():
         if key == "metadata":
             conv.metadata_json = value
         else:
             setattr(conv, key, value)
 
-    conv.updated_at = datetime.now(datetime.now().astimezone().tzinfo)
+    conv.updated_at = datetime.now(timezone.utc)
     await db.commit()
 
     return _conversation_to_dto(conv)
