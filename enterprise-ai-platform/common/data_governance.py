@@ -17,6 +17,7 @@ import uuid
 from enum import Enum
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
+from dataclasses import dataclass, field
 from pydantic import BaseModel, Field
 
 
@@ -31,10 +32,10 @@ class DataSensitivity(str, Enum):
 
 class RetentionPeriod(Enum):
     """Standard retention periods."""
-    ACTIVE_ONLY = "active_only"        # Deleted when account deactivated
+    ACTIVE_ONLY = "active_only"
     TWELVE_MONTHS = timedelta(days=365)
     TWENTY_FOUR_MONTHS = timedelta(days=730)
-    SEVEN_YEARS = timedelta(days=2555)  # Tax/audit requirement
+    SEVEN_YEARS = timedelta(days=2555)
     INDEFINITE = "indefinite"
 
 
@@ -84,15 +85,16 @@ class DataTable(str, Enum):
     AUDIT_LOGS = "audit_logs"
 
 
-class DataField(BaseModel):
+@dataclass
+class DataField:
     """Definition of a personal data field for governance tracking."""
     table: DataTable
     field_name: str
     sensitivity: DataSensitivity
     data_type: str
-    source: str = "user_provided"  # user_provided, ai_generated, external, derived
+    source: str = "user_provided"
     third_party_shared: bool = False
-    retention: RetentionPeriod
+    retention: RetentionPeriod = RetentionPeriod.ACTIVE_ONLY
 
 
 # Complete data inventory — maps every personal data field

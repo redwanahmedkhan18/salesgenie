@@ -211,3 +211,8 @@ def get_all_metrics() -> Dict[str, Metrics]:
     """Get all registered metric registries."""
     with _registry_lock:
         return dict(_metrics_registry)
+
+
+def get_service_metrics(service_name: str) -> str:
+    """Get metrics in Prometheus text format for a specific service."""
+    return get_metrics(service_name).to_prometheus()

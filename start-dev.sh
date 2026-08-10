@@ -10,6 +10,7 @@ echo "SalesGenie Development Startup Script"
 echo "=========================================="
 
 echo "Starting infrastructure..."
+export DB_PASSWORD=salesgenie_secret_pass_2026
 docker compose -f "$BASE_DIR/docker-compose.yml" up -d postgres redis minio mailpit 2>&1
 
 sleep 5
@@ -58,6 +59,7 @@ echo "✓ File metadata table ready"
 
 echo "Activating Python environment..."
 source "$BASE_DIR/.venv/bin/activate" 2>/dev/null || true
+export PYTHON="${PYTHON:-$(which python3)}"
 
 echo "Starting services..."
 cd "$BASE_DIR"
@@ -71,8 +73,9 @@ start_uvicorn() {
   local name=$1
   local module=$2
   local port=$3
-  nohup python3 -m uvicorn "$module" --host 0.0.0.0 --port "$port" > "$LOG_DIR/${name}.log" 2>&1 &
-  sleep 1
+  setsid python -m uvicorn "$module" --host 0.0.0.0 --port "$port" > "$LOG_DIR/${name}.log" 2>&1 &
+  disown
+  sleep 2
   if curl -fs "http://localhost:$port/health/live" > /dev/null 2>&1 || curl -fs "http://localhost:$port/docs" > /dev/null 2>&1; then
     echo "✓ $name (port $port)"
   else
@@ -130,11 +133,11 @@ start_uvicorn "slack" "enterprise_ai_platform.slack_service.main:app" 8024
 
 echo ""
 echo "Starting other services..."
-cd "$BASE_DIR/enterprise-ai-platform/discord-service" && python3 main.py > "$LOG_DIR/discord.log" 2>&1 &
-cd "$BASE_DIR/enterprise-ai-platform/instagram-service" && python3 main.py > "$LOG_DIR/instagram.log" 2>&1 &
-cd "$BASE_DIR/enterprise-ai-platform/sso-service" && python3 main.py > "$LOG_DIR/sso.log" 2>&1 &
-cd "$BASE_DIR/enterprise-ai-platform/ai-evaluation-framework/src" && python3 main.py > "$LOG_DIR/ai_eval.log" 2>&1 &
-cd "$BASE_DIR/enterprise-ai-platform/ABAC-engine" && python3 -m uvicorn main:app --host 0.0.0.0 --port 8030 > "$LOG_DIR/ABAC.log" 2>&1 &
+cd "$BASE_DIR/enterprise-ai-platform/discord-service" && setsid python main.py > "$LOG_DIR/discord.log" 2>&1 &
+cd "$BASE_DIR/enterprise-ai-platform/instagram-service" && setsid python main.py > "$LOG_DIR/instagram.log" 2>&1 &
+cd "$BASE_DIR/enterprise-ai-platform/sso-service" && setsid python main.py > "$LOG_DIR/sso.log" 2>&1 &
+cd "$BASE_DIR/enterprise-ai-platform/ai-evaluation-framework/src" && setsid python main.py > "$LOG_DIR/ai_eval.log" 2>&1 &
+cd "$BASE_DIR/enterprise-ai-platform/ABAC-engine" && setsid python -m uvicorn main:app --host 0.0.0.0 --port 8030 > "$LOG_DIR/ABAC.log" 2>&1 &
 sleep 2
 
 echo "✓ Discord Service (port 8026)"
@@ -146,8 +149,9 @@ echo "✓ ABAC Engine (port 8030)"
 echo ""
 echo "Starting frontend dev server..."
 cd "$BASE_DIR"
-npm run dev > "$LOG_DIR/frontend.log" 2>&1 &
-sleep 3
+setsid npm run dev > "$LOG_DIR/frontend.log" 2>&1 &
+disown
+sleep 5
 echo "✓ Frontend (port 4321)"
 
 cd "$BASE_DIR"

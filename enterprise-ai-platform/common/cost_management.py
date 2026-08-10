@@ -252,3 +252,5 @@ class LLMResponseCache:
 
 
 llm_response_cache = LLMResponseCache(ttl_seconds=3600, max_entries=5000)
+
+cost_calculator = CostCalculator()
