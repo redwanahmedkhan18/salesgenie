@@ -21,7 +21,7 @@ const RATE_LIMIT_STORE: Map<string, { count: number; resetAt: number }> = new Ma
 
 const AUTH_RATE_LIMIT = {
   windowMs: 15 * 60 * 1000,
-  maxRequests: 50,
+  maxRequests: 100,
   keyPrefix: 'auth:login',
 };
 
