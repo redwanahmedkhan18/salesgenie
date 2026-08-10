@@ -303,32 +303,48 @@ class TestCrossTenantIsolation:
 class TestSecurityHeaders:
     """CV-P1-006: Security headers regression tests."""
 
-    def test_csp_meta_tag(self):
-        """Verify Content-Security-Policy meta tag exists."""
+    def test_csp_via_middleware(self):
+        """Verify Content-Security-Policy is set via middleware HTTP header (not meta tag)."""
         layout = _read_source("/home/user/salesgenie/src/layouts/Layout.astro")
-        assert "Content-Security-Policy" in layout, (
-            "CSP meta tag not found in Layout"
+        middleware = _read_source("/home/user/salesgenie/src/middleware.ts")
+        assert "Content-Security-Policy" not in layout, (
+            "CSP should NOT be in meta tag — move to HTTP header"
+        )
+        assert "Content-Security-Policy" in middleware, (
+            "CSP header not found in middleware"
         )
 
-    def test_x_frame_options(self):
-        """Verify X-Frame-Options is set."""
+    def test_x_frame_options_via_middleware(self):
+        """Verify X-Frame-Options is set via middleware HTTP header (not meta tag)."""
         layout = _read_source("/home/user/salesgenie/src/layouts/Layout.astro")
-        assert "X-Frame-Options" in layout, (
-            "X-Frame-Options not found in Layout"
+        middleware = _read_source("/home/user/salesgenie/src/middleware.ts")
+        assert "X-Frame-Options" not in layout, (
+            "X-Frame-Options should NOT be in meta tag — move to HTTP header"
+        )
+        assert "X-Frame-Options" in middleware, (
+            "X-Frame-Options header not found in middleware"
         )
 
-    def test_hsts(self):
-        """Verify HSTS header is set."""
+    def test_hsts_via_middleware(self):
+        """Verify HSTS is set via middleware HTTP header (not meta tag)."""
         layout = _read_source("/home/user/salesgenie/src/layouts/Layout.astro")
-        assert "Strict-Transport-Security" in layout, (
-            "HSTS not found in Layout"
+        middleware = _read_source("/home/user/salesgenie/src/middleware.ts")
+        assert "Strict-Transport-Security" not in layout, (
+            "HSTS should NOT be in meta tag — move to HTTP header"
+        )
+        assert "Strict-Transport-Security" in middleware, (
+            "HSTS header not found in middleware"
         )
 
-    def test_referrer_policy(self):
-        """Verify Referrer-Policy is set."""
+    def test_referrer_policy_via_middleware(self):
+        """Verify Referrer-Policy is set via middleware HTTP header (not meta tag)."""
         layout = _read_source("/home/user/salesgenie/src/layouts/Layout.astro")
-        assert "Referrer-Policy" in layout, (
-            "Referrer-Policy not found in Layout"
+        middleware = _read_source("/home/user/salesgenie/src/middleware.ts")
+        assert "Referrer-Policy" not in layout, (
+            "Referrer-Policy should NOT be in meta tag — move to HTTP header"
+        )
+        assert "Referrer-Policy" in middleware, (
+            "Referrer-Policy header not found in middleware"
         )
 
     def test_api_routes_have_security_headers(self):
