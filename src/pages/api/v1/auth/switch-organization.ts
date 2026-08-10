@@ -1,3 +1,5 @@
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 import { requireAuth, requirePermission, logAuditEvent, getClientIp, validateId } from '../../../../lib/auth-middleware';
 

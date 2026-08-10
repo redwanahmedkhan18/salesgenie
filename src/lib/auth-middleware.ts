@@ -247,7 +247,11 @@ export async function getClientIp(context: APIContext): Promise<string | null> {
   if (forwardedFor) {
     return forwardedFor.split(',')[0].trim();
   }
-  return context.clientAddress || null;
+  try {
+    return context.clientAddress || null;
+  } catch {
+    return null;
+  }
 }
 
 export function validateId(id: string): boolean {

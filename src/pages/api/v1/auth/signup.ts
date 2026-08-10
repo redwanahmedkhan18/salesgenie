@@ -1,3 +1,5 @@
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 import { isAuthRateLimited, hashPassword, validatePasswordStrength, logAuditEvent, getClientIp } from '../../../../lib/auth-middleware';
 
