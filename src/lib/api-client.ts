@@ -222,7 +222,7 @@ class APIClient {
 
   private getSecureHeaders(): HeadersInit {
     const token = getToken();
-    const headers: HeadersInit = { ...this.getSecureHeaders() };
+    const headers: HeadersInit = { ...this.baseHeaders };
     if (token) {
       (headers as Record<string, string>).Authorization = `Bearer ${token}`;
     }

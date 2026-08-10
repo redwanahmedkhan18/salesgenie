@@ -100,7 +100,14 @@ function decodeJWT(token: string): { sub: string; email?: string; roles?: Platfo
     }
 
     try {
-      const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+      const parseBase64Url = (str: string) => {
+        if (typeof Buffer !== 'undefined') {
+          return Buffer.from(str, 'base64url').toString();
+        }
+        const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+        return atob(base64);
+      };
+      const header = JSON.parse(parseBase64Url(parts[0]));
       if (!JWT_ALGORITHMS.includes(header.alg) || header.alg === 'none' || header.alg === 'None') {
         return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
       }
@@ -108,7 +115,7 @@ function decodeJWT(token: string): { sub: string; email?: string; roles?: Platfo
       return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
     }
 
-    const payload: JwtPayload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+    const payload: JwtPayload = JSON.parse(parseBase64Url(parts[1]));
 
     if (typeof payload.sub !== 'string') {
       return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };

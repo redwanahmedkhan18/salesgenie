@@ -108,11 +108,18 @@ export default function OAuthCallback() {
 
         if (jwtPayload.length === 3) {
           try {
-            const header = JSON.parse(Buffer.from(jwtPayload[0], 'base64url').toString());
+            const parseBase64Url = (str: string) => {
+              if (typeof Buffer !== 'undefined') {
+                return Buffer.from(str, 'base64url').toString();
+              }
+              const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+              return atob(base64);
+            };
+            const header = JSON.parse(parseBase64Url(jwtPayload[0]));
             if (!['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512'].includes(header.alg)) {
               throw new Error('Invalid JWT algorithm');
             }
-            const payload: Record<string, unknown> = JSON.parse(Buffer.from(jwtPayload[1], 'base64url').toString());
+            const payload: Record<string, unknown> = JSON.parse(parseBase64Url(jwtPayload[1]));
 
             if (!(payload.sub && typeof payload.sub === 'string')) {
               throw new Error('Invalid token: missing sub');
