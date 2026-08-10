@@ -91,7 +91,7 @@ interface JwtPayload {
 
 function decodeJWT(token: string): { sub: string; email?: string; roles?: PlatformRole[]; tenant_id?: string; exp?: number; valid: boolean } {
   try {
-    if (token.length > MAX_TOKEN_LENGTH) {
+    if (!token || token.length > MAX_TOKEN_LENGTH) {
       return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
     }
     const parts = token.split('.');
@@ -99,30 +99,39 @@ function decodeJWT(token: string): { sub: string; email?: string; roles?: Platfo
       return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
     }
 
-    try {
-      const parseBase64Url = (str: string) => {
-        if (typeof Buffer !== 'undefined') {
-          return Buffer.from(str, 'base64url').toString();
-        }
-        const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-        return atob(base64);
-      };
-      const header = JSON.parse(parseBase64Url(parts[0]));
-      if (!JWT_ALGORITHMS.includes(header.alg) || header.alg === 'none' || header.alg === 'None') {
-        return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+    const parseBase64Url = (str: string): string => {
+      if (typeof Buffer !== 'undefined') {
+        return Buffer.from(str, 'base64url').toString('utf-8');
       }
-    } catch {
+      let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4 !== 0) base64 += '=';
+      return atob(base64);
+    };
+
+    const header = JSON.parse(parseBase64Url(parts[0]));
+    if (!JWT_ALGORITHMS.includes(header.alg) || header.alg === 'none' || header.alg === 'None') {
       return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
     }
 
     const payload: JwtPayload = JSON.parse(parseBase64Url(parts[1]));
 
-    if (typeof payload.sub !== 'string') {
+    if (typeof payload.sub !== 'string' || !payload.sub) {
       return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
     }
 
-    if (payload.exp && (typeof payload.exp !== 'number' || isNaN(payload.exp))) {
+    if (payload.exp !== undefined && (typeof payload.exp !== 'number' || isNaN(payload.exp))) {
       return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+    }
+
+    if (payload.iat !== undefined && (typeof payload.iat !== 'number' || isNaN(payload.iat))) {
+      return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+    }
+
+    if (payload.exp !== undefined) {
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp <= now) {
+        return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
+      }
     }
 
     const audCheck = (aud: string | string[] | undefined): boolean => {
@@ -134,15 +143,15 @@ function decodeJWT(token: string): { sub: string; email?: string; roles?: Platfo
       return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
     }
 
-    if (payload.iat && payload.exp) {
+    if (payload.iat !== undefined && payload.exp !== undefined) {
       const age = payload.exp - payload.iat;
-      if (age > MAX_TOKEN_AGE) {
+      if (age <= 0 || age > MAX_TOKEN_AGE) {
         return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
       }
     }
 
     const expectedIssuer = import.meta.env.PUBLIC_JWT_ISSUER || process.env.JWT_ISSUER || 'salesgenie';
-    if (payload.iss && payload.iss !== expectedIssuer) {
+    if (payload.iss !== undefined && payload.iss !== expectedIssuer) {
       return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
     }
 
@@ -154,7 +163,8 @@ function decodeJWT(token: string): { sub: string; email?: string; roles?: Platfo
       exp: payload.exp,
       valid: true,
     };
-  } catch {
+  } catch (error) {
+    console.error('JWT decoding/validation failed:', error);
     return { sub: '', roles: [], tenant_id: 'default_tenant', valid: false };
   }
 }
@@ -281,11 +291,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
          return response;
        }
 
-       const decoded = decodeJWT(response.access_token);
-       if (!decoded.valid) {
-         dispatch({ type: 'AUTH_ERROR' });
-         throw new Error('Invalid authentication token received');
-       }
+        const decoded = decodeJWT(response.access_token);
+        if (!decoded.valid) {
+          dispatch({ type: 'AUTH_ERROR' });
+          throw new Error('Invalid authentication token received');
+        }
        const roles = response.roles as PlatformRole[];
        const permissions = derivePermissions(roles);
 
