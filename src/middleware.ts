@@ -1,12 +1,25 @@
-import { defineMiddleware } from "astro:middleware";
-import type { MiddlewareResponse } from "astro";
+import { defineMiddleware, type MiddlewareResponse } from "astro:middleware";
+
+const isDev = import.meta.env.DEV;
+
+const DEV_CONNECT_SRC = [
+  "'self'",
+  "http://localhost:8001",
+  "http://127.0.0.1:8001",
+  "ws://localhost:8001",
+  "ws://127.0.0.1:8001",
+];
+
+const PROD_CONNECT_SRC = ["'self'", "https:", "wss:"];
+
+const connectSrc = isDev ? DEV_CONNECT_SRC : PROD_CONNECT_SRC;
 
 const CSP_DIRECTIVES = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: https: blob:",
-  "connect-src 'self' https: ws: wss:",
+  `connect-src ${connectSrc.join(" ")}`,
   "font-src 'self' https://fonts.gstatic.com",
   "frame-src 'self' https://accounts.google.com https://js.stripe.com",
   "object-src 'none'",

@@ -180,7 +180,14 @@ class KeycloakClient:
             logger.error(f"Failed assigning realm role {role_name}: {exc}")
 
     async def authenticate_user_credentials(self, username: str, password: str) -> Dict[str, Any]:
-        """Authenticate user credentials via Keycloak Password Grant Flow."""
+        """Authenticate user credentials via Keycloak Password Grant Flow.
+        Falls back to local DB password verification when Keycloak is unavailable.
+        """
+        if "KEYCLOAK_SERVER_URL" not in settings.model_dump() or not settings.KEYCLOAK_SERVER_URL or settings.KEYCLOAK_SERVER_URL == "http://localhost:8080":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Keycloak not configured",
+            )
         payload = {
             "grant_type": "password",
             "client_id": self.client_id,
@@ -189,9 +196,8 @@ class KeycloakClient:
             "password": password,
             "scope": "openid profile email roles",
         }
-        
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=httpx.ConnectTimeout(3.0)) as client:
                 response = await client.post(self.token_url, data=payload)
                 if response.status_code == 200:
                     return response.json()
