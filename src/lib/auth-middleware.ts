@@ -21,7 +21,7 @@ const RATE_LIMIT_STORE: Map<string, { count: number; resetAt: number }> = new Ma
 
 const AUTH_RATE_LIMIT = {
   windowMs: 15 * 60 * 1000,
-  maxRequests: 5,
+  maxRequests: 50,
   keyPrefix: 'auth:login',
 };
 
@@ -125,7 +125,7 @@ export function requireAuth(context: APIContext): {
         return null;
       }
 
-      const expectedIssuer = process.env.JWT_ISSUER || 'salesgenie';
+      const expectedIssuer = import.meta.env.PUBLIC_JWT_ISSUER || process.env.JWT_ISSUER || 'salesgenie';
       if (payload.iss && payload.iss !== expectedIssuer) {
         return null;
       }
@@ -247,7 +247,7 @@ export async function getClientIp(context: APIContext): Promise<string | null> {
   if (forwardedFor) {
     return forwardedFor.split(',')[0].trim();
   }
-  return null;
+  return context.clientAddress || null;
 }
 
 export function validateId(id: string): boolean {

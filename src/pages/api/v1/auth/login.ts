@@ -31,7 +31,8 @@ export const POST: APIRoute = async (context) => {
   }
 
   try {
-    const body = await context.request.json();
+    const rawBody = await context.request.text();
+    const body = rawBody ? JSON.parse(rawBody) : {};
     const { email, password, mfa_code } = body;
 
     const clientIp = await getClientIp(context) || 'unknown';
