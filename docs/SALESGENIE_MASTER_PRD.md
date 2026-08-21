@@ -1,937 +1,1304 @@
-````markdown
-# SalesGenie — Master Product Requirements Document (PRD)
+# SalesGenie
+## Master Product Requirements Document (PRD)
 
 **Document:** `SALESGENIE_MASTER_PRD.md`  
 **Product:** SalesGenie  
-**Document Type:** Master Product Requirements Document  
 **Version:** 1.0.0  
-**Status:** Product Definition / Implementation Baseline  
-**Date:** 2026-08-21  
-**Target Classification:** Enterprise / FAANG-Level SaaS  
-**Primary Product Category:** AI Revenue & Growth Operating System
+**Status:** Master Product Requirements Baseline  
+**Product Category:** Enterprise AI Revenue, Sales, Marketing, Customer Support & Business Intelligence SaaS  
+**Target Market:** Startups, SMBs, Mid-Market, Enterprise, Agencies  
+**Architecture Target:** FAANG-Level, Multi-Tenant, Cloud-Native, Event-Driven, AI-Native  
+**Primary Objective:** Help businesses acquire customers, increase revenue, reduce waste, understand business performance, automate operations, and continuously improve growth through AI.
 
 ---
 
-# Table of Contents
+# TABLE OF CONTENTS
 
-1. [Executive Summary](#1-executive-summary)
-2. [Product Vision](#2-product-vision)
-3. [Product Mission](#3-product-mission)
-4. [Problem Statement](#4-problem-statement)
-5. [Product Opportunity](#5-product-opportunity)
-6. [Product Positioning](#6-product-positioning)
-7. [Product Objectives](#7-product-objectives)
-8. [Product Principles](#8-product-principles)
-9. [Target Customers](#9-target-customers)
-10. [User Personas](#10-user-personas)
-11. [User Roles and Organizational Hierarchy](#11-user-roles-and-organizational-hierarchy)
-12. [Product Scope](#12-product-scope)
-13. [Core Product Modules](#13-core-product-modules)
-14. [AI Platform](#14-ai-platform)
-15. [Lead Generation and Lead Intelligence](#15-lead-generation-and-lead-intelligence)
-16. [Market Intelligence](#16-market-intelligence)
-17. [Competitor Intelligence](#17-competitor-intelligence)
-18. [AI Product Launch Advisor](#18-ai-product-launch-advisor)
-19. [CRM and Sales Automation](#19-crm-and-sales-automation)
-20. [AI Digital Marketing Platform](#20-ai-digital-marketing-platform)
-21. [AI SEO and AEO Platform](#21-ai-seo-and-aeo-platform)
-22. [Customer Support Platform](#22-customer-support-platform)
-23. [AI + Human Support Model](#23-ai--human-support-model)
-24. [Customer 360](#24-customer-360)
-25. [Workflow Automation](#25-workflow-automation)
-26. [MCP and External Tool Ecosystem](#26-mcp-and-external-tool-ecosystem)
-27. [Analytics and Business Intelligence](#27-analytics-and-business-intelligence)
-28. [Revenue Intelligence](#28-revenue-intelligence)
-29. [Next Best Action Engine](#29-next-best-action-engine)
-30. [Subscription and Pricing System](#30-subscription-and-pricing-system)
-31. [Payment Gateway](#31-payment-gateway)
-32. [Usage and Entitlement Management](#32-usage-and-entitlement-management)
-33. [Super Admin Platform](#33-super-admin-platform)
-34. [Organization Administration](#34-organization-administration)
-35. [Workplace Administration](#35-workplace-administration)
-36. [Sales Agent Platform](#36-sales-agent-platform)
-37. [Support Agent Platform](#37-support-agent-platform)
-38. [Marketing User Platform](#38-marketing-user-platform)
-39. [SEO User Platform](#39-seo-user-platform)
-40. [AI Agent Builder](#40-ai-agent-builder)
-41. [Knowledge and RAG Platform](#41-knowledge-and-rag-platform)
-42. [Omnichannel Communication](#42-omnichannel-communication)
-43. [Integration Ecosystem](#43-integration-ecosystem)
-44. [Security and Privacy](#44-security-and-privacy)
-45. [Multi-Tenant Architecture Requirements](#45-multi-tenant-architecture-requirements)
-46. [Data Platform](#46-data-platform)
-47. [Event-Driven Architecture](#47-event-driven-architecture)
-48. [Observability](#48-observability)
-49. [AI Safety and Governance](#49-ai-safety-and-governance)
-50. [Performance Requirements](#50-performance-requirements)
-51. [Scalability Requirements](#51-scalability-requirements)
-52. [Reliability and Availability](#52-reliability-and-availability)
-53. [Internationalization](#53-internationalization)
-54. [Accessibility](#54-accessibility)
-55. [Audit and Compliance](#55-audit-and-compliance)
-56. [Product Analytics](#56-product-analytics)
-57. [Customer ROI System](#57-customer-roi-system)
-58. [AI Evaluation System](#58-ai-evaluation-system)
-59. [Experimentation Platform](#59-experimentation-platform)
-60. [Feature Flag Platform](#60-feature-flag-platform)
-61. [API Platform](#61-api-platform)
-62. [Developer Platform](#62-developer-platform)
-63. [User Journeys](#63-user-journeys)
-64. [Core Business Workflows](#64-core-business-workflows)
-65. [Functional Product Requirements](#65-functional-product-requirements)
-66. [Non-Functional Product Requirements](#66-non-functional-product-requirements)
-67. [Business Rules](#67-business-rules)
-68. [AI/ML Requirements](#68-aiml-requirements)
-69. [Data Requirements](#69-data-requirements)
-70. [Reporting Requirements](#70-reporting-requirements)
-71. [Notification Requirements](#71-notification-requirements)
-72. [Billing Lifecycle](#72-billing-lifecycle)
-73. [Security Threat Model](#73-security-threat-model)
-74. [Failure and Recovery Requirements](#74-failure-and-recovery-requirements)
-75. [Testing Requirements](#75-testing-requirements)
-76. [Release Requirements](#76-release-requirements)
-77. [Environment Strategy](#77-environment-strategy)
-78. [Deployment Strategy](#78-deployment-strategy)
-79. [MVP Scope](#79-mvp-scope)
-80. [Phase 1 Scope](#80-phase-1-scope)
-81. [Phase 2 Scope](#81-phase-2-scope)
-82. [Phase 3 Scope](#82-phase-3-scope)
-83. [Enterprise Scope](#83-enterprise-scope)
-84. [Future Scope](#84-future-scope)
-85. [Success Metrics](#85-success-metrics)
-86. [North Star Metrics](#86-north-star-metrics)
-87. [Product KPIs](#87-product-kpis)
-88. [Customer KPIs](#88-customer-kpis)
-89. [AI KPIs](#89-ai-kpis)
-90. [Acceptance Criteria](#90-acceptance-criteria)
-91. [Definition of Done](#91-definition-of-done)
-92. [Risks](#92-risks)
-93. [Mitigation Strategy](#93-mitigation-strategy)
-94. [Product Governance](#94-product-governance)
-95. [Final Product Architecture](#95-final-product-architecture)
-96. [Final Product Definition](#96-final-product-definition)
+1. Executive Summary
+2. Product Vision
+3. Product Mission
+4. Product Philosophy
+5. Problem Statement
+6. Product Opportunity
+7. Target Customers
+8. Customer Segments
+9. User Personas
+10. Organizational Hierarchy
+11. Product Scope
+12. Product Modules
+13. Core Business Lifecycle
+14. North Star Product Loop
+15. High-Level Architecture
+16. Multi-Tenant Architecture
+17. Identity and Access Management
+18. RBAC and Authorization
+19. Super Admin Module
+20. Platform Administration
+21. Organization Administration
+22. Workplace Administration
+23. Team Management
+24. User Management
+25. Lead Generation Platform
+26. Lead Discovery
+27. Lead Enrichment
+28. Lead Validation
+29. Lead Scoring
+30. Lead Intent Intelligence
+31. ICP Builder
+32. Account Intelligence
+33. Contact Intelligence
+34. Lead Prioritization
+35. Sales CRM
+36. Sales Pipeline
+37. AI Sales Agent
+38. Sales Automation
+39. Market Intelligence
+40. Competitor Intelligence
+41. Product Launch Intelligence
+42. Business Opportunity Intelligence
+43. Digital Marketing Platform
+44. AI Content Generation
+45. Marketing Automation
+46. SEO Platform
+47. AEO Platform
+48. Advertising Intelligence
+49. Advertising Analytics
+50. Advertising Demographic Intelligence
+51. Advertising Attribution
+52. Advertising ROI
+53. Financial Intelligence
+54. Revenue Analytics
+55. Expense Analytics
+56. Profit and Loss Intelligence
+57. Product Profitability Intelligence
+58. Business Growth Intelligence
+59. AI Business Analyst
+60. AI Root Cause Analysis
+61. AI Recommendation Engine
+62. AI Business Strategy
+63. Product Improvement Intelligence
+64. Customer 360
+65. Customer Health
+66. Customer Retention
+67. Customer Support Platform
+68. AI Support
+69. Human Support
+70. Support Escalation
+71. Omnichannel Communication
+72. AI Agent Platform
+73. RAG Knowledge Platform
+74. MCP Platform
+75. Workflow Automation
+76. Automation Marketplace
+77. Integration Platform
+78. Billing System
+79. Subscription System
+80. Payment Gateway
+81. Usage Metering
+82. Entitlement System
+83. Analytics Platform
+84. Dashboard System
+85. Reporting Platform
+86. Excel Generation
+87. PDF and CSV Reporting
+88. Notification System
+89. Search Platform
+90. Data Platform
+91. Data Ingestion
+92. Data Normalization
+93. Data Quality
+94. Data Governance
+95. Event-Driven Architecture
+96. AI/ML Architecture
+97. Model Gateway
+98. AI Cost Management
+99. AI Evaluation
+100. AI Safety and Guardrails
+101. Security
+102. Privacy
+103. Audit Logging
+104. Compliance
+105. Observability
+106. Reliability
+107. Scalability
+108. Performance
+109. Disaster Recovery
+110. API Requirements
+111. Database Requirements
+112. Frontend Requirements
+113. Backend Requirements
+114. Mobile Requirements
+115. Accessibility
+116. Internationalization
+117. Localization
+118. Business Rules
+119. Functional Requirements
+120. Non-Functional Requirements
+121. User Requirements
+122. System Requirements
+123. Reporting Requirements
+124. Analytics Requirements
+125. AI Recommendation Requirements
+126. Revenue Attribution Requirements
+127. Advertising Data Requirements
+128. Financial Data Requirements
+129. Data Freshness
+130. Data Quality Scoring
+131. Customer ROI
+132. Product Success Metrics
+133. Platform Success Metrics
+134. SaaS Pricing
+135. Free Tier
+136. Paid Tiers
+137. Enterprise Tier
+138. Feature Entitlements
+139. Usage Limits
+140. Trial System
+141. Upgrade/Downgrade
+142. Cancellation
+143. Refunds
+144. Revenue Operations
+145. Customer Onboarding
+146. Product Launch Workflow
+147. Lead Generation Workflow
+148. Sales Workflow
+149. Marketing Workflow
+150. Advertising Workflow
+151. Financial Analysis Workflow
+152. Customer Support Workflow
+153. AI Recommendation Workflow
+154. Excel Reporting Workflow
+155. End-to-End Business Growth Workflow
+156. Dashboard Requirements
+157. Executive Dashboard
+158. Sales Dashboard
+159. Marketing Dashboard
+160. Advertising Dashboard
+161. Finance Dashboard
+162. Product Dashboard
+163. Customer Dashboard
+164. Support Dashboard
+165. SEO Dashboard
+166. Lead Intelligence Dashboard
+167. Market Intelligence Dashboard
+168. AI Operations Dashboard
+169. Super Admin Dashboard
+170. Database Entity Model
+171. Service Architecture
+172. Recommended Microservices
+173. API Domain Structure
+174. Event Catalog
+175. Security Model
+176. Permission Model
+177. AI Autonomy Model
+178. Human-in-the-Loop
+179. Testing Strategy
+180. CI/CD
+181. Deployment
+182. Infrastructure
+183. Monitoring
+184. Backup
+185. Disaster Recovery
+186. Development Roadmap
+187. MVP
+188. Phase 1
+189. Phase 2
+190. Phase 3
+191. Phase 4
+192. Enterprise Scale
+193. Acceptance Criteria
+194. Product KPIs
+195. Business KPIs
+196. Technical KPIs
+197. AI KPIs
+198. Final Product Architecture
+199. Final Product Definition
+200. Product North Star
 
 ---
 
-# 1. Executive Summary
+# 1. EXECUTIVE SUMMARY
 
-SalesGenie is an enterprise-grade, multi-tenant SaaS platform designed to function as an **AI Revenue and Growth Operating System** for businesses.
+SalesGenie is an AI-native, enterprise-grade SaaS platform designed to operate as a unified:
 
-SalesGenie will combine:
-
-- AI lead generation
-- lead intelligence
-- market intelligence
-- competitor intelligence
-- product launch intelligence
+- Revenue Intelligence Platform
+- Lead Generation Platform
+- Sales Automation Platform
 - CRM
-- sales automation
-- AI sales agents
-- digital marketing automation
-- AI content generation
-- SEO automation
-- AEO optimization
-- customer support
-- AI customer service
-- human customer service
-- omnichannel communication
-- workflow automation
-- AI agent orchestration
-- RAG knowledge management
-- customer intelligence
-- revenue intelligence
-- predictive analytics
-- subscription management
-- payment processing
-- enterprise administration
-- analytics
-- integrations
-- MCP-based tool execution
+- Market Intelligence Platform
+- Competitor Intelligence Platform
+- Product Launch Intelligence Platform
+- Digital Marketing Automation Platform
+- SEO/AEO Platform
+- Advertising Intelligence Platform
+- Financial Business Intelligence Platform
+- Product Profitability Platform
+- AI Business Advisor
+- Customer Support Platform
+- AI Agent Platform
+- RAG Knowledge Platform
+- MCP Tool Platform
+- Workflow Automation Platform
+- Subscription and Billing Platform
+- Enterprise Analytics Platform
 
-into a unified platform.
+The platform is designed around one central objective:
 
-The central product philosophy is:
+> Convert fragmented business data into measurable business growth.
 
-> **SalesGenie should not merely automate individual business tasks. It should continuously identify opportunities, execute growth activities, measure outcomes, learn from results, and recommend the next best business action.**
+SalesGenie should not merely report historical information.
 
-The complete business loop is:
+It should:
 
 ```text
-Market
-  ↓
-Market Intelligence
-  ↓
-Customer Intelligence
-  ↓
-ICP
-  ↓
-Lead Discovery
-  ↓
-Lead Enrichment
-  ↓
-Intent Detection
-  ↓
-Lead Scoring
-  ↓
-Sales
-  ↓
-Customer
-  ↓
-Marketing
-  ↓
-Support
-  ↓
-Retention
-  ↓
-Revenue
-  ↓
-Analytics
-  ↓
-AI Recommendations
-  ↓
-Next Best Action
-  ↓
-Automation
-  ↓
-Continuous Learning
-  ↓
-Market
-````
+COLLECT
+   ↓
+UNDERSTAND
+   ↓
+ANALYZE
+   ↓
+DETECT
+   ↓
+EXPLAIN
+   ↓
+PREDICT
+   ↓
+RECOMMEND
+   ↓
+EXECUTE
+   ↓
+MEASURE
+   ↓
+LEARN
+   ↓
+OPTIMIZE
+```
 
 ---
 
-# 2. Product Vision
+# 2. PRODUCT VISION
 
-SalesGenie shall become an intelligent operating layer between a business and its customers.
+SalesGenie will become a Business Growth Operating System where a company can connect its:
 
-The long-term vision is:
-
-> **Every organization should be able to use AI to discover its best opportunities, understand its market, acquire customers, sell more effectively, support customers automatically, retain valuable customers, and continuously optimize revenue.**
-
-SalesGenie should provide capabilities that traditionally require multiple disconnected systems.
-
-Instead of forcing customers to manage separate systems for:
-
-* lead generation
+* sales
 * CRM
+* customers
+* products
+* finance
+* advertising
 * marketing
 * SEO
-* customer support
-* AI agents
-* analytics
-* automation
-* billing
+* support
+* operational
+* product usage
 
-SalesGenie should provide an integrated operating environment.
+data into one intelligent platform.
 
----
+The system should allow executives to ask:
 
-# 3. Product Mission
+> How is my business performing?
 
-The mission of SalesGenie is:
+> Why is revenue increasing or decreasing?
 
-> **Help businesses achieve measurable positive growth by combining AI intelligence, automation, human expertise, and unified customer data.**
+> Which product is most profitable?
 
-Every major feature should ultimately contribute to at least one of:
+> Which product is losing money?
 
-1. Revenue growth
-2. Customer acquisition
-3. Customer conversion
-4. Customer retention
-5. Customer satisfaction
-6. Operational efficiency
-7. Reduced business cost
-8. Better business decision-making
+> Why is the product losing money?
 
----
+> Which advertisement is generating the highest ROI?
 
-# 4. Problem Statement
+> Which customer segment is most valuable?
 
-Businesses commonly use fragmented systems for:
+> Which market should I target?
 
-* lead generation
-* CRM
-* email marketing
-* SEO
-* advertising
-* customer support
-* analytics
-* workflow automation
-* AI assistants
-* knowledge management
+> Which competitor is growing?
 
-This fragmentation creates:
+> What should I do next?
 
-* duplicated data
-* disconnected workflows
-* inconsistent customer information
-* poor attribution
-* expensive software stacks
-* manual processes
-* slow decision-making
-* poor visibility into customer behavior
-* limited AI automation
-* poor coordination between marketing, sales and support
-
-SalesGenie shall address these problems through a unified platform.
+> Can SalesGenie execute the action?
 
 ---
 
-# 5. Product Opportunity
+# 3. PRODUCT MISSION
 
-SalesGenie should compete in the intersection of:
+SalesGenie's mission is:
 
-```text
-CRM
-+
-Sales Intelligence
-+
-Lead Generation
-+
-Marketing Automation
-+
-SEO/AEO
-+
-AI Agents
-+
-Customer Support
-+
-Workflow Automation
-+
-Business Intelligence
-+
-Revenue Intelligence
-```
-
-The product should not attempt to win by cloning one existing SaaS category.
-
-Instead, its competitive advantage should be the **closed-loop revenue architecture**.
+> Help businesses acquire more customers, increase revenue, improve profitability, reduce unnecessary costs, improve customer experience, automate repetitive work, and make evidence-based decisions using AI.
 
 ---
 
-# 6. Product Positioning
+# 4. PRODUCT PHILOSOPHY
 
-## Primary Positioning
+SalesGenie must follow these principles:
 
-> **SalesGenie — AI Revenue & Growth Operating System**
+## 4.1 Data First
 
-## Supporting Statement
+AI decisions must be grounded in available business data.
 
-> Discover opportunities, generate demand, convert customers, automate support, retain customers, and grow revenue with AI.
+## 4.2 Evidence First
 
-## Product Category
+Recommendations should explain their supporting evidence.
 
-SalesGenie should be positioned as:
+## 4.3 Human Control
 
-```text
-AI Revenue & Growth Operating System
-```
+High-impact business actions must remain configurable and controllable by humans.
 
-rather than merely:
+## 4.4 Measurable Outcomes
 
-```text
-AI CRM
-AI Chatbot
-Lead Generation Tool
-Marketing Automation Tool
-Customer Support Tool
-```
+Recommendations should be evaluated against actual outcomes.
 
----
+## 4.5 Continuous Optimization
 
-# 7. Product Objectives
+The system should continuously learn from business performance.
 
-## O-001
+## 4.6 Tenant Isolation
 
-Provide enterprise-grade lead generation.
+One organization must never access another organization's data.
 
-## O-002
+## 4.7 Explainability
 
-Provide AI-powered market and competitor intelligence.
+AI outputs should provide:
 
-## O-003
+* evidence
+* assumptions
+* confidence
+* expected impact
+* risks
 
-Provide product launch strategy recommendations.
+## 4.8 Automation With Guardrails
 
-## O-004
-
-Provide AI-powered digital marketing automation.
-
-## O-005
-
-Provide AI-powered SEO/AEO automation.
-
-## O-006
-
-Provide AI + human customer support.
-
-## O-007
-
-Provide a unified CRM and customer intelligence layer.
-
-## O-008
-
-Provide AI agents capable of executing business tasks.
-
-## O-009
-
-Provide enterprise workflow automation.
-
-## O-010
-
-Provide transparent subscription and usage billing.
-
-## O-011
-
-Provide measurable customer ROI.
-
-## O-012
-
-Provide enterprise security and governance.
-
-## O-013
-
-Support millions of users and large organizations.
+Automation should never bypass authorization.
 
 ---
 
-# 8. Product Principles
+# 5. PROBLEM STATEMENT
 
-## P-001 Outcome First
-
-Features should be designed around measurable business outcomes.
-
-## P-002 AI + Human
-
-AI should automate repetitive and scalable work while humans retain control over strategic, sensitive and complex tasks.
-
-## P-003 Unified Intelligence
-
-Relevant information should be shared across modules through controlled customer and business context.
-
-## P-004 Explainable AI
-
-AI recommendations should expose evidence, confidence and reasoning summaries where appropriate.
-
-## P-005 Secure by Default
-
-Security, authorization and tenant isolation must be foundational.
-
-## P-006 Modular Architecture
-
-Major capabilities should be independently deployable where operationally beneficial.
-
-## P-007 Provider Agnostic AI
-
-The platform should avoid unnecessary lock-in to a single AI provider.
-
-## P-008 Observable AI
-
-AI operations must be measurable in terms of:
-
-* quality
-* cost
-* latency
-* success
-* failures
-* safety
-
-## P-009 Human Override
-
-Users must be able to intervene in AI workflows.
-
-## P-010 Continuous Improvement
-
-Product behavior should improve through feedback, analytics and evaluation.
-
----
-
-# 9. Target Customers
-
-SalesGenie shall support:
-
-## SMB
-
-* startups
-* small businesses
-* agencies
-* professional services
-
-## Mid-Market
-
-* SaaS companies
-* e-commerce businesses
-* technology companies
-* service companies
-
-## Enterprise
-
-* large corporations
-* multinational organizations
-* enterprise sales teams
-* enterprise support organizations
-
-## Agencies
-
-Agencies should be able to manage multiple customer organizations through appropriate multi-tenant or agency functionality.
-
----
-
-# 10. User Personas
-
-SalesGenie shall support:
-
-* Super Admin
-* Platform Admin
-* Platform Support Admin
-* Billing Administrator
-* Organization Owner
-* Organization Admin
-* Security Admin
-* Billing Admin
-* Workplace Admin
-* Team Manager
-* Sales Manager
-* Sales Agent
-* Marketing Manager
-* Marketing Specialist
-* SEO Manager
-* SEO Specialist
-* Support Manager
-* Support Agent
-* AI Agent Builder
-* AI/ML Administrator
-* Business Analyst
-* Integration Developer
-* End User
-* External Customer
-
----
-
-# 11. User Roles and Organizational Hierarchy
-
-The logical hierarchy shall be:
-
-```text
-SalesGenie Platform
-        │
-        ├── Organization
-        │       │
-        │       ├── Workplace
-        │       │       │
-        │       │       ├── Team
-        │       │       │      ├── Users
-        │       │       │      └── Agents
-        │       │       │
-        │       │       └── Resources
-        │       │
-        │       └── Organization Resources
-        │
-        └── Platform Resources
-```
-
-Access control shall combine:
-
-* RBAC
-* resource-level permissions
-* organization context
-* workplace context
-* team context
-* policy-based restrictions
-
----
-
-# 12. Product Scope
-
-SalesGenie shall include the following major domains:
-
-```text
-Identity
-Organization
-Workplace
-RBAC
-Billing
-Payments
-Usage
-AI Gateway
-AI Agents
-RAG
-Knowledge
-Lead Intelligence
-Market Intelligence
-Competitor Intelligence
-Product Launch Intelligence
-CRM
-Sales
-Marketing
-SEO
-AEO
-Customer Support
-Customer 360
-Workflow Automation
-MCP
-Integrations
-Analytics
-Revenue Intelligence
-Notifications
-Security
-Audit
-Observability
-Super Admin
-```
-
----
-
-# 13. Core Product Modules
-
-The primary product modules are:
-
-1. Identity and Access Management
-2. Organization Management
-3. Workplace Management
-4. Team Management
-5. Subscription Management
-6. Payment Management
-7. Usage and Entitlement Management
-8. AI Gateway
-9. AI Agent Platform
-10. Knowledge/RAG Platform
-11. Lead Generation
-12. Lead Intelligence
-13. Market Intelligence
-14. Competitor Intelligence
-15. Product Launch Advisor
-16. CRM
-17. Sales Automation
-18. Digital Marketing Automation
-19. SEO
-20. AEO
-21. Customer Support
-22. Customer 360
-23. Workflow Automation
-24. MCP Platform
-25. Integrations
-26. Analytics
-27. Revenue Intelligence
-28. AI Evaluation
-29. Security
-30. Audit
-31. Notifications
-32. Super Admin
-
----
-
-# 14. AI Platform
-
-## 14.1 AI Gateway
-
-SalesGenie shall provide an AI Gateway that abstracts external model providers.
+Businesses commonly operate with disconnected systems.
 
 Example:
 
 ```text
-                    Application
-                         │
-                         ▼
-                    AI Gateway
-                         │
-        ┌────────────────┼────────────────┐
-        │                │                │
-      Model A          Model B          Model C
-        │                │                │
-     Provider 1       Provider 2       Provider 3
+CRM
+ │
+ ├── Leads
+ ├── Customers
+ └── Sales
+
+Advertising
+ │
+ ├── Facebook
+ ├── Instagram
+ ├── YouTube
+ ├── TikTok
+ └── Google
+
+Finance
+ │
+ ├── Revenue
+ ├── Expenses
+ └── Profit
+
+Marketing
+ │
+ ├── Content
+ ├── SEO
+ └── Campaigns
+
+Support
+ │
+ ├── Tickets
+ ├── Conversations
+ └── Agents
 ```
 
-The AI Gateway shall provide:
+These systems often lack a unified intelligence layer.
 
-* provider abstraction
-* model routing
-* fallback
-* retry
-* timeout
-* token tracking
-* cost tracking
-* rate limiting
-* caching where appropriate
-* request tracing
-* model policy
-* safety controls
+SalesGenie will connect them.
 
 ---
 
-# 15. Lead Generation and Lead Intelligence
+# 6. PRODUCT OPPORTUNITY
 
-Lead generation is a core SalesGenie capability.
+SalesGenie will differentiate itself by combining:
 
-## 15.1 ICP Builder
+```text
+Lead Generation
++
+Sales
++
+Marketing
++
+Advertising
++
+Finance
++
+Product Intelligence
++
+Customer Support
++
+AI Agents
++
+Automation
++
+Business Intelligence
+```
+
+into one platform.
+
+---
+
+# 7. TARGET CUSTOMERS
+
+## 7.1 Startups
+
+Use cases:
+
+* finding initial customers
+* validating products
+* launching products
+* marketing automation
+* customer support
+
+## 7.2 SMB
+
+Use cases:
+
+* lead generation
+* sales automation
+* advertising ROI
+* financial analytics
+* customer support
+
+## 7.3 Mid-Market
+
+Use cases:
+
+* multi-team sales
+* marketing analytics
+* business intelligence
+* AI automation
+
+## 7.4 Enterprise
+
+Use cases:
+
+* multi-tenant enterprise management
+* advanced security
+* AI agents
+* enterprise analytics
+* custom integrations
+* custom workflows
+
+## 7.5 Agencies
+
+Use cases:
+
+* multiple client workspaces
+* campaign management
+* lead generation
+* reporting
+* white-label capabilities
+
+---
+
+# 8. USER PERSONAS
+
+| Role                 | Primary Responsibilities  |
+| -------------------- | ------------------------- |
+| Super Admin          | Entire platform           |
+| Platform Admin       | Platform operations       |
+| Security Admin       | Security                  |
+| Billing Admin        | Billing                   |
+| Organization Owner   | Business ownership        |
+| Organization Admin   | Organization management   |
+| Workplace Admin      | Workplace management      |
+| Team Manager         | Team management           |
+| Sales Manager        | Sales management          |
+| Sales Agent          | Lead and sales operations |
+| Marketing Manager    | Marketing                 |
+| Marketing Specialist | Campaign execution        |
+| SEO Manager          | SEO                       |
+| SEO Specialist       | SEO execution             |
+| Product Manager      | Product intelligence      |
+| Finance Manager      | Finance                   |
+| Business Analyst     | Analytics                 |
+| Support Manager      | Support                   |
+| Support Agent        | Customer support          |
+| AI Agent Builder     | AI agents                 |
+| Developer            | APIs and integrations     |
+| End User             | Customer                  |
+| External Client      | Client organization       |
+
+---
+
+# 9. ORGANIZATIONAL HIERARCHY
+
+```text
+SALESGENIE PLATFORM
+        │
+        ▼
+SUPER ADMIN
+        │
+        ├── Platform
+        ├── Security
+        ├── Billing
+        └── Organizations
+                 │
+                 ▼
+          ORGANIZATION
+                 │
+        ┌────────┴────────┐
+        ▼                 ▼
+    WORKPLACE          WORKPLACE
+        │                 │
+        ▼                 ▼
+      TEAMS             TEAMS
+        │                 │
+        ▼                 ▼
+      USERS             USERS
+```
+
+---
+
+# 10. PRODUCT SCOPE
+
+SalesGenie shall include the following major domains:
+
+```text
+01 Identity
+02 Organizations
+03 Workplaces
+04 RBAC
+05 CRM
+06 Lead Generation
+07 Lead Intelligence
+08 Sales
+09 Market Intelligence
+10 Competitor Intelligence
+11 Product Launch
+12 Marketing
+13 SEO
+14 AEO
+15 Advertising
+16 Finance
+17 Product Profitability
+18 Business Intelligence
+19 Customer 360
+20 Support
+21 AI Support
+22 AI Agents
+23 RAG
+24 MCP
+25 Workflow Automation
+26 Integrations
+27 Analytics
+28 Reporting
+29 Excel
+30 Billing
+31 Payments
+32 Subscriptions
+33 Usage
+34 Security
+35 Audit
+36 Super Admin
+```
+
+---
+
+# 11. CORE BUSINESS LIFECYCLE
+
+```text
+MARKET
+  ↓
+LEAD
+  ↓
+QUALIFICATION
+  ↓
+SALES
+  ↓
+CUSTOMER
+  ↓
+PRODUCT
+  ↓
+MARKETING
+  ↓
+ADVERTISEMENT
+  ↓
+REVENUE
+  ↓
+EXPENSE
+  ↓
+PROFIT/LOSS
+  ↓
+BUSINESS INTELLIGENCE
+  ↓
+AI ANALYSIS
+  ↓
+RECOMMENDATION
+  ↓
+ACTION
+  ↓
+RESULT
+  ↓
+LEARNING
+  ↓
+GROWTH
+```
+
+---
+
+# 12. NORTH STAR PRODUCT LOOP
+
+```text
+              ┌──────────────────────┐
+              │      BUSINESS DATA   │
+              └──────────┬───────────┘
+                         ↓
+                  UNDERSTAND
+                         ↓
+                    ANALYZE
+                         ↓
+                     EXPLAIN
+                         ↓
+                    PREDICT
+                         ↓
+                  RECOMMEND
+                         ↓
+                    EXECUTE
+                         ↓
+                    MEASURE
+                         ↓
+                     LEARN
+                         │
+                         └───────────────┐
+                                         ↓
+                                  BUSINESS DATA
+```
+
+---
+
+# 13. HIGH-LEVEL ARCHITECTURE
+
+```text
+                         USERS
+                           │
+                           ▼
+                  WEB / MOBILE / API
+                           │
+                           ▼
+                  CDN / WAF / GATEWAY
+                           │
+                           ▼
+                    API GATEWAY
+                           │
+        ┌──────────────────┼──────────────────┐
+        │                  │                  │
+        ▼                  ▼                  ▼
+   APPLICATION        AI PLATFORM       DATA PLATFORM
+        │                  │                  │
+        │                  ├── AI Gateway     ├── OLTP
+        │                  ├── Agents         ├── Warehouse
+        │                  ├── RAG            ├── Vector DB
+        │                  ├── MCP            ├── Search
+        │                  └── Evaluation     └── Object Store
+        │
+        ├── Auth
+        ├── CRM
+        ├── Leads
+        ├── Sales
+        ├── Marketing
+        ├── Finance
+        ├── Ads
+        ├── Support
+        ├── Billing
+        └── Analytics
+                           │
+                           ▼
+                    EVENT BUS / QUEUES
+                           │
+                           ▼
+                       WORKERS
+                           │
+                           ▼
+                   EXTERNAL SYSTEMS
+```
+
+---
+
+# 14. MULTI-TENANT ARCHITECTURE
+
+Every request must carry tenant context.
+
+```text
+REQUEST
+  ↓
+AUTHENTICATION
+  ↓
+USER
+  ↓
+ORGANIZATION
+  ↓
+WORKPLACE
+  ↓
+ROLE
+  ↓
+PERMISSION
+  ↓
+RESOURCE
+```
+
+Tenant isolation must be enforced at:
+
+* API
+* service
+* database
+* cache
+* object storage
+* search
+* vector database
+* event processing
+
+levels.
+
+---
+
+# 15. IDENTITY AND ACCESS MANAGEMENT
+
+The system shall support:
+
+* registration
+* login
+* logout
+* password reset
+* email verification
+* MFA
+* session management
+* device management
+* OAuth
+* SSO
+* SAML for enterprise
+* SCIM for enterprise where applicable
+
+---
+
+# 16. RBAC AND AUTHORIZATION
+
+Authorization must support:
+
+```text
+Organization
+   ↓
+Workplace
+   ↓
+Team
+   ↓
+Role
+   ↓
+Permission
+   ↓
+Resource
+```
+
+Permissions should follow:
+
+```text
+CREATE
+READ
+UPDATE
+DELETE
+EXPORT
+APPROVE
+EXECUTE
+ADMINISTER
+```
+
+---
+
+# 17. SUPER ADMIN MODULE
+
+Super Admin can manage:
+
+* users
+* organizations
+* workplaces
+* subscriptions
+* payments
+* plans
+* feature flags
+* AI providers
+* AI costs
+* system health
+* security
+* audit logs
+* integrations
+* system configuration
+
+Super Admin must not automatically expose customer business data unless explicitly authorized and audited.
+
+---
+
+# 18. PLATFORM ADMINISTRATION
+
+Platform administration shall include:
+
+* service monitoring
+* system configuration
+* API configuration
+* provider configuration
+* feature flags
+* maintenance mode
+* rate limits
+* global usage limits
+* AI provider routing
+* platform-level cost monitoring
+
+---
+
+# 19. ORGANIZATION ADMINISTRATION
+
+Organization Admin can:
+
+* manage users
+* manage roles
+* create workplaces
+* create teams
+* configure integrations
+* manage billing
+* configure AI
+* manage knowledge
+* configure automation
+* view organization analytics
+
+---
+
+# 20. WORKPLACE ADMINISTRATION
+
+Workplace Admin can:
+
+* manage teams
+* assign users
+* configure workflows
+* manage leads
+* manage campaigns
+* manage support
+* manage AI agents
+* manage workplace dashboards
+
+---
+
+# 21. TEAM MANAGEMENT
+
+Teams may include:
+
+* sales
+* marketing
+* SEO
+* support
+* finance
+* product
+* operations
+
+Managers can:
+
+* assign tasks
+* monitor performance
+* review KPIs
+* manage team members
+
+---
+
+# 22. USER MANAGEMENT
+
+User profiles shall contain:
+
+* user ID
+* name
+* email
+* designation
+* role
+* organization
+* workplace
+* team
+* status
+* permissions
+* created date
+* last activity
+
+---
+
+# 23. LEAD GENERATION PLATFORM
+
+SalesGenie shall provide an enterprise-grade lead generation engine.
+
+```text
+ICP
+ ↓
+MARKET DISCOVERY
+ ↓
+COMPANY DISCOVERY
+ ↓
+CONTACT DISCOVERY
+ ↓
+ENRICHMENT
+ ↓
+VALIDATION
+ ↓
+INTENT
+ ↓
+SCORING
+ ↓
+PRIORITIZATION
+ ↓
+OUTREACH
+ ↓
+CRM
+```
+
+---
+
+# 24. LEAD DISCOVERY
+
+The system should support authorized data sources such as:
+
+* public web information
+* company websites
+* business directories
+* supported professional networks
+* supported data providers
+* customer-provided datasets
+* CRM imports
+* CSV/XLSX
+
+Data acquisition must comply with source terms and applicable law.
+
+---
+
+# 25. LEAD ENRICHMENT
+
+Enrichment fields:
+
+* company
+* domain
+* industry
+* company size
+* location
+* revenue where available
+* technology
+* job title
+* department
+* business model
+* website
+* social presence
+* intent signals
+
+---
+
+# 26. LEAD VALIDATION
+
+Validation:
+
+* email validation
+* domain validation
+* duplicate detection
+* company matching
+* contact matching
+* data freshness
+* confidence scoring
+
+---
+
+# 27. LEAD SCORING
+
+Lead score may combine:
+
+```text
+Firmographic Fit
++
+ICP Fit
++
+Intent
++
+Engagement
++
+Company Growth
++
+Technology Fit
++
+Historical Conversion
++
+Recency
+```
+
+Example:
+
+```text
+Lead Score: 91/100
+
+ICP Fit: 95
+Intent: 88
+Engagement: 92
+Company Fit: 90
+Data Confidence: 96
+```
+
+---
+
+# 28. LEAD INTENT INTELLIGENCE
+
+Signals may include:
+
+* website activity
+* product research
+* job postings
+* technology changes
+* funding
+* expansion
+* hiring
+* engagement
+* campaign interactions
+
+Intent signals must be sourced, timestamped, and confidence-scored.
+
+---
+
+# 29. ICP BUILDER
 
 Users shall define:
 
 * industry
 * geography
 * company size
-* revenue
+* revenue range
 * technology
+* role
+* pain points
 * business model
-* job title
-* seniority
-* department
-* buying signals
-* intent signals
+* growth stage
 
-Users should also be able to describe an ICP in natural language.
+AI may recommend an ICP based on historical successful customers.
+
+---
+
+# 30. ACCOUNT INTELLIGENCE
+
+Account intelligence shall include:
+
+```text
+Company
+Industry
+Size
+Revenue
+Technology
+Growth
+Contacts
+Intent
+Interactions
+Deals
+Customers
+```
+
+---
+
+# 31. CONTACT INTELLIGENCE
+
+Contact profiles:
+
+* name
+* title
+* department
+* company
+* verified contact information where legally and contractually available
+* engagement
+* role relevance
+* buying influence
+
+---
+
+# 32. LEAD PRIORITIZATION
+
+The platform shall provide:
+
+```text
+HOT
+WARM
+COLD
+UNQUALIFIED
+```
+
+Priority should be dynamic based on changing signals.
+
+---
+
+# 33. SALES CRM
+
+Core entities:
+
+```text
+Company
+Contact
+Lead
+Account
+Opportunity
+Deal
+Pipeline
+Activity
+Task
+Meeting
+Note
+Conversation
+```
+
+---
+
+# 34. SALES PIPELINE
 
 Example:
 
 ```text
-Find B2B SaaS companies in North America with
-100–1000 employees that are actively expanding
-their AI infrastructure.
-```
-
-SalesGenie shall transform the request into structured criteria.
-
----
-
-## 15.2 Lead Discovery
-
-The platform shall support discovery of:
-
-* organizations
-* contacts
-* decision makers
-* potential buyers
-* relevant business entities
-
----
-
-## 15.3 Lead Enrichment
-
-Lead records should support:
-
-* company information
-* contact information
-* industry
-* size
-* technology
-* location
-* public business signals
-* funding signals
-* growth signals
-* hiring signals
-* product signals
-
----
-
-## 15.4 Lead Verification
-
-Where external information is used, SalesGenie should distinguish between:
-
-* verified
-* inferred
-* estimated
-* stale
-* unavailable
-
-The system must avoid presenting uncertain information as confirmed fact.
-
----
-
-## 15.5 Intent Detection
-
-The platform should detect relevant public or first-party signals such as:
-
-* product launch
-* funding
-* hiring
-* expansion
-* technology adoption
-* website behavior
-* content engagement
-* campaign engagement
-* relevant business changes
-
----
-
-## 15.6 Lead Scoring
-
-Lead scoring should combine:
-
-```text
-Fit Score
-+
-Intent Score
-+
-Engagement Score
-+
-Timing Score
-+
-Relationship Score
-=
-Composite Lead Score
-```
-
-The scoring system shall be configurable.
-
----
-
-## 15.7 Predictive Lead Scoring
-
-SalesGenie should support ML-based prediction.
-
-Candidate models:
-
-* Logistic Regression
-* LightGBM
-* XGBoost
-* CatBoost
-
-The system should compare predictive models against a baseline before production deployment.
-
----
-
-## 15.8 Lead Recommendations
-
-The platform shall answer:
-
-> Which leads should the sales team contact now?
-
-Each recommendation should contain:
-
-* ranking
-* reason
-* relevant signals
-* recommended action
-* confidence
-* estimated opportunity value where possible
-
----
-
-# 16. Market Intelligence
-
-SalesGenie shall help customers understand their market before making major business decisions.
-
-## 16.1 Market Analysis
-
-Analyze available information about:
-
-* industry
-* market size
-* trends
-* customer segments
-* geographic opportunity
-* demand signals
-* competitive intensity
-* opportunities
-* risks
-
----
-
-## 16.2 Market Research Sources
-
-Where legally and technically permitted, the system may integrate with:
-
-* search engines
-* public company websites
-* public reports
-* professional networks
-* freelance marketplaces
-* business directories
-* review platforms
-* industry publications
-* public datasets
-* customer-provided data
-
-External platform usage must respect:
-
-* API terms
-* licensing
-* robots policies
-* privacy requirements
-* applicable laws
-
-The product shall not assume unrestricted scraping access to third-party platforms.
-
----
-
-# 17. Competitor Intelligence
-
-SalesGenie shall analyze competitors based on available information.
-
-## Competitor Dimensions
-
-* product
-* features
-* pricing
-* positioning
-* target customers
-* messaging
-* content
-* SEO
-* public reviews
-* partnerships
-* announcements
-* hiring
-* technology signals
-
----
-
-## Competitor Change Detection
-
-The system should detect changes in:
-
-* pricing
-* products
-* website
-* messaging
-* positioning
-* content
-* hiring
-* public announcements
-
----
-
-## Competitive Gap Analysis
-
-Output:
-
-```text
-Competitor Strength
-Competitor Weakness
-Customer Complaint
-Market Gap
-Sales Opportunity
-Product Opportunity
-Marketing Opportunity
-SEO Opportunity
-```
-
----
-
-# 18. AI Product Launch Advisor
-
-This shall be one of SalesGenie's flagship capabilities.
-
-When a customer launches a new product, the system shall analyze:
-
-```text
-Product
+NEW
  ↓
+CONTACTED
+ ↓
+ENGAGED
+ ↓
+QUALIFIED
+ ↓
+DEMO
+ ↓
+PROPOSAL
+ ↓
+NEGOTIATION
+ ↓
+WON / LOST
+```
+
+---
+
+# 35. AI SALES AGENT
+
+AI Sales Agent shall:
+
+1. research prospects
+2. analyze company
+3. identify pain points
+4. personalize outreach
+5. draft communications
+6. send approved communications
+7. monitor engagement
+8. update CRM
+9. schedule follow-ups
+10. recommend next actions
+
+---
+
+# 36. SALES AUTOMATION
+
+Automation:
+
+```text
+Lead Added
+ ↓
+Enrichment
+ ↓
+Score
+ ↓
+Assign
+ ↓
+Personalize
+ ↓
+Human Approval
+ ↓
+Outreach
+ ↓
+Track
+ ↓
+Follow-up
+ ↓
+CRM Update
+```
+
+---
+
+# 37. MARKET INTELLIGENCE
+
+Market intelligence shall analyze:
+
+* market size where data is available
+* market growth
+* customer demand
+* trends
+* pricing
+* emerging products
+* emerging competitors
+* market gaps
+* customer complaints
+* industry signals
+
+---
+
+# 38. COMPETITOR INTELLIGENCE
+
+Competitor analysis:
+
+```text
+Competitor
+ ├── Products
+ ├── Pricing
+ ├── Features
+ ├── Positioning
+ ├── Marketing
+ ├── SEO
+ ├── Reviews
+ ├── Customers
+ ├── Strengths
+ ├── Weaknesses
+ └── Market Signals
+```
+
+---
+
+# 39. PRODUCT LAUNCH INTELLIGENCE
+
+When a customer launches a new product, SalesGenie shall provide an AI Product Launch Analysis.
+
+Input:
+
+```text
+Product Name
+Description
+Target Customer
+Pricing
+Features
+Industry
+Market
+Business Goals
+Budget
+Launch Date
+```
+
+Analysis:
+
+```text
 Market
  ↓
-Customer
+Customers
  ↓
 Competitors
  ↓
+Pricing
+ ↓
 Positioning
  ↓
-Pricing
+Demand
  ↓
 Marketing
  ↓
-Sales
- ↓
 SEO
+ ↓
+Advertising
+ ↓
+Sales
  ↓
 Support
  ↓
@@ -940,823 +1307,713 @@ Launch Strategy
 
 ---
 
-## 18.1 Product Input
+# 40. PRODUCT LAUNCH REPORT
 
-Customer may provide:
+The system shall produce:
 
-* product description
-* target market
-* target customer
-* pricing
-* product documentation
-* website
-* competitors
-* geography
-* business objectives
-
----
-
-## 18.2 Market Evaluation
-
-SalesGenie shall generate:
-
-* opportunity analysis
-* market trends
-* demand signals
-* risks
-* market gaps
-* recommended segments
+* market overview
+* competitor comparison
+* customer segment analysis
+* pricing analysis
+* positioning recommendation
+* product strengths
+* product weaknesses
+* market opportunities
+* market threats
+* marketing strategy
+* SEO strategy
+* advertising strategy
+* sales strategy
+* support strategy
+* launch roadmap
+* KPI recommendations
 
 ---
 
-## 18.3 Competitor Evaluation
+# 41. DIGITAL MARKETING PLATFORM
 
-The system shall analyze comparable products and identify:
+SalesGenie shall provide an AI-powered marketing automation platform.
 
-* successful strategies
-* weaknesses
-* pricing patterns
-* positioning
-* acquisition channels
-* customer complaints
-* differentiation opportunities
+Core functions:
 
----
-
-## 18.4 Launch Strategy
-
-The system shall produce a structured launch plan covering:
-
-### Product
-
-* feature priorities
-* product readiness
-* differentiation
-
-### Market
-
-* target segments
-* market entry
-
-### Pricing
-
-* pricing strategy
-* packaging
-* trial strategy
-
-### Marketing
-
-* content
-* campaigns
-* messaging
-* channels
-
-### Sales
-
-* ICP
-* sales playbook
-* outreach
-* qualification
-
-### SEO/AEO
-
-* keywords
-* content gaps
-* topic clusters
-* AI search visibility
-
-### Support
-
-* knowledge base
-* support readiness
-* AI support agent
-
-### Measurement
-
-* KPIs
-* milestones
-* experiments
+* campaign planning
+* audience creation
+* content planning
+* content generation
+* campaign scheduling
+* campaign analytics
+* optimization
+* automation
 
 ---
 
-# 19. CRM and Sales Automation
+# 42. AI CONTENT GENERATION
 
-SalesGenie shall include a unified CRM.
-
-Core entities:
-
-```text
-Company
-Contact
-Lead
-Opportunity
-Deal
-Task
-Meeting
-Activity
-Pipeline
-```
-
----
-
-## AI Sales Agent
-
-AI sales agents may:
-
-* research leads
-* summarize accounts
-* personalize messages
-* qualify prospects
-* recommend follow-ups
-* schedule meetings
-* update CRM
-* generate proposals
-* execute approved workflows
-
-High-impact actions should support human approval.
-
----
-
-# 20. AI Digital Marketing Platform
-
-SalesGenie shall allow customers to build AI-powered marketing automation.
-
-## Content Generation
-
-Generate:
+AI may generate:
 
 * blog posts
-* social posts
+* landing-page copy
 * email campaigns
-* newsletters
-* landing pages
-* advertisements
-* case studies
-* whitepapers
+* ad copy
+* social posts
 * product descriptions
-* campaign concepts
+* SEO briefs
+* campaign ideas
+
+Generated content must support human review.
 
 ---
 
-## Campaign Automation
+# 43. MARKETING AUTOMATION
 
-Workflow:
+Example:
 
 ```text
-Trigger
-   ↓
-Audience
-   ↓
-Research
-   ↓
+Customer Segment
+ ↓
+Campaign
+ ↓
 AI Content
-   ↓
-Validation
-   ↓
-Human Approval
-   ↓
-Publishing
-   ↓
-Measurement
-   ↓
-Optimization
+ ↓
+Approval
+ ↓
+Publish
+ ↓
+Track
+ ↓
+Analyze
+ ↓
+Optimize
 ```
 
 ---
 
-## Campaign Intelligence
+# 44. SEO PLATFORM
 
-Track:
-
-* impressions
-* engagement
-* clicks
-* leads
-* conversions
-* revenue
-* ROI
-
----
-
-# 21. AI SEO and AEO Platform
-
-SalesGenie shall provide an AI SEO automation platform.
-
-## SEO Features
+SEO features:
 
 * keyword research
 * keyword clustering
-* competitor gap analysis
-* content gap analysis
+* competitor keyword analysis
+* search intent
+* content gaps
 * technical SEO
-* on-page optimization
+* on-page SEO
 * internal linking
+* backlinks where supported
 * content briefs
-* content generation
-* content optimization
-* rank monitoring
+* rank tracking
+* SEO reporting
 
 ---
 
-## AEO Features
+# 45. AEO PLATFORM
 
 AEO = Answer Engine Optimization.
 
-SalesGenie should monitor:
+Capabilities:
 
+* entity optimization
+* answer visibility
 * AI search visibility
-* answer presence
-* citations
-* brand mentions
-* entity visibility
-* content authority
+* structured content
+* topic authority
+* citation opportunities
+* brand presence
 
 ---
 
-# 22. Customer Support Platform
+# 46. ADVERTISING INTELLIGENCE
 
-SalesGenie shall provide both AI and human customer support.
+Target advertising integrations:
 
-Core capabilities:
+* Facebook Ads
+* Instagram Ads
+* WhatsApp advertising where supported
+* YouTube Ads
+* TikTok Ads
+* Google Ads
+* other supported advertising providers
 
-* omnichannel conversations
-* ticketing
-* routing
-* SLA
-* knowledge
-* AI support
-* human support
-* escalation
-* customer history
-* support analytics
+Availability of metrics depends on provider APIs, account permissions, policies, and privacy limitations.
 
 ---
 
-# 23. AI + Human Support Model
+# 47. ADVERTISING ANALYTICS
 
-The system shall support:
+For every campaign:
 
 ```text
-Customer
-   ↓
-AI Support
-   │
-   ├── Resolved
-   │
-   └── Escalation
-          ↓
-      Human Agent
-          ↓
-       Resolution
+Spend
+Impressions
+Reach
+Clicks
+CTR
+CPC
+CPM
+Leads
+Qualified Leads
+Conversions
+Customers
+Revenue
+CAC
+CPA
+ROAS
+ROI
 ```
 
-AI should identify when human intervention is required.
+---
 
-Triggers may include:
+# 48. ADVERTISING DEMOGRAPHIC INTELLIGENCE
 
-* low confidence
-* customer request
-* sensitive issue
-* payment dispute
-* complex technical issue
-* negative sentiment
-* repeated failed resolution
+Analyze available dimensions:
+
+* age
+* gender
+* location
+* language
+* device
+* placement
+* audience
+* platform
+* product
+
+The platform must respect provider privacy aggregation and reporting constraints.
 
 ---
 
-# 24. Customer 360
+# 49. ADVERTISING PRODUCT MATCHING
 
-Customer 360 should unify authorized information:
+SalesGenie shall determine:
 
 ```text
-Identity
-Company
+Which Product
+       +
+Which Audience
+       +
+Which Platform
+       +
+Which Campaign
+       +
+Which Creative
+       =
+Best Business Outcome
+```
+
+---
+
+# 50. ADVERTISING ATTRIBUTION
+
+Supported models:
+
+* first-touch
+* last-touch
+* linear
+* time-decay
+* position-based
+* custom
+
+The dashboard must display the active attribution model.
+
+---
+
+# 51. ADVERTISING ROI
+
+Formula:
+
+```text
+ROAS = Attributed Revenue / Advertising Spend
+```
+
+ROI may be calculated as:
+
+```text
+ROI =
+(Attributed Profit - Advertising Cost)
+/
+Advertising Cost
+```
+
+The exact financial definition must be configurable.
+
+---
+
+# 52. FINANCIAL INTELLIGENCE
+
+Finance module:
+
+```text
+Revenue
+Expenses
+COGS
+Gross Profit
+Operating Expenses
+Operating Profit
+Taxes
+Net Profit
+Margins
+Cash Flow
+```
+
+---
+
+# 53. REVENUE ANALYTICS
+
+Revenue shall be analyzed by:
+
+* day
+* week
+* month
+* quarter
+* year
+* product
+* customer
+* region
+* channel
+* campaign
+* sales agent
+
+---
+
+# 54. EXPENSE ANALYTICS
+
+Expenses:
+
+* COGS
+* advertising
+* salaries
+* software
+* infrastructure
+* operations
+* logistics
+* refunds
+* taxes
+* other expenses
+
+---
+
+# 55. PROFIT AND LOSS INTELLIGENCE
+
+Basic model:
+
+```text
+Revenue
+-
+COGS
+=
+Gross Profit
+
+Gross Profit
+-
+Operating Expenses
+=
+Operating Profit
+
+Operating Profit
+-
+Taxes / Other Costs
+=
+Net Profit
+```
+
+Accounting logic shall be configurable.
+
+---
+
+# 56. PRODUCT PROFITABILITY INTELLIGENCE
+
+For each product:
+
+```text
+Revenue
+-
+COGS
+-
+Marketing Cost
+-
+Advertising Cost
+-
+Support Cost
+-
+Other Allocated Costs
+=
+Contribution / Profitability Metric
+```
+
+Allocation methods must be configurable.
+
+---
+
+# 57. BUSINESS GROWTH INTELLIGENCE
+
+The platform shall analyze:
+
+* revenue growth
+* customer growth
+* lead growth
+* sales growth
+* product growth
+* marketing growth
+* advertising efficiency
+* profitability
+* retention
+* churn
+
+---
+
+# 58. AI BUSINESS ANALYST
+
+The AI Business Analyst shall answer:
+
+```text
+What happened?
+Why?
+What is changing?
+What is causing the change?
+What should we do?
+What could happen next?
+What is the expected impact?
+```
+
+---
+
+# 59. AI ROOT CAUSE ANALYSIS
+
+Example:
+
+```text
+PROFIT DECLINED
+       ↓
+Revenue Stable
+       ↓
+Expenses Increased
+       ↓
+Advertising Increased
+       ↓
+CAC Increased
+       ↓
+Conversion Decreased
+       ↓
+Landing Page Performance Declined
+       ↓
+Probable Root Cause
+```
+
+The system should present root causes as hypotheses when causal evidence is insufficient.
+
+---
+
+# 60. AI RECOMMENDATION ENGINE
+
+Each recommendation shall include:
+
+```text
+Recommendation
+Evidence
+Confidence
+Expected Impact
+Risk
+Assumptions
+Priority
+Suggested Experiment
+Measurement Plan
+```
+
+---
+
+# 61. AI BUSINESS STRATEGY
+
+The AI may generate:
+
+* growth strategy
+* pricing strategy
+* marketing strategy
+* sales strategy
+* product strategy
+* customer retention strategy
+* advertising strategy
+* cost optimization strategy
+
+---
+
+# 62. PRODUCT IMPROVEMENT INTELLIGENCE
+
+For loss-making products, AI should investigate:
+
+* pricing
+* demand
+* conversion
+* acquisition cost
+* COGS
+* refunds
+* retention
+* support costs
+* positioning
+* audience fit
+* competition
+
+---
+
+# 63. CUSTOMER 360
+
+Customer 360 shall unify:
+
+```text
 CRM
 Sales
 Marketing
-Conversations
-Tickets
-Product Usage
+Advertising
+Support
 Payments
+Product Usage
 Subscriptions
-Customer Health
-Revenue
+Interactions
 ```
 
-The customer profile should provide a unified context layer for authorized users and AI agents.
+---
+
+# 64. CUSTOMER HEALTH
+
+Customer health score may use:
+
+```text
+Product Usage
+Engagement
+Support Tickets
+Payment Status
+Renewal
+Sentiment
+Feature Adoption
+```
 
 ---
 
-# 25. Workflow Automation
-
-SalesGenie shall provide visual workflow automation.
-
-Supported node categories:
-
-* trigger
-* condition
-* AI
-* HTTP
-* API
-* CRM
-* email
-* notification
-* database
-* webhook
-* delay
-* loop
-* approval
-* human task
-* MCP tool
-
----
-
-# 26. MCP and External Tool Ecosystem
-
-SalesGenie shall support MCP-based tools where appropriate.
+# 65. CUSTOMER RETENTION
 
 Capabilities:
 
-* MCP server registration
-* tool discovery
-* authentication
-* authorization
-* tool execution
-* tool policies
-* audit logs
-* failure handling
-
-Every external tool must have explicit authorization policies.
+* churn prediction
+* churn risk
+* retention recommendations
+* customer segmentation
+* expansion opportunity
+* renewal prediction
 
 ---
 
-# 27. Analytics and Business Intelligence
+# 66. CUSTOMER SUPPORT PLATFORM
 
-SalesGenie shall provide:
-
-## Executive Analytics
-
-* revenue
-* MRR
-* ARR
-* pipeline
-* conversion
-* retention
-* churn
-* CAC
-* LTV
-
-## Sales Analytics
-
-* leads
-* qualified leads
-* opportunities
-* win rate
-* pipeline velocity
-* sales productivity
-
-## Marketing Analytics
-
-* campaigns
-* traffic
-* leads
-* conversion
-* attribution
-* ROI
-
-## Support Analytics
+Support shall support:
 
 * tickets
-* resolution time
-* SLA
-* CSAT
-* AI resolution rate
-* escalation rate
-
-## AI Analytics
-
-* model usage
-* token usage
-* cost
-* latency
-* quality
-* failures
+* live chat
+* email
+* WhatsApp where integrated
+* web chat
+* social channels where supported
+* voice where integrated
 
 ---
 
-# 28. Revenue Intelligence
+# 67. AI SUPPORT
 
-SalesGenie should connect:
+AI Support shall:
+
+* classify tickets
+* retrieve knowledge
+* answer questions
+* summarize conversations
+* detect sentiment
+* identify urgency
+* recommend actions
+* resolve low-risk cases
+
+---
+
+# 68. HUMAN SUPPORT
+
+Human agents shall have:
+
+* unified inbox
+* customer profile
+* conversation history
+* AI suggestions
+* internal notes
+* ticket assignment
+* escalation
+* SLA tracking
+
+---
+
+# 69. SUPPORT ESCALATION
 
 ```text
-Marketing
- ↓
-Lead
- ↓
-Opportunity
- ↓
 Customer
  ↓
-Revenue
+AI
  ↓
-Retention
-```
-
-The system shall calculate:
-
-* pipeline contribution
-* campaign contribution
-* revenue attribution
-* customer value
-* expansion opportunity
-* churn risk
-
----
-
-# 29. Next Best Action Engine
-
-The platform shall recommend the most valuable next action.
-
-Example:
-
-```text
-NEXT BEST ACTION
-
-Schedule technical demo.
-
-Reason:
-- High purchase intent
-- Recent product research
-- Multiple website visits
-- High ICP fit
-- Recent CRM engagement
-
-Confidence: 89%
-
-Expected Impact: High
-```
-
-The recommendation engine should use:
-
-* business rules
-* ML models
-* AI reasoning
-* customer context
-* historical outcomes
-
----
-
-# 30. Subscription and Pricing System
-
-SalesGenie shall support:
-
-```text
-Free
-Starter
-Growth
-Professional
-Business
-Enterprise
-```
-
-The final commercial plans may be configured dynamically by platform administrators.
-
-Billing frequencies:
-
-* monthly
-* yearly
-
-Optional:
-
-* usage-based
-* credit-based
-* seat-based
-* outcome-based
-* hybrid
-
----
-
-# 31. Payment Gateway
-
-SalesGenie shall provide a payment abstraction layer.
-
-Requirements:
-
-* payment provider abstraction
-* recurring payments
-* invoices
-* refunds
-* payment webhooks
-* transaction ledger
-* payment status
-* failed payment recovery
-* reconciliation
-* tax handling
-* multi-currency where supported
-
-The architecture should avoid hard-coding a single payment provider.
-
----
-
-# 32. Usage and Entitlement Management
-
-Plans shall be implemented through entitlements.
-
-Example:
-
-```text
-Plan
+Confidence Check
  ↓
-Entitlements
- ↓
-Feature Access
- ↓
-Usage Limit
- ↓
-Usage Events
- ↓
-Billing
+Resolved?
+ ├── YES → Close
+ └── NO
+      ↓
+Human Agent
+      ↓
+Resolve
+      ↓
+Feedback
+      ↓
+Knowledge Improvement
 ```
 
-Example entitlements:
+---
+
+# 70. OMNICHANNEL COMMUNICATION
+
+Supported channels should include:
+
+* Web
+* Email
+* WhatsApp
+* SMS
+* Social messaging where supported
+* Voice
+* API
+
+All conversations should map into a unified conversation model.
+
+---
+
+# 71. AI AGENT PLATFORM
+
+Agent architecture:
 
 ```text
-AI Messages
-AI Agent Count
-Lead Count
-Enrichment Count
-Workflow Executions
-Storage
-API Requests
-Knowledge Documents
-SEO Projects
-Marketing Campaigns
-Support Conversations
+AGENT
+ ├── Identity
+ ├── Instructions
+ ├── Model
+ ├── Memory
+ ├── Knowledge
+ ├── Tools
+ ├── MCP
+ ├── Workflow
+ ├── Permissions
+ ├── Guardrails
+ └── Escalation
 ```
 
 ---
 
-# 33. Super Admin Platform
-
-Super Admin shall have access to:
-
-```text
-Platform Overview
-Users
-Organizations
-Workplaces
-Roles
-Subscriptions
-Plans
-Payments
-Invoices
-Usage
-AI Providers
-AI Models
-AI Agents
-System Health
-Security
-Audit Logs
-Feature Flags
-Integrations
-Support
-```
-
-Super Admin shall be able to:
-
-* approve users
-* suspend users
-* ban users
-* create administrative users
-* manage roles
-* manage organizations
-* configure plans
-* configure pricing
-* monitor usage
-* monitor AI costs
-* manage platform settings
-
-End customers should not be treated as administrative users.
-
----
-
-# 34. Organization Administration
-
-Organization administrators shall manage:
-
-* organization profile
-* users
-* teams
-* workplaces
-* roles
-* permissions
-* integrations
-* AI agents
-* knowledge
-* billing
-* security
-* analytics
-
----
-
-# 35. Workplace Administration
-
-Workplace administrators shall manage:
-
-* members
-* teams
-* workflows
-* agents
-* channels
-* campaigns
-* support configuration
-* workplace analytics
-
----
-
-# 36. Sales Agent Platform
-
-Sales agents shall have:
-
-```text
-Dashboard
-Leads
-Lead Intelligence
-AI Recommendations
-Tasks
-Meetings
-Pipeline
-Conversations
-Follow-ups
-Accounts
-Performance
-```
-
----
-
-# 37. Support Agent Platform
-
-Support agents shall have:
-
-```text
-Inbox
-Tickets
-Conversations
-Customers
-AI Copilot
-Knowledge
-SLA
-Escalations
-Performance
-```
-
----
-
-# 38. Marketing User Platform
-
-Marketing users shall have:
-
-```text
-Marketing Dashboard
-Campaigns
-Audiences
-Content
-AI Content
-Automation
-Analytics
-Attribution
-```
-
----
-
-# 39. SEO User Platform
-
-SEO users shall have:
-
-```text
-SEO Dashboard
-Projects
-Keywords
-Competitors
-Content Gaps
-Technical SEO
-Content
-Rankings
-AEO
-Reports
-```
-
----
-
-# 40. AI Agent Builder
-
-Users shall be able to configure:
-
-* agent name
-* description
-* system instructions
-* model
-* temperature where supported
-* tools
-* knowledge
-* memory
-* workflows
-* channels
-* permissions
-* escalation rules
-
-Agents must support versioning.
-
-Example:
-
-```text
-Agent
- ├── v1
- ├── v2
- └── v3
-```
-
-Production deployment must identify the active version.
-
----
-
-# 41. Knowledge and RAG Platform
-
-Supported sources:
-
-* PDF
-* DOCX
-* TXT
-* CSV
-* HTML
-* URLs
-* FAQs
-* website content
-* structured data
-* connected cloud storage
+# 72. RAG KNOWLEDGE PLATFORM
 
 Pipeline:
 
 ```text
 Document
  ↓
-Parsing
+Parser
  ↓
-Cleaning
+Cleaner
  ↓
-Chunking
+Chunker
  ↓
 Embedding
  ↓
-Indexing
+Vector Database
  ↓
-Retrieval
+Retriever
  ↓
-Reranking
+Reranker
  ↓
-Generation
+LLM
+ ↓
+Answer
+ ↓
+Sources
 ```
 
-Support:
+Supported sources:
 
-* semantic retrieval
-* keyword retrieval
-* hybrid retrieval
-* metadata filtering
-* reranking
-* citations
-* access control
-
----
-
-# 42. Omnichannel Communication
-
-Supported channels may include:
-
-* Web Chat
-* Email
-* WhatsApp
-* SMS
-* social messaging platforms
-* API
-* voice
-* future channels
-
-Each conversation shall have:
-
-* conversation ID
-* customer ID
-* channel
-* participants
-* messages
-* status
-* assignment
-* AI state
-* escalation state
+* PDF
+* DOCX
+* TXT
+* Markdown
+* CSV
+* XLSX
+* web pages where permitted
+* knowledge bases
+* cloud storage
 
 ---
 
-# 43. Integration Ecosystem
+# 73. MCP PLATFORM
+
+MCP architecture:
+
+```text
+AI Agent
+ ↓
+Policy Engine
+ ↓
+Permission
+ ↓
+MCP Server
+ ↓
+Tool
+ ↓
+External Service
+ ↓
+Result
+ ↓
+Agent
+```
+
+Every tool execution must be auditable.
+
+---
+
+# 74. WORKFLOW AUTOMATION
+
+Workflow nodes:
+
+```text
+Trigger
+Condition
+AI
+HTTP
+Webhook
+CRM
+Email
+Database
+Delay
+Loop
+Approval
+Human Task
+MCP
+Notification
+Report
+```
+
+---
+
+# 75. AUTOMATION MARKETPLACE
+
+Future marketplace capabilities:
+
+* templates
+* agents
+* workflows
+* prompts
+* integrations
+* marketing templates
+* sales sequences
+* support workflows
+
+---
+
+# 76. INTEGRATION PLATFORM
 
 Priority integrations:
 
@@ -1765,524 +2022,669 @@ Priority integrations:
 * Google Calendar
 * Slack
 * Microsoft Teams
-* Salesforce
 * HubSpot
+* Salesforce
 * Zendesk
 * Jira
 * Notion
 * WhatsApp
-* email providers
+* Google Ads
+* Meta Ads
+* Instagram
+* TikTok
+* YouTube
 * payment providers
-* analytics platforms
+* accounting providers
+* analytics providers
 
-Integration architecture should support:
+---
+
+# 77. BILLING SYSTEM
+
+Billing shall support:
+
+* plans
+* subscriptions
+* invoices
+* payments
+* refunds
+* taxes
+* coupons
+* trials
+* upgrades
+* downgrades
+* cancellations
+* renewals
+
+---
+
+# 78. SUBSCRIPTION SYSTEM
+
+Plans:
 
 ```text
-OAuth
-API Keys
-Webhooks
-Polling
-MCP
-Event Streams
+FREE
+STARTER
+GROWTH
+PRO
+BUSINESS
+ENTERPRISE
+```
+
+Billing periods:
+
+```text
+MONTHLY
+YEARLY
 ```
 
 ---
 
-# 44. Security and Privacy
+# 79. PAYMENT GATEWAY
 
-Security requirements include:
-
-* TLS
-* encryption at rest
-* secure credential storage
-* password hashing
-* MFA
-* OAuth security
-* SSO
-* RBAC
-* authorization policies
-* tenant isolation
-* rate limiting
-* audit logging
-* secrets management
-* API security
-* session security
-
----
-
-# 45. Multi-Tenant Architecture Requirements
-
-Tenant isolation must exist at:
+Architecture:
 
 ```text
-API
-Database
-Cache
-Object Storage
-Vector Storage
-Search
-Events
-Workflows
-Analytics
+Customer
+ ↓
+Checkout
+ ↓
+Payment Provider
+ ↓
+Payment
+ ↓
+Webhook
+ ↓
+Billing Service
+ ↓
+Subscription
+ ↓
+Entitlement
 ```
 
-A request must never access another organization's data unless explicitly authorized through a platform-level operation.
+Payment provider selection should support regional and international payment requirements.
 
 ---
 
-# 46. Data Platform
+# 80. USAGE METERING
 
-Core entities include:
+Track:
 
-```text
-users
-organizations
-workplaces
-teams
-roles
-permissions
-memberships
-
-plans
-subscriptions
-entitlements
-usage_events
-credits
-invoices
-payments
-
-companies
-contacts
-leads
-opportunities
-deals
-activities
-
-agents
-agent_versions
-agent_tools
-agent_executions
-
-knowledge_bases
-documents
-chunks
-embeddings
-
-conversations
-messages
-tickets
-sla_policies
-
-campaigns
-content
-keywords
-seo_projects
-rankings
-
-markets
-competitors
-market_events
-launch_plans
-
-customers
-customer_events
-customer_health
-
-workflows
-workflow_versions
-workflow_executions
-
-integrations
-oauth_connections
-webhooks
-
-audit_events
-security_events
-notifications
-```
+* AI requests
+* AI tokens
+* leads
+* enrichment
+* campaigns
+* workflows
+* documents
+* storage
+* support conversations
+* API calls
+* exports
 
 ---
 
-# 47. Event-Driven Architecture
+# 81. ENTITLEMENT SYSTEM
 
-Important domain events shall include:
-
-```text
-USER_CREATED
-USER_UPDATED
-USER_SUSPENDED
-
-ORGANIZATION_CREATED
-WORKPLACE_CREATED
-
-LEAD_CREATED
-LEAD_ENRICHED
-LEAD_SCORED
-LEAD_UPDATED
-
-CAMPAIGN_CREATED
-CAMPAIGN_STARTED
-CAMPAIGN_COMPLETED
-
-MESSAGE_RECEIVED
-MESSAGE_SENT
-
-AI_AGENT_CREATED
-AI_AGENT_EXECUTED
-AI_AGENT_FAILED
-
-TICKET_CREATED
-TICKET_ASSIGNED
-TICKET_ESCALATED
-TICKET_RESOLVED
-
-PAYMENT_CREATED
-PAYMENT_COMPLETED
-PAYMENT_FAILED
-REFUND_CREATED
-
-SUBSCRIPTION_CREATED
-SUBSCRIPTION_UPDATED
-SUBSCRIPTION_CANCELLED
-
-COMPETITOR_CHANGED
-MARKET_EVENT_DETECTED
-
-CUSTOMER_CREATED
-CUSTOMER_HEALTH_CHANGED
-CHURN_RISK_CHANGED
-```
-
----
-
-# 48. Observability
-
-SalesGenie shall use structured observability.
-
-## Logs
-
-Structured JSON logs.
-
-## Metrics
-
-Metrics should include:
-
-* request count
-* latency
-* errors
-* queue depth
-* database performance
-* AI usage
-* AI cost
-* workflow failures
-
-## Tracing
-
-Distributed tracing should use OpenTelemetry-compatible standards.
-
----
-
-# 49. AI Safety and Governance
-
-The AI platform shall defend against:
-
-* prompt injection
-* indirect prompt injection
-* data exfiltration
-* unauthorized tool execution
-* malicious documents
-* sensitive information disclosure
-* unsafe automation
-
-Tool execution must pass authorization policies.
+Every feature should map to an entitlement.
 
 Example:
 
 ```text
-AI Request
- ↓
-Policy Evaluation
- ↓
-Permission Check
- ↓
-Tool Authorization
- ↓
-Tool Execution
- ↓
-Audit
+feature.lead_generation
+feature.ai_sales_agent
+feature.advanced_analytics
+feature.ad_intelligence
+feature.financial_intelligence
+feature.product_intelligence
+feature.excel_export
+feature.enterprise_sso
 ```
 
-High-risk operations should require human approval.
-
 ---
 
-# 50. Performance Requirements
+# 82. ANALYTICS PLATFORM
 
-Initial target:
-
-| Component              |                         Target |
-| ---------------------- | -----------------------------: |
-| API p95                | <300 ms excluding AI inference |
-| Indexed DB query       |                 <100 ms target |
-| Search                 |               <1 second target |
-| Dashboard initial load |              <2 seconds target |
-| AI first token         |              <2 seconds target |
-| Authentication         |                 <500 ms target |
-
-Targets shall be validated under realistic load.
-
----
-
-# 51. Scalability Requirements
-
-Long-term architecture should target:
-
-* 10M+ users
-* 500K+ concurrent conversations
-* millions of leads
-* millions of documents
-* thousands of organizations
-* large event volumes
-
-Scaling mechanisms should include:
-
-* horizontal service scaling
-* database indexing
-* read replicas
-* caching
-* queues
-* partitioning
-* asynchronous processing
-* object storage
-* distributed search
-* event streaming
-
----
-
-# 52. Reliability and Availability
-
-Production baseline:
+Analytics layers:
 
 ```text
-Availability Target: ≥99.9%
+Operational Analytics
+Sales Analytics
+Marketing Analytics
+Advertising Analytics
+Financial Analytics
+Customer Analytics
+Product Analytics
+Support Analytics
+AI Analytics
+Platform Analytics
 ```
 
-Critical enterprise deployments should support higher contractual SLA levels.
+---
 
-The platform shall provide:
+# 83. DASHBOARD SYSTEM
 
-* retries
-* circuit breakers
-* health checks
-* graceful degradation
-* queue recovery
-* database backup
-* disaster recovery
-* failover
+Dashboards must support:
+
+* configurable widgets
+* filters
+* date ranges
+* drill-down
+* export
+* saved views
+* role-based layouts
+* organization-level dashboards
+* team dashboards
 
 ---
 
-# 53. Internationalization
+# 84. REPORTING PLATFORM
 
-The platform should support:
+Reports:
 
-* multiple languages
-* localized UI
-* localized dates
-* localized currency
-* timezone handling
-* translated AI responses
-
-The architecture must not hard-code English-only UI strings.
-
----
-
-# 54. Accessibility
-
-The UI should target WCAG 2.1 AA-level accessibility where applicable.
-
-Requirements:
-
-* keyboard navigation
-* screen-reader compatibility
-* sufficient contrast
-* semantic HTML
-* accessible forms
-* accessible error states
-* focus management
+* executive report
+* sales report
+* lead report
+* marketing report
+* advertising report
+* finance report
+* product report
+* support report
+* SEO report
+* business growth report
+* AI recommendation report
 
 ---
 
-# 55. Audit and Compliance
+# 85. EXCEL GENERATION
 
-Audit events should cover:
+Automatic Excel workbook:
 
-* authentication
-* authorization changes
-* role changes
-* data access where required
-* billing
-* payment
-* AI actions
-* tool execution
-* administrative operations
-* security events
+```text
+SALESGENIE_BUSINESS_REPORT.xlsx
 
-Audit logs must be tamper-resistant.
+01 Executive Summary
+02 Revenue
+03 Expenses
+04 Profit Loss
+05 Product Profitability
+06 Product Loss Analysis
+07 Customer Growth
+08 Sales
+09 Leads
+10 Marketing
+11 Advertising
+12 Platform Performance
+13 Demographics
+14 Geography
+15 Campaigns
+16 ROAS
+17 ROI
+18 SEO
+19 Support
+20 AI Recommendations
+```
 
 ---
 
-# 56. Product Analytics
+# 86. EXCEL ADVERTISING REPORT
+
+```text
+SALESGENIE_ADVERTISING_REPORT.xlsx
+
+01 Executive Summary
+02 Platform Performance
+03 Campaign Performance
+04 Ad Set Performance
+05 Product Performance
+06 Spend
+07 Reach
+08 Impressions
+09 Clicks
+10 Leads
+11 Customers
+12 Revenue
+13 ROAS
+14 ROI
+15 Demographics
+16 Geography
+17 Age
+18 Gender
+19 Device
+20 AI Recommendations
+```
+
+---
+
+# 87. PDF AND CSV REPORTING
+
+Supported exports:
+
+```text
+XLSX
+CSV
+PDF
+JSON
+```
+
+Large exports must use asynchronous processing.
+
+---
+
+# 88. NOTIFICATION SYSTEM
+
+Notification categories:
+
+* lead assigned
+* campaign completed
+* workflow failed
+* support escalated
+* payment failed
+* subscription expiring
+* security event
+* AI recommendation
+* data integration failure
+* report ready
+
+---
+
+# 89. SEARCH PLATFORM
+
+Search must support:
+
+* users
+* organizations
+* leads
+* companies
+* contacts
+* products
+* campaigns
+* tickets
+* conversations
+* knowledge
+* reports
+
+---
+
+# 90. DATA PLATFORM
+
+Major storage layers:
+
+```text
+PostgreSQL
+Redis
+Object Storage
+Vector Database
+Search Engine
+Analytics Warehouse
+Event Bus
+```
+
+---
+
+# 91. DATA INGESTION
+
+Data sources:
+
+```text
+APIs
+Webhooks
+CSV
+XLSX
+Database
+CRM
+Advertising APIs
+Payment APIs
+Accounting APIs
+```
+
+---
+
+# 92. DATA NORMALIZATION
+
+Normalize:
+
+* dates
+* currencies
+* products
+* customers
+* companies
+* campaigns
+* channels
+* countries
+* metrics
+
+---
+
+# 93. DATA QUALITY
+
+Detect:
+
+* duplicate data
+* missing values
+* invalid records
+* inconsistent identifiers
+* stale data
+* conflicting data
+* broken integrations
+
+---
+
+# 94. DATA GOVERNANCE
+
+Every dataset should store:
+
+```text
+Source
+Timestamp
+Freshness
+Confidence
+Collection Method
+Permission
+Transformation
+Attribution Method
+```
+
+---
+
+# 95. EVENT-DRIVEN ARCHITECTURE
+
+Example:
+
+```text
+AD_DATA_IMPORTED
+       ↓
+DATA_NORMALIZED
+       ↓
+CAMPAIGN_ANALYZED
+       ↓
+ROI_CALCULATED
+       ↓
+BUSINESS_METRICS_UPDATED
+       ↓
+AI_ANALYSIS_REQUESTED
+       ↓
+RECOMMENDATION_GENERATED
+       ↓
+USER_NOTIFIED
+```
+
+---
+
+# 96. AI/ML ARCHITECTURE
+
+AI services:
+
+```text
+AI Gateway
+Model Router
+LLM Providers
+Embedding Service
+Reranker
+ML Models
+Prediction Service
+Recommendation Engine
+Evaluation Service
+Cost Management
+Guardrails
+```
+
+---
+
+# 97. MODEL GATEWAY
+
+The AI Gateway should provide:
+
+* provider abstraction
+* model routing
+* fallback
+* rate limiting
+* cost tracking
+* token tracking
+* latency monitoring
+* model policy
+
+Possible model categories:
+
+```text
+Reasoning
+General Chat
+Coding
+Embedding
+Vision
+Speech
+Translation
+Classification
+```
+
+---
+
+# 98. AI COST MANAGEMENT
 
 Track:
 
 ```text
-Signup
-Activation
-Feature Usage
-Agent Creation
-Agent Execution
-Lead Creation
-Lead Qualification
-Campaign Execution
-Ticket Creation
-AI Resolution
-Human Escalation
-Subscription
-Payment
-Cancellation
+Provider
+Model
+Input Tokens
+Output Tokens
+Requests
+Latency
+Cost
+Organization
+User
+Agent
+Workflow
 ```
 
 ---
 
-# 57. Customer ROI System
+# 99. AI EVALUATION
 
-SalesGenie shall provide a customer-facing ROI dashboard.
+AI evaluation metrics:
 
-Example:
+* factuality
+* groundedness
+* relevance
+* latency
+* cost
+* task completion
+* escalation rate
+* hallucination rate
+
+---
+
+# 100. AI SAFETY AND GUARDRAILS
+
+Guardrails:
+
+* prompt injection defense
+* tool authorization
+* output validation
+* PII protection
+* data access control
+* dangerous action protection
+* human approval
+* rate limits
+
+---
+
+# 101. SECURITY
+
+Security requirements:
+
+* TLS
+* encrypted storage
+* password hashing
+* MFA
+* RBAC
+* tenant isolation
+* rate limiting
+* secure sessions
+* secret management
+* audit logs
+* vulnerability scanning
+
+---
+
+# 102. PRIVACY
+
+The system shall provide:
+
+* data access controls
+* export controls
+* deletion workflows
+* retention policies
+* privacy settings
+* consent management where applicable
+
+---
+
+# 103. AUDIT LOGGING
+
+Audit events:
 
 ```text
-                CUSTOMER ROI
-
-Leads Generated                  12,430
-Qualified Leads                   3,420
-Opportunities                       618
-Customers                           127
-
-Attributed Revenue            $840,000
-
-Support Conversations            38,200
-AI Resolved                       27,400
-Human Escalations                 10,800
-
-Estimated Support Savings       $92,000
-
-Marketing Investment             $18,000
-SalesGenie Cost                   $6,500
-
-Estimated Net Impact            $907,500
+LOGIN
+LOGOUT
+USER_CREATED
+ROLE_CHANGED
+PERMISSION_CHANGED
+DATA_EXPORTED
+REPORT_GENERATED
+PAYMENT_CREATED
+SUBSCRIPTION_CHANGED
+AI_TOOL_EXECUTED
+WORKFLOW_EXECUTED
+INTEGRATION_CONNECTED
+INTEGRATION_DISCONNECTED
 ```
-
-ROI calculations must disclose methodology.
-
-Estimates must not be presented as guaranteed revenue.
 
 ---
 
-# 58. AI Evaluation System
+# 104. COMPLIANCE
 
-Every production AI agent should have evaluation datasets.
+Architecture should be designed to support applicable frameworks such as:
+
+* SOC 2
+* ISO 27001
+* GDPR where applicable
+* regional privacy laws
+* PCI requirements for payment processing
+
+SalesGenie should minimize direct handling of sensitive payment data by using compliant payment providers.
+
+---
+
+# 105. OBSERVABILITY
 
 Metrics:
 
-* task success
-* groundedness
-* hallucination rate
-* retrieval accuracy
-* tool accuracy
-* latency
-* cost
-* user satisfaction
-
-Evaluation should support:
-
 ```text
-Prompt Version
-+
-Model
-+
-Knowledge Version
-+
-Tool Version
-=
-Evaluation Result
+API Latency
+Error Rate
+Request Rate
+Database Latency
+Queue Depth
+Worker Utilization
+AI Latency
+AI Cost
+Integration Failures
+Workflow Failures
 ```
 
 ---
 
-# 59. Experimentation Platform
+# 106. RELIABILITY
 
-SalesGenie should support controlled experimentation for:
+Target availability:
 
-* prompts
-* AI models
-* campaigns
-* landing pages
-* messaging
-* lead scoring
-* workflows
+```text
+Standard Services: ≥99.9%
+Enterprise Critical Services: configurable SLA
+```
 
-Experiments should track:
+Required mechanisms:
 
-* treatment
-* control
-* metric
-* sample size
-* outcome
+* retries
+* circuit breakers
+* health checks
+* failover
+* graceful degradation
+* idempotency
+* dead-letter queues
 
 ---
 
-# 60. Feature Flag Platform
+# 107. SCALABILITY
 
-Features should support:
-
-* global enablement
-* organization-level enablement
-* workplace-level enablement
-* user-level testing
-* percentage rollout
-* role-based rollout
-
-Example:
+Target architecture:
 
 ```text
-Feature:
-advanced_ai_agents
+10M+ Users
+500K+ Concurrent Conversations
+Millions of Leads
+Millions of Campaigns
+Billions of Events
+```
 
-State:
-10% rollout
+Scaling strategy:
+
+```text
+Load Balancer
+ ↓
+Stateless Services
+ ↓
+Queues
+ ↓
+Workers
+ ↓
+Databases
 ```
 
 ---
 
-# 61. API Platform
+# 108. PERFORMANCE
 
-APIs shall be:
+Targets:
 
-* versioned
-* authenticated
-* authorized
-* documented
-* rate limited
-* observable
+| Operation      |                  Target |
+| -------------- | ----------------------: |
+| API p95        |                 <300 ms |
+| Authentication |                 <500 ms |
+| Search         |                  <1 sec |
+| Dashboard      |                  <2 sec |
+| AI first token |           <2 sec target |
+| Export         |                   Async |
+| Large report   |                   Async |
+| Data ingestion | Async where appropriate |
 
-Base format:
+---
+
+# 109. DISASTER RECOVERY
+
+Requirements:
+
+* automated backups
+* point-in-time recovery
+* object storage backup
+* configuration backup
+* recovery testing
+* documented DR plan
+
+Enterprise RPO/RTO should be configurable by contract.
+
+---
+
+# 110. API REQUIREMENTS
+
+Base API:
 
 ```text
 /api/v1/
 ```
 
-Major APIs:
+Domains:
 
 ```text
 /auth
@@ -2295,37 +2697,50 @@ Major APIs:
 /companies
 /contacts
 /opportunities
-
-/agents
-/agent-executions
-/knowledge
+/crm
+/sales
 
 /market
 /competitors
 /product-launch
 
-/crm
-/sales
 /marketing
 /seo
+/aeo
+
+/ads
+/ad-campaigns
+/ad-analytics
+/ad-demographics
+
+/finance
+/revenue
+/expenses
+/profit-loss
+/products/profitability
+
+/business-intelligence
+/recommendations
+
+/agents
+/knowledge
+/workflows
+/mcp
 
 /conversations
 /tickets
 /support
 
-/workflows
-/mcp
-
-/integrations
-
 /billing
 /subscriptions
 /payments
+/invoices
 /usage
 
-/analytics
-/revenue
+/reports
+/exports
 
+/analytics
 /admin
 /audit
 /security
@@ -2333,497 +2748,1600 @@ Major APIs:
 
 ---
 
-# 62. Developer Platform
+# 111. API DESIGN PRINCIPLES
 
-Developers should have access to:
+APIs must support:
 
-* REST API
-* webhooks
-* SDKs
-* API keys
-* OAuth
-* MCP
-* event subscriptions
-* documentation
-* sandbox environment
+* authentication
+* authorization
+* pagination
+* filtering
+* sorting
+* search
+* validation
+* idempotency
+* rate limiting
+* versioning
+* structured errors
+* request tracing
 
 ---
 
-# 63. User Journeys
+# 112. DATABASE REQUIREMENTS
 
-## Journey 1 — New Customer
+Primary relational entities:
 
 ```text
-Landing Page
- ↓
-Signup
- ↓
-Email Verification
- ↓
-Organization Setup
- ↓
-Choose Plan
- ↓
-Workspace Creation
- ↓
-Connect Data
- ↓
-Create AI Agent
- ↓
-Create ICP
- ↓
-Generate Leads
- ↓
-Launch Campaign
- ↓
-Measure Results
+users
+organizations
+workplaces
+teams
+roles
+permissions
+memberships
+
+leads
+companies
+contacts
+accounts
+opportunities
+deals
+activities
+
+products
+transactions
+expenses
+revenue
+profit_loss
+
+campaigns
+ad_platforms
+ad_sets
+advertisements
+ad_metrics
+audiences
+
+customers
+subscriptions
+payments
+invoices
+
+conversations
+tickets
+messages
+
+agents
+agent_tools
+knowledge_documents
+knowledge_chunks
+workflows
+workflow_runs
+
+recommendations
+reports
+audit_logs
+integrations
 ```
 
 ---
 
-## Journey 2 — Lead Generation
+# 113. FRONTEND REQUIREMENTS
+
+Frontend must provide:
+
+* responsive UI
+* role-aware navigation
+* dashboards
+* data tables
+* charts
+* filters
+* search
+* command palette
+* notifications
+* forms
+* modals
+* report export
+* AI chat interface
+* agent builder
+* workflow builder
+
+---
+
+# 114. MOBILE REQUIREMENTS
+
+Future mobile application:
+
+* dashboard
+* notifications
+* leads
+* CRM
+* support
+* AI assistant
+* approval workflows
+* reports
+
+---
+
+# 115. ACCESSIBILITY
+
+Target:
 
 ```text
+WCAG 2.1 AA
+```
+
+Requirements:
+
+* keyboard navigation
+* screen-reader support
+* sufficient contrast
+* accessible forms
+* accessible charts
+* focus management
+
+---
+
+# 116. INTERNATIONALIZATION
+
+Support architecture for:
+
+* English
+* Bengali
+* Spanish
+* other languages
+
+Localization must support:
+
+* currency
+* date
+* time
+* number
+* language
+
+---
+
+# 117. BUSINESS RULES
+
+## BR-001
+
+Users can only access resources allowed by their tenant and permissions.
+
+## BR-002
+
+Financial calculations must use configured accounting rules.
+
+## BR-003
+
+Advertising metrics must identify source platform.
+
+## BR-004
+
+Attribution must identify the selected attribution model.
+
+## BR-005
+
+AI recommendations must identify evidence.
+
+## BR-006
+
+High-risk actions require authorization.
+
+## BR-007
+
+All administrative actions must be audited.
+
+## BR-008
+
+Large reports must execute asynchronously.
+
+## BR-009
+
+External data must preserve source metadata.
+
+## BR-010
+
+Estimated metrics must not be presented as confirmed actual values.
+
+---
+
+# 118. FUNCTIONAL REQUIREMENTS
+
+## FR-AUTH
+
+The system shall provide secure authentication and authorization.
+
+## FR-ORG
+
+The system shall support multi-organization management.
+
+## FR-LEAD
+
+The system shall discover, enrich, validate, score and prioritize leads.
+
+## FR-CRM
+
+The system shall manage contacts, companies, deals and sales activities.
+
+## FR-MARKET
+
+The system shall analyze markets and competitors.
+
+## FR-PRODUCT
+
+The system shall analyze new product launches.
+
+## FR-MARKETING
+
+The system shall automate digital marketing.
+
+## FR-SEO
+
+The system shall provide SEO and AEO capabilities.
+
+## FR-ADS
+
+The system shall ingest and analyze advertising data.
+
+## FR-FINANCE
+
+The system shall calculate configurable financial metrics.
+
+## FR-PROFIT
+
+The system shall identify profitable and loss-making products.
+
+## FR-AI
+
+The system shall provide AI business analysis.
+
+## FR-RECOMMEND
+
+The system shall generate evidence-based recommendations.
+
+## FR-SUPPORT
+
+The system shall support AI and human customer support.
+
+## FR-AGENT
+
+The system shall support configurable AI agents.
+
+## FR-WORKFLOW
+
+The system shall provide workflow automation.
+
+## FR-BILLING
+
+The system shall support subscription billing.
+
+## FR-REPORT
+
+The system shall generate Excel, PDF and CSV reports.
+
+---
+
+# 119. NON-FUNCTIONAL REQUIREMENTS
+
+## Security
+
+High.
+
+## Availability
+
+≥99.9% target.
+
+## Scalability
+
+Horizontal.
+
+## Maintainability
+
+Modular microservices.
+
+## Extensibility
+
+API-first.
+
+## Observability
+
+Full tracing and metrics.
+
+## Performance
+
+Defined service-level targets.
+
+## Reliability
+
+Idempotent and fault tolerant.
+
+## Accessibility
+
+WCAG 2.1 AA target.
+
+## Internationalization
+
+Built into architecture.
+
+---
+
+# 120. USER REQUIREMENTS
+
+Users shall be able to:
+
+* register
+* manage accounts
+* manage organizations
+* generate leads
+* analyze leads
+* analyze markets
+* analyze competitors
+* launch products
+* automate marketing
+* manage SEO
+* manage advertising
+* analyze financial performance
+* analyze product profitability
+* understand business growth
+* receive AI recommendations
+* generate Excel reports
+* access AI support
+* access human support
+* manage subscriptions
+* manage payments
+
+---
+
+# 121. SYSTEM REQUIREMENTS
+
+The system shall:
+
+* support multi-tenancy
+* ingest data
+* normalize data
+* validate data
+* analyze data
+* calculate business metrics
+* provide AI intelligence
+* provide automation
+* provide analytics
+* generate reports
+* enforce security
+* enforce permissions
+* maintain audit trails
+* support billing
+* support payments
+* support subscriptions
+
+---
+
+# 122. REPORTING REQUIREMENTS
+
+Reports must support:
+
+```text
+Daily
+Weekly
+Monthly
+Quarterly
+Yearly
+Custom
+```
+
+Comparisons:
+
+```text
+Current vs Previous
+Current vs Previous Year
+Target vs Actual
+Forecast vs Actual
+```
+
+---
+
+# 123. ANALYTICS REQUIREMENTS
+
+Analytics should support:
+
+* drill-down
+* filters
+* date range
+* comparison
+* segmentation
+* export
+* saved views
+* scheduled reports
+
+---
+
+# 124. AI RECOMMENDATION REQUIREMENTS
+
+Each recommendation:
+
+```text
+ID
+Title
+Problem
+Evidence
+Analysis
+Recommendation
+Confidence
+Expected Impact
+Risk
+Priority
+Owner
+Status
+Created At
+```
+
+---
+
+# 125. REVENUE ATTRIBUTION REQUIREMENTS
+
+Every attributed revenue record should include:
+
+```text
+Customer
+Revenue
+Source
+Campaign
+Touchpoint
+Attribution Model
+Timestamp
+Confidence
+```
+
+---
+
+# 126. ADVERTISING DATA REQUIREMENTS
+
+Required data where available:
+
+```text
+Spend
+Impressions
+Reach
+Clicks
+CTR
+CPC
+CPM
+Leads
+Conversions
+Customers
+Revenue
+ROAS
+ROI
+Audience
+Demographics
+Geography
+```
+
+---
+
+# 127. FINANCIAL DATA REQUIREMENTS
+
+Required data:
+
+```text
+Revenue
+COGS
+Expenses
+Advertising
+Marketing
+Refunds
+Taxes
+Other Costs
+```
+
+---
+
+# 128. DATA FRESHNESS
+
+Dashboards must show:
+
+```text
+Last Updated
+Data Source
+Synchronization Status
+Freshness
+```
+
+Example:
+
+```text
+Meta Ads
+Synced 10 minutes ago
+
+CRM
+Synced 4 minutes ago
+
+Finance
+Synced 45 minutes ago
+```
+
+---
+
+# 129. DATA QUALITY SCORING
+
+Example:
+
+```text
+Data Quality Score: 94/100
+
+Completeness: 97
+Accuracy: 92
+Freshness: 95
+Consistency: 93
+```
+
+---
+
+# 130. CUSTOMER ROI
+
+SalesGenie shall measure:
+
+```text
+Revenue Influenced
+Revenue Attributed
+Costs Reduced
+Hours Saved
+Leads Generated
+Customers Acquired
+Support Tickets Automated
+Campaign Efficiency
+Marketing ROI
+Advertising ROI
+```
+
+---
+
+# 131. PRODUCT SUCCESS METRICS
+
+Product KPIs:
+
+```text
+Activation Rate
+Weekly Active Organizations
+Monthly Active Organizations
+Lead Generation Usage
+AI Agent Usage
+Automation Usage
+Retention
+Expansion
+Churn
+```
+
+---
+
+# 132. PLATFORM SUCCESS METRICS
+
+Technical:
+
+```text
+Availability
+Latency
+Error Rate
+Queue Delay
+Integration Success Rate
+AI Latency
+AI Cost
+```
+
+---
+
+# 133. BUSINESS KPIs
+
+Business KPIs:
+
+```text
+MRR
+ARR
+CAC
+LTV
+Gross Margin
+Net Revenue Retention
+Churn
+Conversion
+ROAS
+ROI
+```
+
+---
+
+# 134. AI KPIs
+
+AI KPIs:
+
+```text
+Task Completion Rate
+Resolution Rate
+Recommendation Acceptance
+Recommendation Accuracy
+Hallucination Rate
+Groundedness
+Latency
+Cost
+Escalation Rate
+```
+
+---
+
+# 135. PRICING ARCHITECTURE
+
+Suggested structure:
+
+```text
+FREE
+ ↓
+STARTER
+ ↓
+GROWTH
+ ↓
+PRO
+ ↓
+BUSINESS
+ ↓
+ENTERPRISE
+```
+
+Pricing should be configurable.
+
+---
+
+# 136. FREE TIER
+
+Possible limits:
+
+* limited users
+* limited leads
+* limited AI usage
+* limited workflows
+* limited reports
+* basic analytics
+* limited support
+
+---
+
+# 137. PAID TIERS
+
+Paid tiers may unlock:
+
+* more leads
+* more AI
+* advanced analytics
+* advertising intelligence
+* financial intelligence
+* AI agents
+* workflows
+* integrations
+* advanced support
+
+---
+
+# 138. ENTERPRISE TIER
+
+Enterprise may include:
+
+* custom limits
+* SSO
+* SCIM
+* advanced RBAC
+* advanced audit
+* custom integrations
+* dedicated infrastructure
+* custom SLA
+* enterprise support
+* private AI options
+
+---
+
+# 139. FEATURE ENTITLEMENTS
+
+Entitlements must be dynamically configurable.
+
+Example:
+
+```text
+lead.max
+ai.requests.max
+workflow.max
+storage.max
+agents.max
+reports.max
+exports.max
+```
+
+---
+
+# 140. USAGE LIMITS
+
+Limits may be based on:
+
+* users
+* seats
+* leads
+* AI credits
+* tokens
+* storage
+* workflows
+* conversations
+* API calls
+
+---
+
+# 141. TRIAL SYSTEM
+
+Trial features:
+
+* trial start
+* trial end
+* trial reminders
+* trial conversion
+* trial expiration
+* feature restrictions
+
+---
+
+# 142. UPGRADE/DOWNGRADE
+
+Billing changes must:
+
+* calculate proration where applicable
+* update entitlements
+* maintain audit logs
+* notify users
+
+---
+
+# 143. CANCELLATION
+
+Cancellation:
+
+```text
+Active
+ ↓
+Cancellation Requested
+ ↓
+End of Billing Period
+ ↓
+Expired
+```
+
+Optional immediate cancellation may be supported based on billing provider capabilities.
+
+---
+
+# 144. REFUNDS
+
+Refunds must:
+
+* use authorized payment systems
+* update subscription state
+* record audit
+* generate billing events
+
+---
+
+# 145. CUSTOMER ONBOARDING
+
+Onboarding:
+
+```text
+Create Account
+ ↓
+Create Organization
+ ↓
+Business Profile
+ ↓
+Connect Data Sources
+ ↓
+Define Products
+ ↓
 Define ICP
  ↓
-Market Search
+Connect Ads
  ↓
-Lead Discovery
+Connect CRM
  ↓
-Enrichment
+Configure AI
  ↓
-Verification
- ↓
-Intent Detection
- ↓
-Lead Scoring
- ↓
-AI Ranking
- ↓
-Sales Outreach
+Generate First Insights
 ```
 
 ---
 
-## Journey 3 — Product Launch
+# 146. PRODUCT LAUNCH WORKFLOW
 
 ```text
-Enter Product
+NEW PRODUCT
  ↓
-Market Analysis
+PRODUCT DATA
  ↓
-Competitor Analysis
+MARKET ANALYSIS
  ↓
-Customer Analysis
+COMPETITOR ANALYSIS
  ↓
-Positioning
+CUSTOMER ANALYSIS
  ↓
-Pricing
+PRICING
  ↓
-Marketing Plan
+POSITIONING
  ↓
-Sales Plan
+MARKETING
  ↓
-SEO Plan
+SEO
  ↓
-Support Plan
+ADVERTISING
  ↓
-Launch
+SALES
  ↓
-Monitor
+SUPPORT
+ ↓
+LAUNCH PLAN
+ ↓
+EXECUTION
+ ↓
+MEASUREMENT
+```
+
+---
+
+# 147. LEAD GENERATION WORKFLOW
+
+```text
+ICP
+ ↓
+SEARCH
+ ↓
+DISCOVER
+ ↓
+ENRICH
+ ↓
+VALIDATE
+ ↓
+INTENT
+ ↓
+SCORE
+ ↓
+QUALIFY
+ ↓
+CRM
+ ↓
+OUTREACH
+ ↓
+CONVERT
+```
+
+---
+
+# 148. SALES WORKFLOW
+
+```text
+Lead
+ ↓
+Qualification
+ ↓
+Contact
+ ↓
+Meeting
+ ↓
+Opportunity
+ ↓
+Proposal
+ ↓
+Negotiation
+ ↓
+Won
+ ↓
+Customer
+```
+
+---
+
+# 149. MARKETING WORKFLOW
+
+```text
+Audience
+ ↓
+Strategy
+ ↓
+Content
+ ↓
+Approval
+ ↓
+Publish
+ ↓
+Measure
  ↓
 Optimize
 ```
 
 ---
 
-## Journey 4 — AI Support
+# 150. ADVERTISING WORKFLOW
+
+```text
+Campaign
+ ↓
+Spend
+ ↓
+Reach
+ ↓
+Click
+ ↓
+Lead
+ ↓
+Customer
+ ↓
+Revenue
+ ↓
+ROAS
+ ↓
+Optimization
+```
+
+---
+
+# 151. FINANCIAL ANALYSIS WORKFLOW
+
+```text
+Revenue
+ +
+Expenses
+ +
+COGS
+ +
+Marketing
+ +
+Advertising
+ +
+Operations
+ ↓
+Financial Engine
+ ↓
+P&L
+ ↓
+Product Profitability
+ ↓
+Business Growth
+ ↓
+AI Analysis
+```
+
+---
+
+# 152. CUSTOMER SUPPORT WORKFLOW
 
 ```text
 Customer
  ↓
-AI Support
- ↓
-Knowledge Retrieval
- ↓
-AI Response
- ↓
-Resolved?
- ├── YES → Close
- └── NO
-       ↓
-Human Escalation
-       ↓
-Agent
-       ↓
-Resolution
-```
-
----
-
-## Journey 5 — Subscription
-
-```text
-Select Plan
- ↓
-Checkout
- ↓
-Payment
- ↓
-Subscription Created
- ↓
-Entitlements Activated
- ↓
-Usage Tracking
- ↓
-Renewal
-```
-
----
-
-# 64. Core Business Workflows
-
-## Lead Workflow
-
-```text
-Lead Discovery
- ↓
-Enrichment
- ↓
-Verification
- ↓
-Scoring
- ↓
-Qualification
- ↓
-Assignment
- ↓
-Outreach
- ↓
-Engagement
- ↓
-Opportunity
- ↓
-Deal
- ↓
-Customer
-```
-
----
-
-## Support Workflow
-
-```text
-Conversation
+Channel
  ↓
 AI Classification
  ↓
 Knowledge Retrieval
  ↓
-AI Response
+AI Answer
  ↓
-Resolution
- OR
-Human Escalation
- ↓
-Resolution
- ↓
-Feedback
- ↓
-Knowledge Improvement
+Confidence
+ ├── High → Resolve
+ └── Low → Human
 ```
 
 ---
 
-## Marketing Workflow
+# 153. AI RECOMMENDATION WORKFLOW
 
 ```text
-Market Intelligence
+Business Data
  ↓
-Audience
+Analytics
  ↓
-Campaign
+Anomaly / Trend
  ↓
-AI Content
+Root Cause
+ ↓
+AI Recommendation
+ ↓
+Confidence
  ↓
 Approval
  ↓
-Distribution
+Execution
  ↓
-Lead
+Outcome
  ↓
-Conversion
- ↓
-Revenue Attribution
+Evaluation
 ```
 
 ---
 
-# 65. Functional Product Requirements
-
-Every major feature must provide:
-
-1. User interface
-2. Backend API
-3. Database persistence
-4. Authorization
-5. Validation
-6. Error handling
-7. Logging
-8. Audit where required
-9. Analytics events
-10. Automated tests
-11. Documentation
-12. Observability
-
-A feature shall not be considered production-ready merely because its API returns HTTP 200.
-
----
-
-# 66. Non-Functional Product Requirements
-
-The platform shall provide:
-
-* scalability
-* reliability
-* maintainability
-* observability
-* security
-* performance
-* accessibility
-* internationalization
-* testability
-* disaster recovery
-* extensibility
-
----
-
-# 67. Business Rules
-
-## BR-001
-
-A user may only access resources authorized for their tenant.
-
-## BR-002
-
-Subscription entitlements determine feature availability.
-
-## BR-003
-
-Usage must be recorded independently from presentation-layer calculations.
-
-## BR-004
-
-AI tool execution must respect authorization.
-
-## BR-005
-
-Critical administrative operations must be audited.
-
-## BR-006
-
-External information should have source metadata where available.
-
-## BR-007
-
-AI-generated recommendations must be distinguishable from verified factual information.
-
-## BR-008
-
-Billing records must be immutable or append-only where financially appropriate.
-
-## BR-009
-
-Deleted resources must follow configurable retention policies.
-
-## BR-010
-
-Human agents must be able to override AI support.
-
----
-
-# 68. AI/ML Requirements
-
-ML systems should support:
-
-* training
-* validation
-* evaluation
-* versioning
-* deployment
-* monitoring
-* drift detection
-* rollback
-
-Candidate ML systems:
+# 154. EXCEL REPORTING WORKFLOW
 
 ```text
-Lead Scoring
-Churn Prediction
-Customer Health
-Revenue Forecasting
-Intent Classification
-Ticket Classification
-Recommendation
-Next Best Action
+User Request
+ ↓
+Validate Permission
+ ↓
+Collect Data
+ ↓
+Aggregate
+ ↓
+Calculate Metrics
+ ↓
+Generate Workbook
+ ↓
+Validate Workbook
+ ↓
+Store Securely
+ ↓
+Notify User
 ```
 
 ---
 
-# 69. Data Requirements
-
-Data architecture should separate:
+# 155. END-TO-END BUSINESS GROWTH WORKFLOW
 
 ```text
-Operational Data
-Analytics Data
-Vector Data
-Search Data
-Event Data
-Object Data
-Audit Data
+                 MARKET
+                   ↓
+              LEAD GENERATION
+                   ↓
+                 SALES
+                   ↓
+                CUSTOMER
+                   ↓
+        ┌──────────┼──────────┐
+        ↓          ↓          ↓
+    MARKETING    PRODUCT    SUPPORT
+        ↓          ↓          ↓
+       ADS       USAGE      FEEDBACK
+        └──────────┼──────────┘
+                   ↓
+                FINANCE
+                   ↓
+             PROFIT / LOSS
+                   ↓
+           BUSINESS INTELLIGENCE
+                   ↓
+               AI ANALYST
+                   ↓
+             RECOMMENDATIONS
+                   ↓
+               AUTOMATION
+                   ↓
+               OUTCOMES
+                   ↓
+                 ROI
+                   ↓
+                LEARNING
+                   ↓
+                GROWTH
 ```
-
-Sensitive data must receive appropriate:
-
-* encryption
-* access control
-* retention
-* masking
-* logging policies
 
 ---
 
-# 70. Reporting Requirements
+# 156. DASHBOARD REQUIREMENTS
 
-Reports shall support:
+All dashboards must support:
 
-* dashboard
-* table
-* chart
-* filtering
-* date range
+* role-based access
+* filters
+* date ranges
 * export
-* scheduled reports
-* role-specific access
-
-Exports may include:
-
-* CSV
-* XLSX
-* PDF
+* drill-down
+* comparison
+* responsive design
+* configurable widgets
 
 ---
 
-# 71. Notification Requirements
+# 157. EXECUTIVE DASHBOARD
 
-Supported notifications:
-
-* email
-* in-app
-* push where supported
-* webhook
-* SMS where configured
-
-Events:
-
-* lead assignment
-* ticket escalation
-* payment failure
-* subscription renewal
-* workflow failure
-* security alert
-* AI agent failure
-
-Users should control notification preferences.
-
----
-
-# 72. Billing Lifecycle
+Metrics:
 
 ```text
-Trial
- ↓
-Active
- ↓
-Renewal
- ↓
-Payment Success
- ↓
-Active
+Revenue
+Profit
+Expenses
+Growth
+Customers
+CAC
+LTV
+ROAS
+ROI
+Product Performance
+AI Recommendations
 ```
 
-Failure:
+---
+
+# 158. SALES DASHBOARD
+
+Metrics:
 
 ```text
-Payment Failure
- ↓
-Retry
- ↓
-Grace Period
- ↓
-Restricted
- ↓
-Cancelled
+Leads
+Qualified Leads
+Pipeline
+Deals
+Conversion
+Sales
+Revenue
+Sales Agent Performance
+Forecast
 ```
 
-Cancellation should preserve billing and audit history according to retention policies.
+---
+
+# 159. MARKETING DASHBOARD
+
+Metrics:
+
+```text
+Campaigns
+Reach
+Engagement
+Leads
+Conversions
+Revenue
+Marketing ROI
+```
 
 ---
 
-# 73. Security Threat Model
+# 160. ADVERTISING DASHBOARD
 
-Primary threats:
+Metrics:
 
-* account takeover
-* credential theft
-* privilege escalation
-* tenant breakout
-* API abuse
-* data leakage
-* prompt injection
-* malicious tools
-* malicious files
-* payment fraud
-* webhook abuse
-* supply-chain compromise
-* insider abuse
-
-Security testing should include:
-
-* SAST
-* DAST
-* dependency scanning
-* container scanning
-* secret scanning
-* penetration testing
-* authorization testing
+```text
+Spend
+Reach
+Impressions
+Clicks
+Leads
+Customers
+Revenue
+ROAS
+ROI
+Demographics
+```
 
 ---
 
-# 74. Failure and Recovery Requirements
+# 161. FINANCE DASHBOARD
 
-The platform shall handle:
+Metrics:
 
-* AI provider outage
-* database failure
-* Redis failure
-* queue failure
-* external API failure
-* payment failure
-* webhook failure
-* workflow failure
-* malformed input
-
-AI Gateway should support provider fallback when configured.
-
-Workflows should support retries and dead-letter handling.
+```text
+Revenue
+Expenses
+COGS
+Gross Profit
+Operating Profit
+Net Profit
+Margins
+Cash Flow
+```
 
 ---
 
-# 75. Testing Requirements
+# 162. PRODUCT DASHBOARD
 
-Testing layers:
+Metrics:
+
+```text
+Product Revenue
+Product Cost
+Product Profit
+Product Loss
+Conversion
+Retention
+Refund
+Customer Feedback
+```
+
+---
+
+# 163. CUSTOMER DASHBOARD
+
+Metrics:
+
+```text
+Customers
+New Customers
+Active Customers
+Churn
+Retention
+LTV
+Customer Health
+```
+
+---
+
+# 164. SUPPORT DASHBOARD
+
+Metrics:
+
+```text
+Tickets
+Open
+Resolved
+AI Resolution
+Human Resolution
+Response Time
+Resolution Time
+SLA
+Customer Satisfaction
+```
+
+---
+
+# 165. SEO DASHBOARD
+
+Metrics:
+
+```text
+Keywords
+Rankings
+Traffic
+Content
+Technical Issues
+Competitor Gaps
+AEO Visibility
+```
+
+---
+
+# 166. LEAD INTELLIGENCE DASHBOARD
+
+Metrics:
+
+```text
+Total Leads
+Qualified
+Hot
+Warm
+Cold
+Intent
+Conversion
+Pipeline Value
+```
+
+---
+
+# 167. MARKET INTELLIGENCE DASHBOARD
+
+Metrics:
+
+```text
+Market Trends
+Competitors
+Opportunities
+Threats
+Customer Demand
+Pricing
+```
+
+---
+
+# 168. AI OPERATIONS DASHBOARD
+
+Metrics:
+
+```text
+AI Requests
+Tokens
+Cost
+Latency
+Agents
+Tool Calls
+Failures
+Recommendations
+Automation
+```
+
+---
+
+# 169. SUPER ADMIN DASHBOARD
+
+Metrics:
+
+```text
+Users
+Organizations
+Active Users
+Subscriptions
+MRR
+ARR
+Payments
+AI Cost
+Infrastructure
+Errors
+Security
+```
+
+---
+
+# 170. DATABASE ENTITY MODEL
+
+Core relationship:
+
+```text
+Organization
+ ├── Workplaces
+ │     ├── Teams
+ │     │     └── Users
+ │
+ ├── Products
+ ├── Customers
+ ├── Leads
+ ├── Companies
+ ├── Contacts
+ ├── Campaigns
+ ├── Transactions
+ ├── Expenses
+ ├── Ads
+ ├── Conversations
+ ├── Tickets
+ ├── Agents
+ ├── Workflows
+ ├── Knowledge
+ ├── Reports
+ └── Recommendations
+```
+
+---
+
+# 171. SERVICE ARCHITECTURE
+
+Recommended services:
+
+```text
+API Gateway
+Auth Service
+User Service
+Organization Service
+RBAC Service
+CRM Service
+Lead Intelligence Service
+Sales Service
+Market Intelligence Service
+Product Intelligence Service
+Marketing Service
+SEO Service
+Advertising Service
+Finance Service
+Business Intelligence Service
+Customer Service
+Support Service
+AI Gateway
+Agent Service
+Knowledge Service
+Workflow Service
+MCP Service
+Integration Service
+Notification Service
+Billing Service
+Payment Service
+Reporting Service
+Analytics Service
+Audit Service
+```
+
+---
+
+# 172. RECOMMENDED MICROSERVICES
+
+Each service should have:
+
+* clear ownership
+* API contract
+* database boundaries
+* event contracts
+* health endpoint
+* metrics
+* tracing
+* logging
+* retry policy
+
+---
+
+# 173. API DOMAIN STRUCTURE
+
+```text
+/api/v1/auth
+/api/v1/users
+/api/v1/organizations
+/api/v1/workplaces
+/api/v1/teams
+
+/api/v1/leads
+/api/v1/lead-intelligence
+/api/v1/crm
+/api/v1/sales
+
+/api/v1/market-intelligence
+/api/v1/competitors
+/api/v1/product-launch
+
+/api/v1/marketing
+/api/v1/seo
+/api/v1/aeo
+
+/api/v1/advertising
+/api/v1/advertising/analytics
+/api/v1/advertising/demographics
+
+/api/v1/finance
+/api/v1/business-intelligence
+/api/v1/recommendations
+
+/api/v1/support
+/api/v1/conversations
+
+/api/v1/agents
+/api/v1/knowledge
+/api/v1/workflows
+/api/v1/mcp
+
+/api/v1/integrations
+/api/v1/billing
+/api/v1/payments
+/api/v1/subscriptions
+
+/api/v1/reports
+/api/v1/exports
+/api/v1/analytics
+
+/api/v1/admin
+/api/v1/audit
+```
+
+---
+
+# 174. EVENT CATALOG
+
+Major events:
+
+```text
+USER_REGISTERED
+USER_LOGIN
+ORGANIZATION_CREATED
+WORKPLACE_CREATED
+LEAD_CREATED
+LEAD_ENRICHED
+LEAD_SCORED
+LEAD_QUALIFIED
+DEAL_CREATED
+DEAL_WON
+DEAL_LOST
+CUSTOMER_CREATED
+PRODUCT_CREATED
+PRODUCT_LAUNCHED
+CAMPAIGN_CREATED
+CAMPAIGN_STARTED
+CAMPAIGN_COMPLETED
+AD_DATA_IMPORTED
+AD_METRICS_UPDATED
+FINANCIAL_DATA_IMPORTED
+PROFITABILITY_UPDATED
+RECOMMENDATION_CREATED
+RECOMMENDATION_ACCEPTED
+RECOMMENDATION_REJECTED
+ACTION_EXECUTED
+SUPPORT_TICKET_CREATED
+SUPPORT_ESCALATED
+AI_RESPONSE_GENERATED
+WORKFLOW_STARTED
+WORKFLOW_COMPLETED
+WORKFLOW_FAILED
+PAYMENT_CREATED
+PAYMENT_FAILED
+SUBSCRIPTION_CREATED
+SUBSCRIPTION_UPDATED
+SUBSCRIPTION_CANCELLED
+REPORT_CREATED
+REPORT_READY
+```
+
+---
+
+# 175. SECURITY MODEL
+
+Security layers:
+
+```text
+Network
+ ↓
+WAF
+ ↓
+API Gateway
+ ↓
+Authentication
+ ↓
+Authorization
+ ↓
+Tenant Isolation
+ ↓
+Service Authorization
+ ↓
+Database Authorization
+ ↓
+Audit
+```
+
+---
+
+# 176. PERMISSION MODEL
+
+Example:
+
+```text
+sales.lead.read
+sales.lead.create
+sales.lead.update
+sales.lead.delete
+sales.lead.export
+
+finance.report.read
+finance.report.export
+
+advertising.campaign.read
+advertising.campaign.manage
+
+support.ticket.read
+support.ticket.assign
+support.ticket.resolve
+```
+
+---
+
+# 177. AI AUTONOMY MODEL
+
+Levels:
+
+```text
+LEVEL 0
+AI Only Suggests
+
+LEVEL 1
+AI Drafts
+
+LEVEL 2
+AI Executes Low-Risk Actions
+
+LEVEL 3
+AI Executes Approved Actions
+
+LEVEL 4
+AI Autonomous Within Policy
+```
+
+Organization administrators can configure autonomy.
+
+---
+
+# 178. HUMAN-IN-THE-LOOP
+
+Approval examples:
+
+```text
+AI Draft
+ ↓
+Human Review
+ ↓
+Approve / Reject
+ ↓
+Execute
+```
+
+Required for configurable high-risk actions.
+
+---
+
+# 179. TESTING STRATEGY
+
+Testing levels:
 
 ```text
 Unit
@@ -2836,705 +4354,651 @@ Security
  ↓
 Performance
  ↓
-AI Evaluation
+E2E
+ ↓
+Production Validation
+```
+
+AI testing:
+
+* prompt evaluation
+* groundedness
+* hallucination testing
+* tool-use testing
+* regression testing
+* adversarial testing
+
+---
+
+# 180. CI/CD
+
+Pipeline:
+
+```text
+Commit
+ ↓
+Lint
+ ↓
+Type Check
+ ↓
+Unit Tests
+ ↓
+Integration Tests
+ ↓
+Security Scan
+ ↓
+Build
+ ↓
+Container Scan
+ ↓
+Deploy Staging
  ↓
 E2E
  ↓
-Production Monitoring
-```
-
-Critical workflows require automated regression tests.
-
----
-
-# 76. Release Requirements
-
-Production release requires:
-
-* successful CI
-* automated tests
-* security checks
-* migration validation
-* observability
-* rollback strategy
-* release notes
-
-Database migrations must be backward compatible where rolling deployments require it.
-
----
-
-# 77. Environment Strategy
-
-Environments:
-
-```text
-Local
- ↓
-Development
- ↓
-Testing
- ↓
-Staging
+Approval
  ↓
 Production
 ```
 
-Production secrets must never be stored in source control.
+---
+
+# 181. DEPLOYMENT
+
+Environment:
+
+```text
+Development
+Testing
+Staging
+Production
+```
+
+Infrastructure should support:
+
+* containers
+* orchestration
+* autoscaling
+* managed databases
+* object storage
+* observability
 
 ---
 
-# 78. Deployment Strategy
+# 182. INFRASTRUCTURE
 
-Recommended deployment architecture:
+Recommended infrastructure components:
 
 ```text
-Internet
-   ↓
-CDN / WAF
-   ↓
+CDN
+WAF
+Load Balancer
 API Gateway
+Container Platform
+PostgreSQL
+Redis
+Object Storage
+Vector DB
+Search Engine
+Message Broker
+Analytics Warehouse
+Monitoring
+Secrets Manager
+```
+
+---
+
+# 183. MONITORING
+
+Monitor:
+
+```text
+CPU
+Memory
+Disk
+Network
+API
+Database
+Queues
+Workers
+AI
+Billing
+Integrations
+```
+
+---
+
+# 184. BACKUP
+
+Backups:
+
+* database
+* object storage
+* configuration
+* audit data
+* critical system metadata
+
+Backup restoration must be tested regularly.
+
+---
+
+# 185. DISASTER RECOVERY
+
+Required:
+
+* RPO
+* RTO
+* backup verification
+* failover procedures
+* recovery runbooks
+* incident communication
+
+---
+
+# 186. DEVELOPMENT ROADMAP
+
+SalesGenie should be developed incrementally.
+
+```text
+FOUNDATION
    ↓
-Microservices
+MVP
    ↓
-Databases / Queues / Storage
-```
-
-AI services should be independently scalable.
-
----
-
-# 79. MVP Scope
-
-The MVP shall establish the foundation rather than attempting every advanced feature.
-
-## MVP
-
-### Identity
-
-* registration
-* login
-* JWT/session
-* password reset
-* RBAC
-
-### Multi-Tenancy
-
-* organization
-* workplace
-* users
-* teams
-
-### AI
-
-* AI Gateway
-* model configuration
-* basic AI Agent
-* RAG
-
-### Lead Generation
-
-* ICP
-* lead discovery
-* lead enrichment
-* lead scoring
-
-### CRM
-
-* companies
-* contacts
-* leads
-* opportunities
-
-### Support
-
-* web chat
-* AI support
-* human handoff
-* tickets
-
-### Billing
-
-* plans
-* monthly subscription
-* yearly subscription
-* payment
-* invoices
-* usage
-
-### Administration
-
-* Super Admin
-* Organization Admin
-* Workplace Admin
-
-### Analytics
-
-* basic dashboards
-* usage
-* lead metrics
-* support metrics
-* revenue metrics
-
----
-
-# 80. Phase 1 Scope
-
-Phase 1 should add:
-
-* advanced lead intelligence
-* predictive lead scoring
-* AI sales agent
-* advanced RAG
-* workflow automation
-* omnichannel support
-* customer 360
-* marketing automation
-* SEO automation
-* MCP
-* advanced billing
-* AI observability
-
----
-
-# 81. Phase 2 Scope
-
-Phase 2 should add:
-
-* market intelligence
-* competitor intelligence
-* product launch advisor
-* revenue intelligence
-* next-best-action
-* predictive customer health
-* churn prediction
-* advanced attribution
-* advanced AI evaluation
-
----
-
-# 82. Phase 3 Scope
-
-Phase 3 should add:
-
-* advanced voice AI
-* agency mode
-* white-label
-* private enterprise deployment
-* advanced data residency
-* enterprise SSO
-* advanced governance
-* industry-specific AI agents
-
----
-
-# 83. Enterprise Scope
-
-Enterprise customers should be able to receive:
-
-* SSO
-* SCIM where applicable
-* advanced RBAC
-* custom roles
-* audit controls
-* data residency options
-* enterprise SLA
-* dedicated support
-* private deployment options
-* custom integrations
-* advanced analytics
-* custom AI policies
-* custom retention policies
-
----
-
-# 84. Future Scope
-
-Potential future capabilities:
-
-* autonomous revenue agents
-* AI SDR organizations
-* AI marketing departments
-* AI support departments
-* AI research departments
-* autonomous campaign optimization
-* AI product management
-* AI business strategy
-* AI financial forecasting
-* digital twin of business operations
-
-These capabilities should only be added after the core platform is stable.
-
----
-
-# 85. Success Metrics
-
-## Acquisition
-
-* visitor-to-signup rate
-* signup-to-activation rate
-* trial-to-paid conversion
-
-## Revenue
-
-* MRR
-* ARR
-* ARPU
-* NRR
-* GRR
-* expansion revenue
-
-## Sales
-
-* lead conversion
-* opportunity conversion
-* win rate
-* sales cycle
-
-## Support
-
-* AI resolution rate
-* escalation rate
-* first response time
-* resolution time
-* CSAT
-
-## Product
-
-* DAU
-* WAU
-* MAU
-* feature adoption
-* retention
-
----
-
-# 86. North Star Metrics
-
-Primary North Star Metric:
-
-> **Customer-attributed incremental business value generated through SalesGenie.**
-
-Supporting metrics:
-
-```text
-Qualified Leads Generated
-Opportunities Created
-Revenue Influenced
-Revenue Attributed
-Support Cost Saved
-Hours Automated
-Customer Retention Improved
-```
-
-The methodology must distinguish:
-
-* influenced revenue
-* attributed revenue
-* modeled revenue
-* directly recorded revenue
-
----
-
-# 87. Product KPIs
-
-## Activation
-
-Customer completes:
-
-```text
-Organization
-+
-Workspace
-+
-Data Connection
-+
-ICP
-+
-First Lead
-+
-First AI Agent
+GROWTH
+   ↓
+INTELLIGENCE
+   ↓
+AUTOMATION
+   ↓
+ENTERPRISE
 ```
 
 ---
 
-## Engagement
+# 187. MVP
 
-Track:
-
-* AI usage
-* leads processed
-* workflows
-* campaigns
-* support conversations
-
----
-
-## Retention
-
-Measure:
-
-* logo retention
-* revenue retention
-* feature retention
-* workflow retention
-
----
-
-# 88. Customer KPIs
-
-SalesGenie should help customers measure:
-
-* leads
-* qualified leads
-* opportunities
-* customers
-* revenue
-* CAC
-* LTV
-* conversion
-* churn
-* retention
-* support efficiency
-* marketing ROI
-
----
-
-# 89. AI KPIs
-
-AI metrics:
+MVP should include:
 
 ```text
-Task Success
+Authentication
+Organizations
+RBAC
+CRM
+Lead Management
+Basic Lead Generation
+Basic Sales
+Basic AI Assistant
+Basic Marketing
+Basic Support
+Basic Billing
+Basic Analytics
+Basic Reporting
+```
+
+---
+
+# 188. PHASE 1
+
+Add:
+
+```text
+Advanced Lead Intelligence
+AI Sales Agent
+Market Intelligence
+Competitor Intelligence
+SEO
+Marketing Automation
+AI Support
+RAG
+Workflow Automation
+```
+
+---
+
+# 189. PHASE 2
+
+Add:
+
+```text
+Advertising Intelligence
+Advertising ROI
+Demographic Intelligence
+Financial Intelligence
+Product Profitability
+Business Growth Intelligence
+AI Business Analyst
+Excel Automation
+```
+
+---
+
+# 190. PHASE 3
+
+Add:
+
+```text
+Product Launch Intelligence
+Advanced AI Recommendations
+MCP Platform
+Advanced AI Agents
+Advanced Attribution
+Predictive Analytics
+Revenue Forecasting
+Churn Prediction
+```
+
+---
+
+# 191. PHASE 4
+
+Add:
+
+```text
+Enterprise SSO
+SCIM
+Advanced Governance
+Private AI
+Advanced Data Residency
+Dedicated Infrastructure
+Enterprise Marketplace
+Advanced Autonomous Agents
+```
+
+---
+
+# 192. ENTERPRISE SCALE
+
+Target architecture:
+
+```text
+10M+ Users
+500K+ Concurrent Conversations
+Millions of Organizations
+Millions of Leads
+Large-scale Advertising Data
+Billions of Events
+```
+
+Architecture must be horizontally scalable.
+
+---
+
+# 193. ACCEPTANCE CRITERIA
+
+The product shall be considered functionally complete for the business intelligence release when a customer can:
+
+1. Connect business data.
+2. View monthly revenue.
+3. View yearly revenue.
+4. View monthly expenses.
+5. View yearly expenses.
+6. View monthly profit/loss.
+7. View yearly profit/loss.
+8. Identify profitable products.
+9. Identify loss-making products.
+10. See probable reasons for product losses.
+11. Receive AI recommendations.
+12. Connect advertising platforms.
+13. View advertising spending.
+14. View advertising reach.
+15. View advertising conversions.
+16. View attributed revenue.
+17. View ROAS.
+18. View ROI.
+19. Analyze available demographic information.
+20. Map product performance to audience segments.
+21. Generate Excel reports.
+22. View graphical analytics.
+23. Export reports.
+24. Maintain tenant isolation.
+25. Audit sensitive actions.
+
+---
+
+# 194. PRODUCT KPIs
+
+Primary:
+
+```text
+Organizations Activated
+Weekly Active Organizations
+Monthly Active Organizations
+Customer Retention
+Net Revenue Retention
+Expansion Revenue
+Churn
+```
+
+---
+
+# 195. BUSINESS KPIs
+
+```text
+MRR
+ARR
+CAC
+LTV
+Gross Margin
+Net Margin
+ROAS
+ROI
+Conversion Rate
+Lead-to-Customer Rate
+```
+
+---
+
+# 196. TECHNICAL KPIs
+
+```text
+Availability
+P95 Latency
+P99 Latency
+Error Rate
+Integration Success
+Queue Delay
+Database Performance
+Deployment Frequency
+MTTR
+```
+
+---
+
+# 197. AI KPIs
+
+```text
+Recommendation Acceptance
+Recommendation Accuracy
+AI Resolution Rate
+Human Escalation Rate
+Task Completion
 Groundedness
 Hallucination Rate
-Tool Success
-Latency
-Cost
-User Satisfaction
-Escalation Rate
+AI Cost per Task
+AI Latency
 ```
-
-AI agents must be evaluated continuously.
 
 ---
 
-# 90. Acceptance Criteria
-
-A feature is considered production-ready only when:
+# 198. FINAL PRODUCT ARCHITECTURE
 
 ```text
-Functional Requirement
-        +
-UI
-        +
-API
-        +
-Database
-        +
-Authorization
-        +
-Validation
-        +
-Error Handling
-        +
-Logging
-        +
-Observability
-        +
-Analytics
-        +
-Testing
-        +
-Documentation
+                           SALESGENIE
+                  AI REVENUE & GROWTH OS
+                              │
+       ┌──────────────────────┼──────────────────────┐
+       │                      │                      │
+       ▼                      ▼                      ▼
+   ACQUIRE                 CONVERT                 RETAIN
+       │                      │                      │
+       ├── Market             ├── CRM               ├── Support
+       ├── Competitors        ├── Sales             ├── AI Support
+       ├── Lead Gen           ├── AI Sales           ├── Human Support
+       └── Ads                └── Automation         └── Customer 360
+       │                      │                      │
+       └──────────────────────┼──────────────────────┘
+                              ▼
+                           GROW
+                              │
+              ┌───────────────┼────────────────┐
+              ▼               ▼                ▼
+          Marketing          SEO              Product
+              │               │                │
+              ▼               ▼                ▼
+         Advertising         AEO          Product Launch
+              │               │                │
+              └───────────────┼────────────────┘
+                              ▼
+                           ANALYZE
+                              │
+       ┌──────────────────────┼──────────────────────┐
+       ▼                      ▼                      ▼
+    Finance                 Ads                    CRM
+       │                      │                      │
+       ▼                      ▼                      ▼
+    P&L                    ROI                    Sales
+       │                      │                      │
+       └──────────────────────┼──────────────────────┘
+                              ▼
+                     BUSINESS INTELLIGENCE
+                              │
+                              ▼
+                        AI BUSINESS ANALYST
+                              │
+                              ▼
+                       ROOT CAUSE ENGINE
+                              │
+                              ▼
+                     RECOMMENDATION ENGINE
+                              │
+                              ▼
+                         AI AGENTS
+                              │
+                              ▼
+                      WORKFLOW AUTOMATION
+                              │
+                              ▼
+                           ACTION
+                              │
+                              ▼
+                           RESULT
+                              │
+                              ▼
+                            ROI
+                              │
+                              ▼
+                          LEARNING
+                              │
+                              └──────────────► GROWTH
 ```
 
-All critical acceptance criteria must pass before production deployment.
-
 ---
 
-# 91. Definition of Done
+# 199. FINAL PRODUCT DEFINITION
 
-A feature is DONE when:
-
-* requirements are implemented
-* frontend is implemented
-* backend is implemented
-* database migrations exist
-* API is documented
-* authorization works
-* tenant isolation is verified
-* errors are handled
-* audit requirements are satisfied
-* metrics exist
-* logs exist
-* tests pass
-* security checks pass
-* staging validation passes
-* production rollback is possible
-
----
-
-# 92. Risks
-
-## R-001 Product Scope Explosion
-
-Risk:
-
-Too many features delay core product maturity.
-
-Mitigation:
-
-Prioritize the revenue loop.
-
----
-
-## R-002 AI Cost
-
-Risk:
-
-Large-scale AI usage becomes expensive.
-
-Mitigation:
-
-* model routing
-* caching
-* batching
-* smaller models
-* usage limits
-* cost monitoring
-
----
-
-## R-003 External Data Dependency
-
-Risk:
-
-Third-party platforms change APIs or access policies.
-
-Mitigation:
-
-* official APIs
-* provider abstraction
-* source metadata
-* graceful degradation
-
----
-
-## R-004 Data Quality
-
-Risk:
-
-Incorrect lead information damages trust.
-
-Mitigation:
-
-* verification
-* confidence
-* source tracking
-* freshness indicators
-
----
-
-## R-005 AI Hallucination
-
-Risk:
-
-AI provides incorrect recommendations.
-
-Mitigation:
-
-* RAG
-* citations
-* validation
-* evaluation
-* confidence
-* human approval
-
----
-
-## R-006 Security
-
-Risk:
-
-Multi-tenant data leakage.
-
-Mitigation:
-
-* defense-in-depth
-* authorization
-* tenant-scoped queries
-* automated security testing
-* audit
-
----
-
-# 93. Mitigation Strategy
-
-SalesGenie should use:
+SalesGenie is an enterprise-grade, multi-tenant, AI-native SaaS platform that combines:
 
 ```text
-Architecture Governance
+LEAD GENERATION
 +
-Automated Testing
+LEAD INTELLIGENCE
 +
-Security Testing
+CRM
 +
-AI Evaluation
+SALES AUTOMATION
 +
-Observability
+AI SALES AGENTS
 +
-Feature Flags
+MARKET INTELLIGENCE
 +
-Progressive Deployment
+COMPETITOR INTELLIGENCE
 +
-Rollback
+PRODUCT LAUNCH INTELLIGENCE
++
+DIGITAL MARKETING
++
+SEO
++
+AEO
++
+ADVERTISING INTELLIGENCE
++
+ADVERTISING ROI
++
+DEMOGRAPHIC INTELLIGENCE
++
+FINANCIAL INTELLIGENCE
++
+PROFIT/LOSS ANALYSIS
++
+PRODUCT PROFITABILITY
++
+BUSINESS GROWTH ANALYTICS
++
+AI BUSINESS ANALYST
++
+AI RECOMMENDATION ENGINE
++
+CUSTOMER 360
++
+AI SUPPORT
++
+HUMAN SUPPORT
++
+AI AGENTS
++
+RAG
++
+MCP
++
+WORKFLOW AUTOMATION
++
+OMNICHANNEL COMMUNICATION
++
+ANALYTICS
++
+EXCEL REPORTING
++
+BILLING
++
+PAYMENTS
++
+SUBSCRIPTIONS
++
+ENTERPRISE SECURITY
 ```
 
 ---
 
-# 94. Product Governance
+# 200. PRODUCT NORTH STAR
 
-Product governance should define:
-
-* feature ownership
-* service ownership
-* API ownership
-* data ownership
-* AI model ownership
-* security ownership
-* incident ownership
-
-Every production capability must have an accountable owner.
-
----
-
-# 95. Final Product Architecture
-
-The final conceptual architecture:
+The ultimate SalesGenie experience is:
 
 ```text
-                                SALESGENIE
-                   AI REVENUE & GROWTH OPERATING SYSTEM
-                                      │
-       ┌──────────────────────────────┼──────────────────────────────┐
-       │                              │                              │
-       ▼                              ▼                              ▼
- MARKET INTELLIGENCE             AI PLATFORM                  CUSTOMER INTELLIGENCE
-       │                              │                              │
-       ├── Market Research            ├── AI Gateway                 ├── Customer 360
-       ├── Competitor Intel           ├── Agent Runtime              ├── Customer Health
-       ├── Product Launch             ├── Agent Builder              ├── Churn
-       └── Opportunity                ├── RAG                         └── Revenue
-                                      ├── Evaluation
-                                      └── MCP
-       │
-       └──────────────────────────────┬──────────────────────────────┘
-                                      │
-                                      ▼
-                             LEAD INTELLIGENCE
-                                      │
-                     ┌────────────────┼────────────────┐
-                     ▼                ▼                ▼
-                 Discovery       Enrichment       Intent
-                     │                │                │
-                     └────────────────┼────────────────┘
-                                      ▼
-                                LEAD SCORING
-                                      │
-                                      ▼
-                                     CRM
-                                      │
-                                      ▼
-                              SALES AUTOMATION
-                                      │
-                                      ▼
-                                  CUSTOMER
-                                      │
-                 ┌────────────────────┼────────────────────┐
-                 ▼                    ▼                    ▼
-             MARKETING               SEO                 SUPPORT
-                 │                    │                    │
-                 ├── Campaigns        ├── SEO              ├── AI Support
-                 ├── Content          ├── AEO              ├── Human Support
-                 ├── Automation       └── Content          └── Ticketing
-                 │
-                 └────────────────────┬────────────────────┘
-                                      │
-                                      ▼
-                              REVENUE INTELLIGENCE
-                                      │
-                                      ▼
-                             NEXT BEST ACTION
-                                      │
-                                      ▼
-                             WORKFLOW AUTOMATION
-                                      │
-                                      ▼
-                              BUSINESS OUTCOME
-                                      │
-                                      ▼
-                              CONTINUOUS LEARNING
+                         BUSINESS
+                            │
+                            ▼
+                       CONNECT DATA
+                            │
+                            ▼
+                         ANALYZE
+                            │
+        ┌───────────────────┼───────────────────┐
+        ▼                   ▼                   ▼
+      MARKET             CUSTOMER             FINANCE
+        │                   │                   │
+        ▼                   ▼                   ▼
+    COMPETITOR            SALES                 ADS
+        │                   │                   │
+        └───────────────────┼───────────────────┘
+                            ▼
+                    BUSINESS INTELLIGENCE
+                            │
+                            ▼
+                       AI ANALYST
+                            │
+                            ▼
+                    ROOT CAUSE ANALYSIS
+                            │
+                            ▼
+                    PREDICTION / FORECAST
+                            │
+                            ▼
+                   RECOMMENDATION ENGINE
+                            │
+                            ▼
+                    NEXT BEST ACTION
+                            │
+                            ▼
+                      HUMAN APPROVAL
+                            │
+                            ▼
+                       AI EXECUTION
+                            │
+                            ▼
+                         OUTCOME
+                            │
+                            ▼
+                           ROI
+                            │
+                            ▼
+                         LEARNING
+                            │
+                            ▼
+                          GROWTH
+                            │
+                            └───────────────────────┐
+                                                    │
+                                                    ▼
+                                                 ANALYZE
 ```
 
 ---
 
-# 96. Final Product Definition
+# FINAL PRODUCT PRINCIPLE
 
-SalesGenie is defined as:
+SalesGenie must not be built as a collection of disconnected SaaS tools.
 
-> **A multi-tenant, enterprise-grade AI Revenue and Growth Operating System that combines market intelligence, competitor intelligence, lead generation, CRM, sales automation, AI-powered digital marketing, SEO/AEO automation, AI and human customer support, workflow automation, AI agents, customer intelligence, revenue intelligence, billing, analytics and enterprise governance into one unified SaaS platform.**
+It must be built as one integrated business intelligence and execution platform.
 
-The core product loop is:
-
-```text
-UNDERSTAND THE MARKET
-        ↓
-IDENTIFY OPPORTUNITIES
-        ↓
-FIND THE RIGHT CUSTOMERS
-        ↓
-QUALIFY AND SCORE LEADS
-        ↓
-AUTOMATE SALES
-        ↓
-CONVERT CUSTOMERS
-        ↓
-MARKET TO CUSTOMERS
-        ↓
-SUPPORT CUSTOMERS
-        ↓
-RETAIN CUSTOMERS
-        ↓
-MEASURE REVENUE
-        ↓
-PREDICT WHAT TO DO NEXT
-        ↓
-AUTOMATE THE NEXT ACTION
-        ↓
-LEARN FROM THE RESULT
-        ↓
-IMPROVE BUSINESS GROWTH
-```
-
-## Product North Star
-
-> **SalesGenie should continuously answer five questions for every customer:**
+The platform should answer three fundamental questions:
 
 ```text
-1. Where is the best opportunity?
-
-2. Which customer should we target?
-
-3. What should we do next?
-
-4. Can AI execute it safely?
-
-5. Did it actually improve revenue or customer outcomes?
+1. WHAT IS HAPPENING?
 ```
 
-If SalesGenie can reliably answer and operationalize these five questions, it becomes substantially more than a collection of AI tools.
-
-It becomes an **AI-native business growth operating system**.
-
+```text
+2. WHY IS IT HAPPENING?
 ```
+
+```text
+3. WHAT SHOULD WE DO NEXT?
+```
+
+And, where authorized:
+
+```text
+4. CAN SALESGENIE DO IT FOR US?
+```
+
+The complete platform loop is therefore:
+
+```text
+DISCOVER
+   ↓
+COLLECT
+   ↓
+UNIFY
+   ↓
+UNDERSTAND
+   ↓
+ANALYZE
+   ↓
+EXPLAIN
+   ↓
+PREDICT
+   ↓
+RECOMMEND
+   ↓
+APPROVE
+   ↓
+EXECUTE
+   ↓
+MEASURE
+   ↓
+LEARN
+   ↓
+OPTIMIZE
+   ↓
+GROW
+```
+
+## Final North Star
+
+> **SalesGenie exists to transform business data into intelligent decisions, intelligent decisions into automated actions, and automated actions into measurable business growth.**
+
+```text
+SALESGENIE
+AI REVENUE + SALES + MARKETING + FINANCE + SUPPORT + BUSINESS INTELLIGENCE
+                           ↓
+                    BUSINESS GROWTH
 ```
