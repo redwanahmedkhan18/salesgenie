@@ -1,3 +1,0 @@
-"""
-Vector Service Package
-"""

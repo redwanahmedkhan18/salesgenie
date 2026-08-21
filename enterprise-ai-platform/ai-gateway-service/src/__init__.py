@@ -1,3 +1,0 @@
-"""
-AI Gateway Service Package
-"""

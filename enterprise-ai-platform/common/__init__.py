@@ -1,3 +1,0 @@
-"""
-Common Shared Microservice Utilities
-"""
