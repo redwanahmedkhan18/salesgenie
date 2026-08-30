@@ -1,0 +1,2532 @@
+# SalesGenie — AI-Based Ad Audience Analysis
+
+## User Requirements, System Requirements & Functional Requirements
+
+> **Document:** `ad_audience_analysis.md`
+>
+> **Platform:** SalesGenie Enterprise AI Customer Support, Sales & Marketing Platform
+>
+> **Capability:** AI-Powered Advertising Audience Intelligence
+>
+> **Objective:** Enable SalesGenie to discover, analyze, score, segment, predict, compare, and optimize advertising audiences across channels using AI-driven behavioral, demographic, contextual, conversion, revenue, and customer intelligence.
+
+---
+
+## 1. Product Overview
+
+SalesGenie's **AI Ad Audience Analysis** module shall provide an enterprise-grade intelligence layer for understanding how different advertising audiences behave and perform across the complete customer acquisition lifecycle.
+
+The system shall analyze audiences across:
+
+- Advertising platforms
+- Campaigns
+- Ad sets
+- Ads
+- Creatives
+- Products
+- Locations
+- Demographics
+- Interests
+- Behaviors
+- Devices
+- Acquisition channels
+- Customer lifecycle stages
+- Conversion events
+- Revenue
+- Profitability
+- Customer lifetime value
+
+The platform shall transform raw advertising and customer data into:
+
+- Audience profiles
+- Audience performance scores
+- Audience quality scores
+- Conversion probability
+- Purchase probability
+- Revenue potential
+- Customer lifetime value
+- Audience overlap
+- Audience saturation
+- Audience fatigue
+- Audience growth opportunities
+- Audience risks
+- AI recommendations
+- Predictive audience insights
+
+The system shall support:
+
+1. AI-driven autonomous analysis
+2. Human-driven audience analysis
+3. AI-assisted decision-making
+4. Human approval workflows
+5. Policy-controlled autonomous optimization
+
+---
+
+## 2. Business Objectives
+
+## BO-001 — Identify High-Value Audiences
+
+The system shall identify audiences that generate the highest:
+
+- Conversion rate
+- Revenue
+- Profit
+- Customer lifetime value
+- ROAS
+- Retention
+
+---
+
+## BO-002 — Reduce Audience Acquisition Cost
+
+The platform shall identify audiences that minimize:
+
+- CPC
+- CPL
+- CPQL
+- CPA
+- CAC
+
+---
+
+## BO-003 — Improve Audience Quality
+
+The AI shall distinguish between:
+
+- High-quality audiences
+- Medium-quality audiences
+- Low-quality audiences
+- Low-intent audiences
+- High-intent audiences
+- High-value customer audiences
+
+---
+
+## BO-004 — Discover New Audiences
+
+The system shall identify potential audience segments that are not currently being targeted.
+
+---
+
+## BO-005 — Improve Advertising Efficiency
+
+The AI shall recommend how advertising spend should be distributed across audiences.
+
+---
+
+## BO-006 — Reduce Audience Saturation
+
+The system shall detect:
+
+- Audience fatigue
+- Frequency problems
+- Declining engagement
+- Declining conversion
+- Overlapping targeting
+- Excessive audience concentration
+
+---
+
+## BO-007 — Predict Audience Behavior
+
+The AI shall predict:
+
+- Conversion probability
+- Purchase probability
+- Revenue potential
+- Customer lifetime value
+- Churn risk
+- Audience growth potential
+
+---
+
+## BO-008 — Improve Customer Acquisition
+
+The platform shall connect advertising audiences to:
+
+```text
+Audience
+   ↓
+Lead
+   ↓
+Qualified Lead
+   ↓
+Opportunity
+   ↓
+Customer
+   ↓
+Revenue
+   ↓
+Retention
+   ↓
+Lifetime Value
+```
+
+---
+
+## 3. User Roles
+
+## 3.1 Super Admin
+
+The Super Admin shall be able to:
+
+* Configure platform-wide audience analytics policies.
+* Manage advertising integrations.
+* Monitor tenant usage.
+* Configure AI capabilities.
+* Monitor AI performance.
+* Review audit logs.
+* Configure security policies.
+
+---
+
+## 3.2 Organization Admin
+
+The Organization Admin shall be able to:
+
+* Connect advertising accounts.
+* Configure audience data sources.
+* Configure audience definitions.
+* Configure AI autonomy.
+* Configure audience optimization policies.
+* Manage permissions.
+* Configure data retention.
+
+---
+
+## 3.3 Marketing Manager
+
+The Marketing Manager shall be able to:
+
+* Analyze audience performance.
+* Compare audience segments.
+* Review AI audience recommendations.
+* Approve audience changes.
+* Identify audience opportunities.
+* Monitor audience saturation.
+
+---
+
+## 3.4 Marketing Analyst
+
+The Marketing Analyst shall be able to:
+
+* Perform audience analysis.
+* Create audience reports.
+* Analyze audience cohorts.
+* Compare audience segments.
+* Investigate audience performance changes.
+
+---
+
+## 3.5 Advertising Specialist
+
+The Advertising Specialist shall be able to:
+
+* Analyze campaign audiences.
+* Analyze ad-set audiences.
+* Identify high-performing targeting.
+* Identify audience overlap.
+* Optimize targeting strategies.
+
+---
+
+## 3.6 Sales Manager
+
+The Sales Manager shall be able to:
+
+* Analyze lead quality by audience.
+* Compare audience-to-customer conversion.
+* Identify high-value lead sources.
+* Evaluate revenue generated by audiences.
+
+---
+
+## 3.7 Finance Manager
+
+The Finance Manager shall be able to:
+
+* Analyze audience acquisition economics.
+* Compare CAC across audiences.
+* Evaluate audience profitability.
+* Analyze LTV:CAC by audience.
+
+---
+
+## 3.8 Executive
+
+The Executive shall be able to:
+
+* View audience health.
+* Identify high-value customer segments.
+* Monitor audience growth.
+* Review strategic audience opportunities.
+* Review AI-generated audience recommendations.
+
+---
+
+## 4. User Requirements
+
+## UR-001 — Advertising Account Integration
+
+Users shall be able to connect advertising platforms including:
+
+* Google Ads
+* Facebook Ads
+* Instagram Ads
+* LinkedIn Ads
+* TikTok Ads
+* YouTube Ads
+* Other supported advertising providers
+
+Users shall be able to:
+
+* Connect accounts
+* Disconnect accounts
+* Reauthorize accounts
+* View synchronization status
+* Configure synchronization schedules
+
+---
+
+## UR-002 — Unified Audience Dashboard
+
+The platform shall provide a centralized dashboard containing:
+
+* Total audiences
+* Active audiences
+* New audiences
+* High-performing audiences
+* Declining audiences
+* Saturated audiences
+* Audience overlap
+* Audience conversion rate
+* Audience CPA
+* Audience CAC
+* Audience revenue
+* Audience ROAS
+* Audience profit
+* Audience quality score
+
+---
+
+## UR-003 — Audience Discovery
+
+Users shall be able to discover audiences based on:
+
+* Demographics
+* Interests
+* Behaviors
+* Geography
+* Devices
+* Customer lifecycle
+* Purchase behavior
+* Engagement
+* Conversion behavior
+* Revenue
+* Product affinity
+
+---
+
+## UR-004 — Audience Performance Analysis
+
+Users shall be able to evaluate audiences using:
+
+* Reach
+* Impressions
+* Frequency
+* Clicks
+* CTR
+* Leads
+* Qualified leads
+* Opportunities
+* Customers
+* Conversion rate
+* CPA
+* CAC
+* Revenue
+* ROAS
+* Profit
+
+---
+
+## UR-005 — Audience Comparison
+
+Users shall be able to compare multiple audiences simultaneously.
+
+Example:
+
+```text
+Audience A
+Audience B
+Audience C
+Audience D
+```
+
+The system shall compare:
+
+* Conversion rate
+* Cost
+* Revenue
+* Profit
+* Customer quality
+* LTV
+* ROAS
+* Growth potential
+
+---
+
+## UR-006 — Audience Segmentation
+
+Users shall be able to create audience segments based on:
+
+* Age
+* Gender
+* Location
+* Language
+* Interests
+* Behaviors
+* Engagement
+* Purchase history
+* Lead status
+* Customer status
+* Product affinity
+* Website activity
+* Campaign interaction
+
+---
+
+## UR-007 — AI Audience Discovery
+
+The AI shall automatically identify potentially valuable audience segments.
+
+The AI shall analyze historical data and identify:
+
+* Emerging segments
+* High-conversion segments
+* High-value segments
+* Underserved segments
+* Low-cost segments
+* High-growth segments
+
+---
+
+## UR-008 — AI Audience Scoring
+
+The system shall assign configurable scores such as:
+
+```text
+Audience Quality Score
+Audience Conversion Score
+Audience Value Score
+Audience Growth Score
+Audience Saturation Score
+Audience Opportunity Score
+Audience Risk Score
+```
+
+---
+
+## UR-009 — Audience Quality Analysis
+
+The platform shall determine audience quality based on:
+
+* Lead quality
+* Conversion rate
+* Revenue
+* Profit
+* Customer retention
+* Customer lifetime value
+* Refund rate
+* Churn
+* Opportunity creation
+
+---
+
+## UR-010 — Audience Conversion Analysis
+
+The AI shall determine:
+
+* Which audiences convert best?
+* Which audiences convert fastest?
+* Which audiences generate qualified leads?
+* Which audiences generate customers?
+* Which audiences produce repeat customers?
+
+---
+
+## UR-011 — Audience Revenue Analysis
+
+Users shall be able to identify:
+
+* Revenue per audience
+* Revenue per customer
+* Revenue per conversion
+* Revenue growth
+* Revenue contribution
+
+---
+
+## UR-012 — Audience Profitability Analysis
+
+The system shall determine audience profitability using:
+
+* Advertising spend
+* Acquisition cost
+* Revenue
+* Product margin
+* Customer lifetime value
+* Operational cost where available
+
+---
+
+## UR-013 — Audience LTV Analysis
+
+The AI shall estimate customer lifetime value by audience.
+
+The system shall identify:
+
+* Highest-LTV audiences
+* Lowest-LTV audiences
+* Increasing-LTV audiences
+* Declining-LTV audiences
+
+---
+
+## UR-014 — Audience Overlap Analysis
+
+The system shall identify overlapping audiences.
+
+Example:
+
+```text
+Audience A
+     ↘
+      Overlap
+     ↗
+Audience B
+```
+
+The system shall estimate:
+
+* Overlap percentage
+* Duplicate reach
+* Duplicate spend
+* Potential cannibalization
+
+---
+
+## UR-015 — Audience Saturation Analysis
+
+The system shall identify audience saturation using:
+
+* Frequency
+* Reach growth
+* CTR decline
+* Conversion decline
+* CPA increase
+* Engagement decline
+
+---
+
+## UR-016 — Audience Fatigue Detection
+
+The AI shall detect audience fatigue when:
+
+* Frequency increases
+* Engagement decreases
+* CTR decreases
+* Conversion rate decreases
+* CPA increases
+
+---
+
+## UR-017 — Audience Expansion Recommendations
+
+The AI shall recommend:
+
+* Lookalike audiences
+* Similar audiences
+* Adjacent segments
+* New geographic segments
+* New interest groups
+* New behavioral groups
+
+---
+
+## UR-018 — Audience Reduction Recommendations
+
+The AI shall recommend reducing or excluding audiences when they show:
+
+* Low conversion
+* High CPA
+* Low customer quality
+* Low revenue
+* Negative profitability
+* High fraud/suspicious activity
+
+---
+
+## UR-019 — Audience Exclusion
+
+Users shall be able to exclude:
+
+* Existing customers
+* Converted users
+* Unqualified leads
+* Low-value users
+* Churned customers
+* Duplicate audiences
+* Internal employees
+* Test accounts
+
+---
+
+## UR-020 — Audience Lifecycle Analysis
+
+The platform shall classify audiences according to lifecycle:
+
+```text
+Unknown
+Prospect
+Engaged
+Lead
+Qualified Lead
+Opportunity
+Customer
+Repeat Customer
+Loyal Customer
+Churned Customer
+```
+
+---
+
+## UR-021 — Audience Intent Analysis
+
+The AI shall estimate intent levels:
+
+```text
+Very Low
+Low
+Medium
+High
+Very High
+```
+
+Intent signals may include:
+
+* Website visits
+* Product views
+* Content engagement
+* Search behavior
+* Ad interactions
+* Form submissions
+* Product comparison
+* Purchase activity
+
+---
+
+## UR-022 — Audience Affinity Analysis
+
+The system shall identify affinity between audiences and:
+
+* Products
+* Services
+* Categories
+* Content
+* Offers
+* Brands
+* Features
+
+---
+
+## UR-023 — Geographic Audience Analysis
+
+Users shall be able to analyze audience performance by:
+
+* Country
+* Region
+* State
+* City
+* Postal area
+* Market
+* Territory
+
+---
+
+## UR-024 — Device Audience Analysis
+
+The system shall analyze audiences by:
+
+* Mobile
+* Desktop
+* Tablet
+* Operating system
+* Browser
+* Device type
+
+---
+
+## UR-025 — Time-Based Audience Analysis
+
+Users shall be able to analyze audiences by:
+
+* Hour
+* Day
+* Week
+* Month
+* Quarter
+* Season
+* Campaign period
+
+---
+
+## UR-026 — Audience Cohort Analysis
+
+The system shall support cohorts based on:
+
+* Acquisition date
+* First interaction
+* First purchase
+* Campaign
+* Product
+* Geography
+* Customer lifecycle
+
+---
+
+## UR-027 — Audience Trend Analysis
+
+The system shall identify:
+
+```text
+Growing
+Declining
+Stable
+Emerging
+Saturated
+Volatile
+Recovering
+Deteriorating
+```
+
+audience segments.
+
+---
+
+## UR-028 — AI Audience Recommendations
+
+The AI shall provide recommendations such as:
+
+* Increase spend on Audience A.
+* Reduce spend on Audience B.
+* Exclude Audience C.
+* Create a lookalike from Audience D.
+* Expand Audience E geographically.
+* Test Audience F with a new creative.
+
+Every recommendation shall contain:
+
+* Evidence
+* Expected impact
+* Confidence
+* Risk
+* Rationale
+
+---
+
+## UR-029 — Human Approval
+
+Organizations shall be able to require approval before AI changes:
+
+* Audience targeting
+* Audience exclusions
+* Audience budgets
+* Audience bids
+* Campaign targeting
+
+---
+
+## UR-030 — AI Autonomy
+
+Organizations shall be able to configure:
+
+```text
+Level 0 — Analytics Only
+Level 1 — Recommendations
+Level 2 — Human Approval
+Level 3 — Conditional Automation
+Level 4 — Autonomous Optimization
+```
+
+---
+
+## UR-031 — Audience Forecasting
+
+The AI shall forecast:
+
+* Audience growth
+* Audience conversion
+* Audience revenue
+* Audience CPA
+* Audience CAC
+* Audience saturation
+* Audience value
+
+---
+
+## UR-032 — Audience Opportunity Detection
+
+The AI shall identify audiences where:
+
+```text
+High Potential
++
+Low Competition
++
+Strong Conversion
++
+Acceptable Cost
+```
+
+indicates a potential expansion opportunity.
+
+---
+
+## UR-033 — Audience Risk Detection
+
+The system shall identify:
+
+* Audience decline
+* Audience saturation
+* High acquisition cost
+* Low-quality traffic
+* Fraudulent activity
+* Tracking issues
+* Excessive overlap
+* Audience dependency
+
+---
+
+## UR-034 — Audience Alerts
+
+Users shall receive alerts for:
+
+* Conversion decline
+* CPA increase
+* CAC increase
+* Audience saturation
+* Audience overlap
+* Audience growth
+* Audience quality decline
+* Revenue decline
+
+---
+
+## UR-035 — Natural-Language Audience Analysis
+
+Users shall be able to ask:
+
+```text
+Which audience is most profitable?
+
+Which audience has the highest conversion rate?
+
+Which audience should we target next?
+
+Why is this audience declining?
+
+Which audiences overlap?
+
+Which audience generates the highest-LTV customers?
+
+Which audiences should we exclude?
+
+Which audience should receive more budget?
+```
+
+---
+
+## UR-036 — Custom Audience Reports
+
+Users shall be able to generate reports containing:
+
+* Audience performance
+* Audience quality
+* Audience conversion
+* Audience revenue
+* Audience profitability
+* Audience overlap
+* Audience saturation
+* Audience forecasting
+* AI recommendations
+
+---
+
+## UR-037 — Scheduled Reports
+
+Users shall be able to schedule:
+
+* Daily
+* Weekly
+* Monthly
+* Quarterly
+* Custom
+
+audience reports.
+
+---
+
+## 5. System Requirements
+
+## SR-001 — Multi-Tenant Architecture
+
+All audience data shall be isolated using:
+
+```text
+tenant_id
+organization_id
+workspace_id
+advertising_account_id
+```
+
+Cross-tenant audience access shall be prohibited.
+
+---
+
+## SR-002 — Audience Data Ingestion
+
+The system shall ingest:
+
+* Advertising audience data
+* Campaign data
+* Ad-set data
+* Ad data
+* Impression data
+* Click data
+* Engagement data
+* Conversion data
+* Customer data
+* Revenue data
+* Product data
+* CRM data
+* Website behavioral data where integrated
+
+---
+
+## SR-003 — Canonical Audience Model
+
+Provider-specific audience structures shall be normalized.
+
+Core entities shall include:
+
+```text
+Audience
+AudienceMember
+AudienceSegment
+AudienceSource
+AudienceSignal
+AudienceEvent
+AudiencePerformance
+AudienceScore
+AudienceOverlap
+AudienceForecast
+AudienceRecommendation
+```
+
+---
+
+## SR-004 — Audience Identity Resolution
+
+The platform shall support privacy-aware identity resolution using available identifiers.
+
+The system shall avoid unnecessary exposure of raw personal information.
+
+---
+
+## SR-005 — Audience Deduplication
+
+The system shall identify duplicate audience records using:
+
+* Provider IDs
+* Customer IDs
+* Hashed identifiers
+* Event fingerprints
+* Membership identifiers
+
+---
+
+## SR-006 — Audience Normalization
+
+Audience attributes shall be normalized across advertising providers.
+
+Examples:
+
+```text
+Age
+Gender
+Location
+Interest
+Behavior
+Device
+Lifecycle
+Product Affinity
+```
+
+---
+
+## SR-007 — Audience Performance Engine
+
+The system shall calculate audience-level:
+
+```text
+Reach
+Impressions
+Frequency
+Clicks
+CTR
+Leads
+Qualified Leads
+Conversions
+Conversion Rate
+CPA
+CAC
+Revenue
+ROAS
+Profit
+LTV
+```
+
+---
+
+## SR-008 — Audience Scoring Engine
+
+The platform shall calculate configurable audience scores.
+
+Example:
+
+```text
+Audience Value Score
+=
+Conversion Quality
++
+Revenue Potential
++
+LTV Potential
++
+Retention
+-
+Acquisition Cost
+```
+
+The exact scoring model shall be versioned and configurable.
+
+---
+
+## SR-009 — Audience Similarity Engine
+
+The platform shall calculate similarity between audience segments.
+
+Potential techniques may include:
+
+* Cosine similarity
+* Jaccard similarity
+* Embedding similarity
+* Clustering
+* Behavioral similarity
+
+---
+
+## SR-010 — Audience Clustering
+
+The AI shall support clustering audiences using:
+
+* Behavioral features
+* Demographics
+* Interests
+* Engagement
+* Conversion behavior
+* Product affinity
+* Revenue behavior
+
+Possible algorithms include:
+
+* K-Means
+* HDBSCAN
+* DBSCAN
+* Gaussian Mixture Models
+* Hierarchical clustering
+
+---
+
+## SR-011 — Audience Overlap Engine
+
+The system shall calculate overlap using:
+
+```text
+Intersection
+Union
+Jaccard Similarity
+Membership Overlap
+Reach Overlap
+```
+
+---
+
+## SR-012 — Audience Saturation Engine
+
+The system shall monitor:
+
+```text
+Frequency
+Reach
+CTR
+Conversion Rate
+CPA
+Engagement
+```
+
+to determine saturation.
+
+---
+
+## SR-013 — Audience Propensity Model
+
+The AI shall estimate:
+
+```text
+Conversion Probability
+Purchase Probability
+Lead Qualification Probability
+Opportunity Probability
+```
+
+---
+
+## SR-014 — Audience Value Model
+
+The system shall estimate:
+
+```text
+Expected Revenue
+Expected Profit
+Expected LTV
+Expected CAC
+LTV:CAC
+```
+
+---
+
+## SR-015 — Audience Forecasting Engine
+
+The system shall forecast:
+
+* Audience growth
+* Conversion rate
+* Conversion volume
+* Revenue
+* CPA
+* CAC
+* Saturation
+
+---
+
+## SR-016 — Audience Anomaly Detection
+
+The system shall detect:
+
+* Sudden audience size changes
+* Conversion drops
+* CPA spikes
+* Engagement anomalies
+* Frequency anomalies
+* Revenue anomalies
+
+---
+
+## SR-017 — Recommendation Engine
+
+The AI recommendation engine shall evaluate:
+
+```text
+Audience Quality
+Conversion Rate
+CPA
+CAC
+Revenue
+Profit
+LTV
+ROAS
+Growth
+Saturation
+Overlap
+Competition
+Historical Performance
+```
+
+---
+
+## SR-018 — AI Grounding
+
+AI outputs shall be grounded in actual SalesGenie audience data.
+
+The AI shall not fabricate:
+
+* Audience size
+* Conversion rate
+* Revenue
+* CPA
+* CAC
+* LTV
+* Audience performance
+
+---
+
+## SR-019 — Explainability
+
+Each AI audience recommendation shall include:
+
+```text
+Recommendation
+Evidence
+Supporting Metrics
+Expected Impact
+Confidence
+Risk
+Assumptions
+```
+
+---
+
+## SR-020 — Confidence Estimation
+
+AI confidence shall consider:
+
+* Sample size
+* Data freshness
+* Data completeness
+* Statistical significance
+* Historical consistency
+* Attribution reliability
+
+---
+
+## SR-021 — Privacy Controls
+
+The platform shall support:
+
+* Data minimization
+* Access controls
+* Encryption
+* Consent-aware processing
+* Configurable retention
+* Audit logging
+* Privacy-preserving analytics
+
+---
+
+## SR-022 — RBAC
+
+Permissions shall include:
+
+```text
+audience.read
+audience.write
+audience.analytics
+audience.create
+audience.export
+audience.configure
+audience.recommendations.read
+audience.recommendations.approve
+audience.automation.execute
+audience.admin
+```
+
+---
+
+## SR-023 — Audit Logging
+
+The system shall log:
+
+* Audience creation
+* Audience modification
+* Audience deletion
+* Audience synchronization
+* AI recommendations
+* Human approvals
+* Automated changes
+* Audience exclusions
+* Targeting changes
+* Report exports
+
+---
+
+## 6. Functional Requirements
+
+## FR-001 — Audience Ingestion
+
+The system shall:
+
+1. Connect to advertising providers.
+2. Retrieve audience information.
+3. Validate data.
+4. Normalize attributes.
+5. Deduplicate records.
+6. Store audience information.
+7. Calculate audience metrics.
+8. Update analytics.
+
+---
+
+## FR-002 — Audience Creation
+
+Authorized users shall be able to create audiences using configurable rules.
+
+Example:
+
+```text
+Country = Bangladesh
+AND
+Age >= 25
+AND
+Product Interest = AI Software
+AND
+Website Engagement > 3 Sessions
+```
+
+---
+
+## FR-003 — AI Audience Creation
+
+The AI shall be able to propose audience definitions based on business objectives.
+
+Example:
+
+> "Find an audience likely to purchase our enterprise AI software."
+
+The AI shall analyze available data and propose candidate audience segments.
+
+---
+
+## FR-004 — Audience Ranking
+
+The system shall rank audiences according to:
+
+* Conversion
+* Revenue
+* Profit
+* LTV
+* ROAS
+* CPA
+* CAC
+* Growth
+* Quality
+
+---
+
+## FR-005 — Audience Comparison
+
+Users shall be able to compare multiple audiences.
+
+The system shall highlight:
+
+* Best performer
+* Worst performer
+* Fastest-growing
+* Highest-value
+* Lowest-cost
+* Highest-risk
+
+---
+
+## FR-006 — Audience Segmentation
+
+The system shall allow rule-based and AI-based segmentation.
+
+---
+
+## FR-007 — AI Clustering
+
+The system shall automatically discover behavioral clusters.
+
+The AI shall generate:
+
+```text
+Cluster Name
+Cluster Description
+Key Characteristics
+Size
+Conversion Rate
+CPA
+Revenue
+LTV
+Opportunity Score
+```
+
+---
+
+## FR-008 — Audience Quality Scoring
+
+The system shall assign configurable quality scores.
+
+---
+
+## FR-009 — Audience Opportunity Scoring
+
+The AI shall rank potential expansion opportunities.
+
+Example:
+
+```text
+Audience
++
+High Conversion
++
+High LTV
++
+Low CPA
++
+Growing Demand
+=
+High Opportunity
+```
+
+---
+
+## FR-010 — Audience Saturation Detection
+
+The system shall identify audiences where increasing spend is likely to reduce efficiency.
+
+---
+
+## FR-011 — Audience Overlap Detection
+
+The system shall identify overlapping audiences and estimate potential:
+
+* Duplicate reach
+* Duplicate spend
+* Cannibalization
+
+---
+
+## FR-012 — Audience Expansion
+
+The AI shall recommend:
+
+* Similar audiences
+* Lookalikes
+* Adjacent interests
+* New geographies
+* New demographic groups
+* New behavioral segments
+
+---
+
+## FR-013 — Audience Exclusion
+
+The system shall recommend audiences to exclude based on:
+
+* Low quality
+* High cost
+* Poor conversion
+* Negative profitability
+* Existing customer status
+* Campaign duplication
+
+---
+
+## FR-014 — Audience Forecasting
+
+The system shall forecast future audience performance.
+
+Forecast output shall contain:
+
+```text
+Prediction
+Confidence
+Prediction Interval
+Key Drivers
+Assumptions
+```
+
+---
+
+## FR-015 — Audience Anomaly Detection
+
+The system shall:
+
+1. Establish baseline.
+2. Detect abnormal changes.
+3. Calculate severity.
+4. Identify affected segments.
+5. Investigate likely causes.
+6. Notify users.
+7. Generate recommendations.
+
+---
+
+## FR-016 — Audience Root-Cause Analysis
+
+When audience performance changes, the AI shall investigate:
+
+```text
+Creative
+Campaign
+Frequency
+Budget
+Competition
+Geography
+Device
+Landing Page
+Offer
+Seasonality
+Audience Composition
+Tracking
+```
+
+---
+
+## FR-017 — Audience Recommendation Engine
+
+The AI shall recommend:
+
+```text
+Increase Targeting
+Decrease Targeting
+Expand Audience
+Narrow Audience
+Create Lookalike
+Exclude Audience
+Change Creative
+Change Offer
+Change Geography
+Change Budget
+```
+
+---
+
+## FR-018 — Human Approval Workflow
+
+The system shall support:
+
+```text
+AI Recommendation
+        ↓
+Pending Review
+        ↓
+Approved / Rejected
+        ↓
+Execution
+        ↓
+Verification
+        ↓
+Impact Measurement
+```
+
+---
+
+## FR-019 — Autonomous Audience Optimization
+
+If enabled, the AI shall:
+
+1. Identify opportunity.
+2. Generate recommendation.
+3. Validate policy.
+4. Validate guardrails.
+5. Execute permitted action.
+6. Monitor impact.
+7. Roll back if necessary.
+
+---
+
+## FR-020 — Audience Guardrails
+
+Administrators shall configure:
+
+```text
+Maximum Audience Expansion
+Maximum Audience Reduction
+Maximum Budget Change
+Minimum Conversion Rate
+Maximum CPA
+Maximum CAC
+Minimum Audience Size
+Approval Required Actions
+Restricted Audiences
+```
+
+---
+
+## FR-021 — Audience Feedback
+
+Users shall be able to:
+
+* Approve recommendations.
+* Reject recommendations.
+* Modify recommendations.
+* Rate recommendations.
+* Provide feedback.
+
+---
+
+## FR-022 — Natural-Language Query Engine
+
+The platform shall support questions such as:
+
+```text
+Which audience is most profitable?
+
+Why is Audience A declining?
+
+Which audience should we scale?
+
+Which audience has the highest LTV?
+
+Which audience has the lowest CAC?
+
+Which audiences overlap?
+
+Which audience should we exclude?
+
+Find audiences similar to our highest-value customers.
+
+Find audiences with high conversion but low advertising spend.
+
+Which audience has the highest growth potential?
+```
+
+---
+
+## FR-023 — AI Query Planning
+
+For each natural-language query, the AI shall:
+
+1. Determine intent.
+2. Determine required dimensions.
+3. Determine required metrics.
+4. Determine date range.
+5. Validate permissions.
+6. Query analytics.
+7. Analyze data.
+8. Generate grounded response.
+
+---
+
+## FR-024 — Scenario Simulation
+
+Users shall be able to simulate:
+
+```text
+Increase Audience Size
+Decrease Audience Size
+Expand Geography
+Change Demographics
+Add Lookalike Audience
+Exclude Existing Customers
+Increase Budget
+Decrease Budget
+```
+
+The system shall estimate:
+
+* Reach
+* Clicks
+* Conversions
+* CPA
+* Revenue
+* Profit
+* LTV
+
+---
+
+## FR-025 — Audience Budget Allocation
+
+The AI shall recommend budget allocation based on:
+
+```text
+Conversion
+Revenue
+Profit
+LTV
+CPA
+CAC
+Growth
+Saturation
+Marginal Return
+```
+
+---
+
+## FR-026 — Marginal Audience Analysis
+
+The system shall estimate the expected incremental value of expanding an audience.
+
+Example:
+
+```text
+Current Audience Size: 100,000
+Expansion: +20,000
+Expected Additional Conversions: X
+Expected Additional Revenue: Y
+Expected Additional Cost: Z
+Expected Incremental Profit: P
+```
+
+---
+
+## FR-027 — Audience Dependency Detection
+
+The system shall identify excessive dependence on:
+
+* One demographic
+* One geography
+* One audience
+* One advertising platform
+* One customer segment
+
+---
+
+## FR-028 — Audience Diversity Analysis
+
+The AI shall measure audience concentration and diversity to identify strategic acquisition risks.
+
+---
+
+## FR-029 — Cohort Analysis
+
+Users shall be able to compare audiences acquired during different periods.
+
+---
+
+## FR-030 — Audience-to-Revenue Attribution
+
+The system shall connect audience performance to:
+
+```text
+Leads
+Opportunities
+Customers
+Orders
+Revenue
+Profit
+LTV
+```
+
+---
+
+## FR-031 — Audience-to-Sales Analysis
+
+SalesGenie shall integrate advertising audience intelligence with CRM and sales pipeline data.
+
+The system shall calculate:
+
+```text
+Audience → Lead
+Audience → Qualified Lead
+Audience → Opportunity
+Audience → Customer
+Audience → Revenue
+```
+
+---
+
+## FR-032 — Audience-to-Customer-Lifetime Analysis
+
+The platform shall identify audiences generating customers with:
+
+* High retention
+* High repeat purchase
+* High LTV
+* Low churn
+
+---
+
+## FR-033 — Audience Report Generation
+
+Reports shall include:
+
+```text
+Audience Overview
+Audience Performance
+Audience Quality
+Audience Conversion
+Audience Revenue
+Audience Profitability
+Audience Overlap
+Audience Saturation
+Audience Trends
+Audience Forecast
+AI Recommendations
+```
+
+---
+
+## FR-034 — Audience Export
+
+Authorized users shall be able to export analytics to:
+
+* CSV
+* XLSX
+* JSON
+* PDF
+
+---
+
+## FR-035 — API Layer
+
+SalesGenie shall expose APIs such as:
+
+```text
+GET  /advertising/audiences
+GET  /advertising/audiences/{id}
+GET  /advertising/audiences/metrics
+GET  /advertising/audiences/performance
+GET  /advertising/audiences/segments
+GET  /advertising/audiences/clusters
+GET  /advertising/audiences/overlap
+GET  /advertising/audiences/saturation
+GET  /advertising/audiences/forecast
+GET  /advertising/audiences/recommendations
+POST /advertising/audiences
+POST /advertising/audiences/scenarios
+POST /advertising/audiences/recommendations/{id}/approve
+POST /advertising/audiences/recommendations/{id}/reject
+```
+
+---
+
+## 7. AI Agent Architecture
+
+## AI-001 — Ad Audience Intelligence Agent
+
+SalesGenie shall provide a specialized:
+
+**AI Ad Audience Intelligence Agent**
+
+The agent shall be responsible for:
+
+* Audience discovery
+* Audience segmentation
+* Audience scoring
+* Audience clustering
+* Audience comparison
+* Audience quality analysis
+* Audience overlap analysis
+* Audience saturation analysis
+* Audience forecasting
+* Audience recommendations
+* Audience optimization
+
+---
+
+## AI-002 — Agent Tools
+
+The agent shall have controlled access to:
+
+```text
+Advertising Analytics Tool
+Audience Analytics Tool
+Campaign Analytics Tool
+Creative Analytics Tool
+Conversion Analytics Tool
+Customer Intelligence Tool
+CRM Analytics Tool
+Revenue Analytics Tool
+Financial Analytics Tool
+Clustering Tool
+Forecasting Tool
+Anomaly Detection Tool
+Recommendation Tool
+Scenario Simulation Tool
+Reporting Tool
+```
+
+---
+
+## AI-003 — Multi-Agent Collaboration
+
+The Audience Agent may collaborate with:
+
+```text
+AI Marketing Agent
+AI Campaign Agent
+AI Advertising Agent
+AI Social Media Agent
+AI Marketing Analytics Agent
+AI Marketing Strategy Agent
+AI Financial Agent
+AI Business Analyst
+AI Customer Intelligence Agent
+AI Budget Optimization Agent
+```
+
+---
+
+## AI-004 — Agent Orchestration
+
+The orchestration architecture shall support:
+
+```text
+User Request
+      ↓
+Intent Detection
+      ↓
+Task Decomposition
+      ↓
+Audience Agent
+      ↓
+Analytics Tools
+      ↓
+Customer Intelligence
+      ↓
+Financial Analysis
+      ↓
+Cross-Agent Validation
+      ↓
+Recommendation
+      ↓
+Policy Validation
+      ↓
+Human Approval / Automation
+```
+
+---
+
+## AI-005 — Evidence-Based Analysis
+
+AI audience conclusions shall be based on measurable data.
+
+The AI shall distinguish:
+
+```text
+Observed Fact
+Prediction
+Inference
+Recommendation
+```
+
+---
+
+## AI-006 — Uncertainty Handling
+
+The AI shall explicitly communicate:
+
+* Insufficient sample size
+* Low data quality
+* Low confidence
+* Missing attributes
+* Attribution limitations
+* Privacy limitations
+* Forecast uncertainty
+
+---
+
+## 8. Advanced AI Audience Intelligence
+
+## ADV-001 — High-Value Audience Discovery
+
+The AI shall identify audience segments associated with:
+
+```text
+High Conversion
++
+High Revenue
++
+High LTV
++
+Low CAC
++
+High Retention
+```
+
+---
+
+## ADV-002 — Lookalike Discovery
+
+The system shall identify users or segments similar to high-value customers.
+
+---
+
+## ADV-003 — Behavioral Clustering
+
+The AI shall cluster audiences based on behavioral patterns.
+
+---
+
+## ADV-004 — Purchase Affinity
+
+The AI shall identify relationships between audience characteristics and product purchases.
+
+---
+
+## ADV-005 — Audience Propensity
+
+The system shall estimate:
+
+```text
+Conversion Probability
+Purchase Probability
+Opportunity Probability
+Repeat Purchase Probability
+Retention Probability
+```
+
+---
+
+## ADV-006 — Audience Lifetime Value
+
+The system shall estimate LTV by audience segment.
+
+---
+
+## ADV-007 — Audience Saturation Prediction
+
+The AI shall predict when an audience may become saturated.
+
+---
+
+## ADV-008 — Audience Expansion Prediction
+
+The AI shall estimate potential returns from expanding an audience.
+
+---
+
+## ADV-009 — Audience Cannibalization Detection
+
+The system shall identify when multiple audiences compete for the same users.
+
+---
+
+## ADV-010 — Audience Migration Analysis
+
+The system shall identify changes in audience composition over time.
+
+---
+
+## ADV-011 — Emerging Audience Detection
+
+The AI shall detect new audience segments showing rapidly increasing:
+
+* Engagement
+* Conversion
+* Revenue
+* Product interest
+
+---
+
+## ADV-012 — Audience Decline Prediction
+
+The AI shall identify audiences likely to deteriorate before significant performance loss occurs.
+
+---
+
+## 9. Dashboard Requirements
+
+## Main Audience Intelligence Dashboard
+
+### KPI Cards
+
+```text
+Total Audiences
+Active Audiences
+Top Audience
+Audience Growth
+Average Conversion Rate
+Average CPA
+Average CAC
+Audience Revenue
+Audience Profit
+Average LTV
+Audience Quality Score
+```
+
+---
+
+## Audience Performance Charts
+
+```text
+Audience Conversion Rate
+Audience Revenue
+Audience Profit
+Audience CPA
+Audience CAC
+Audience LTV
+Audience Growth
+Audience Saturation
+Audience Overlap
+```
+
+---
+
+## AI Intelligence Panel
+
+```text
+Top Audience Opportunities
+Audience Risks
+Emerging Audiences
+Declining Audiences
+Saturated Audiences
+Recommended Audiences
+AI Forecast
+```
+
+---
+
+## 10. Audience Intelligence Card
+
+Each audience shall display:
+
+```text
+Audience Name
+Audience ID
+Source
+Size
+Reach
+Frequency
+Conversion Rate
+CPA
+CAC
+Revenue
+Profit
+LTV
+ROAS
+Quality Score
+Opportunity Score
+Saturation Score
+Growth Score
+Risk Score
+Last Updated
+```
+
+---
+
+## 11. Data Model
+
+Core entities shall include:
+
+```text
+Tenant
+Organization
+Workspace
+AdvertisingAccount
+AdvertisingChannel
+
+Audience
+AudienceMember
+AudienceSegment
+AudienceCluster
+AudienceSource
+AudienceAttribute
+AudienceSignal
+AudienceEvent
+
+Campaign
+AdSet
+Advertisement
+Creative
+
+Lead
+Opportunity
+Customer
+Product
+Order
+
+ConversionEvent
+RevenueEvent
+AttributionEvent
+
+AudiencePerformance
+AudienceScore
+AudienceOverlap
+AudienceSaturation
+AudienceForecast
+AudienceRecommendation
+AudienceScenario
+
+Approval
+AuditEvent
+```
+
+---
+
+## 12. Key Metrics
+
+The system shall calculate:
+
+```text
+Audience Size
+Reach
+Impressions
+Frequency
+Clicks
+CTR
+Engagement Rate
+
+Leads
+Qualified Leads
+Opportunities
+Customers
+
+Conversion Rate
+Lead Conversion Rate
+Customer Conversion Rate
+
+CPC
+CPL
+CPQL
+CPA
+CAC
+
+Revenue
+Revenue per Customer
+Revenue per Audience Member
+
+Profit
+Profit Margin
+
+ROAS
+LTV
+LTV:CAC
+
+Audience Growth
+Audience Saturation
+Audience Overlap
+Audience Quality
+Audience Opportunity
+Audience Risk
+
+Conversion Probability
+Purchase Probability
+Retention Probability
+```
+
+---
+
+## 13. Example AI Analysis
+
+User:
+
+> "Which advertising audience should we scale?"
+
+The AI should produce an evidence-based response similar to:
+
+```text
+Top Scaling Opportunity: Enterprise SaaS Decision-Makers
+
+Evidence:
+
+• Conversion rate: 7.8%
+• Account average conversion rate: 4.1%
+• CPA: 31% below account average
+• CAC: 24% below account average
+• Revenue per customer: 42% above average
+• LTV: 55% above account average
+• Audience growth: +18% over the last 30 days
+• Saturation risk: Low
+
+Recommendation:
+
+Increase audience allocation gradually while monitoring marginal CPA and conversion rate.
+
+Expected impact:
+
+• Higher qualified conversion volume
+• Improved acquisition efficiency
+• Increased revenue
+• Potential increase in customer LTV
+
+Confidence: High
+Risk: Low
+```
+
+---
+
+## 14. Example Audience Discovery Workflow
+
+```text
+Advertising Data
+       ↓
+Customer Data
+       ↓
+CRM Data
+       ↓
+Conversion Data
+       ↓
+Revenue Data
+       ↓
+Feature Engineering
+       ↓
+Audience Clustering
+       ↓
+Audience Scoring
+       ↓
+High-Value Segment Detection
+       ↓
+Lookalike Discovery
+       ↓
+Opportunity Scoring
+       ↓
+AI Recommendation
+       ↓
+Human Approval / Autonomous Execution
+       ↓
+Advertising Platform
+       ↓
+Performance Monitoring
+       ↓
+Feedback Loop
+```
+
+---
+
+## 15. Example AI Audience Optimization Workflow
+
+```text
+Audience Monitoring
+        ↓
+Performance Change Detected
+        ↓
+Anomaly Detection
+        ↓
+Root-Cause Analysis
+        ↓
+Audience Quality Evaluation
+        ↓
+Conversion Prediction
+        ↓
+Revenue Prediction
+        ↓
+Saturation Analysis
+        ↓
+AI Recommendation
+        ↓
+Guardrail Validation
+        ↓
+Human Approval / Autonomous Execution
+        ↓
+Post-Change Measurement
+        ↓
+Incremental Impact Evaluation
+        ↓
+Model Learning
+```
+
+---
+
+## 16. Non-Functional Requirements
+
+## NFR-001 — Scalability
+
+The platform shall horizontally scale to support:
+
+* Millions of audience records
+* Millions of behavioral events
+* Large advertising datasets
+* Multiple advertising providers
+* Large numbers of campaigns
+* Concurrent AI queries
+
+---
+
+## NFR-002 — Performance
+
+Audience dashboards shall use:
+
+* Caching
+* Pre-aggregation
+* Analytical indexes
+* Materialized views
+* Distributed query processing where required
+
+---
+
+## NFR-003 — Reliability
+
+The system shall support:
+
+* Retry mechanisms
+* Idempotent ingestion
+* Dead-letter queues
+* Data reconciliation
+* Provider outage handling
+* Failure recovery
+
+---
+
+## NFR-004 — Availability
+
+Critical audience intelligence services shall target enterprise-grade availability.
+
+---
+
+## NFR-005 — Security
+
+The system shall implement:
+
+* OAuth 2.0
+* JWT
+* RBAC
+* MFA
+* Encryption in transit
+* Encryption at rest
+* Secrets management
+* Tenant isolation
+* Audit logging
+* Rate limiting
+
+---
+
+## NFR-006 — Privacy
+
+The platform shall support privacy-preserving audience analytics.
+
+The system shall minimize:
+
+* Raw PII exposure
+* Unnecessary identity storage
+* Unauthorized audience access
+
+---
+
+## NFR-007 — Observability
+
+The platform shall monitor:
+
+```text
+API Health
+Integration Health
+Data Freshness
+Audience Sync Status
+AI Latency
+Model Performance
+Forecast Accuracy
+Recommendation Performance
+```
+
+---
+
+## NFR-008 — Explainability
+
+Audience recommendations shall be explainable using underlying evidence.
+
+---
+
+## NFR-009 — Reproducibility
+
+Audience metrics shall be reproducible using:
+
+```text
+Source Data
+Metric Definition Version
+Model Version
+Attribution Model
+Calculation Timestamp
+Data Snapshot
+```
+
+---
+
+## 17. Enterprise Acceptance Criteria
+
+## AC-001
+
+Given valid advertising data, the platform shall calculate audience performance metrics.
+
+## AC-002
+
+Given multiple advertising providers, the system shall normalize audience data into a canonical representation.
+
+## AC-003
+
+Given sufficient behavioral data, the AI shall identify meaningful audience clusters.
+
+## AC-004
+
+Given sufficient conversion and revenue data, the AI shall identify high-value audiences.
+
+## AC-005
+
+Given an audience performance decline, the AI shall investigate relevant contributing factors.
+
+## AC-006
+
+Given overlapping audiences, the system shall identify potential duplicate reach and spend.
+
+## AC-007
+
+Given audience saturation signals, the AI shall generate a saturation warning.
+
+## AC-008
+
+Given a high-value audience, the AI shall be able to recommend expansion strategies.
+
+## AC-009
+
+Every AI recommendation shall include evidence, expected impact, confidence, and risk.
+
+## AC-010
+
+Human approval mode shall prevent unauthorized autonomous audience modifications.
+
+## AC-011
+
+Autonomous optimization shall respect configured budget, targeting, privacy, and risk guardrails.
+
+## AC-012
+
+All audience operations shall be auditable.
+
+## AC-013
+
+All audience analytics shall respect tenant isolation and RBAC.
+
+## AC-014
+
+The system shall explicitly identify insufficient data rather than fabricating audience conclusions.
+
+---
+
+## 18. Strategic Product Principle
+
+SalesGenie's AI Ad Audience Analysis should not function as a simple audience reporting dashboard.
+
+It should operate as a **closed-loop AI Audience Intelligence and Optimization System**:
+
+```text
+Collect
+   ↓
+Normalize
+   ↓
+Understand
+   ↓
+Segment
+   ↓
+Cluster
+   ↓
+Score
+   ↓
+Compare
+   ↓
+Predict
+   ↓
+Discover
+   ↓
+Evaluate
+   ↓
+Recommend
+   ↓
+Approve
+   ↓
+Execute
+   ↓
+Monitor
+   ↓
+Measure Incremental Impact
+   ↓
+Learn
+   ↓
+Optimize
+```
+
+The ultimate objective is to help SalesGenie customers identify the **right people, at the right time, through the right advertising channel, with the right message and offer**, while maximizing qualified conversions, revenue, profitability, customer lifetime value, and sustainable audience growth.
